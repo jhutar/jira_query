@@ -1,0 +1,5 @@
+---
+server:
+  url: https://jira.example.com
+  auth:
+    token_auth: <JIRA_TOKEN>
