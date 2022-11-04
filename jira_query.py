@@ -66,6 +66,8 @@ def main():
 
     logging.debug(dir(issues[0]))
     logging.debug(dir(issues[0].fields))
+    logging.debug(dir(issues[0].fields.assignee))
+    logging.debug(dir(issues[0].fields.status))
 
     print(template.render({"issues": issues}))
 
