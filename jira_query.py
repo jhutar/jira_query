@@ -64,11 +64,6 @@ def main():
 
     issues = list_issues(my_jira, args.query)
 
-    logging.debug(dir(issues[0]))
-    logging.debug(dir(issues[0].fields))
-    logging.debug(dir(issues[0].fields.assignee))
-    logging.debug(dir(issues[0].fields.status))
-
     print(template.render({"issues": issues}))
 
 
