@@ -1,0 +1,5 @@
+| issue | summary |
+| --- | --- | --- |
+{%- for i in issues %}
+| [{{ i.key }}]({{ i.permalink() }}) | {{ i.fields.summary }} |
+{%- endfor %}
