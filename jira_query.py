@@ -10,6 +10,7 @@ import jinja2
 import jira
 
 import yaml
+import json
 
 
 def list_issues(my_jira, jql):
@@ -65,6 +66,10 @@ def main():
     issues = list_issues(my_jira, args.query)
 
     print(template.render({"issues": issues}))
+
+    ###for i in issues:
+    ###    with open(f"issue-{i.key}.json", "w") as fd:
+    ###        json.dump(i.raw, fd, indent=4, sort_keys=False)
 
 
 if __name__ == "__main__":
