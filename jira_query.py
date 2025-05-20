@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional
 import jinja2
 from jira import JIRA
 from jira.resources import Issue
+import json
 import yaml
 
 # Configuration
@@ -146,6 +147,12 @@ def setup_arg_parser() -> argparse.ArgumentParser:
         default=None,
     )
     parser.add_argument(
+        "--dump",
+        "-u",
+        action="store_true",
+        help="Also dump JSON files of fetched issues.",
+    )
+    parser.add_argument(
         "--info",
         "-i",
         action="store_true",
@@ -191,30 +198,30 @@ def main():
         level = logging.INFO
     else:
         level = logging.WARNING
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(level)
     # Update level for all handlers if more are added
     for handler in logging.getLogger().handlers:
-        handler.setLevel(logging.DEBUG)
+        handler.setLevel(level)
 
     logger.debug(f"Arguments received: {args}")
 
     try:
-        # 1. Load Configuration
+        # 1. Load configuration
         server_conf = load_server_config(args.config)
         jira_url = server_conf["url"]
         jira_token = server_conf["auth"]["token_auth"]
 
-        # 2. Initialize Jira Client
+        # 2. Initialize Jira client
         jira_client = JiraClient(server_url=jira_url, token=jira_token)
 
-        # 3. Fetch Issues
+        # 3. Fetch issues
         issues = jira_client.search_issues(args.jql_query)
 
-        # 4. Render Output
+        # 4. Render output
         renderer = TemplateRenderer(args.template)
         rendered_output = renderer.render({"issues": issues, "query": args.jql_query})
 
-        # 5. Output Results
+        # 5. Output results
         if args.output:
             output_path = Path(args.output)
             output_path.parent.mkdir(parents=True, exist_ok=True) # Ensure directory exists
@@ -224,18 +231,19 @@ def main():
         else:
             print(rendered_output)
 
-        # Optional: Save individual issue JSONs (from original commented code)
-        # output_dir = Path("jira_issue_details")
-        # output_dir.mkdir(exist_ok=True)
-        # for issue in issues:
-        #     try:
-        #         issue_data = issue.raw  # .raw contains the full JSON
-        #         file_path = output_dir / f"issue-{issue.key}.json"
-        #         with open(file_path, "w", encoding="utf-8") as fd:
-        #             json.dump(issue_data, fd, indent=4, sort_keys=False)
-        #         logger.debug(f"Saved details for issue {issue.key} to {file_path}")
-        #     except Exception as e:
-        #         logger.error(f"Could not save details for issue {issue.key}: {e}")
+        # 6. Dump issue details
+        if args.dump:
+            output_dir = Path("jira_issue_details")
+            output_dir.mkdir(exist_ok=True)
+            for issue in issues:
+                try:
+                    issue_data = issue.raw  # .raw contains the full JSON
+                    file_path = output_dir / f"issue-{issue.key}.json"
+                    with open(file_path, "w", encoding="utf-8") as fd:
+                        json.dump(issue_data, fd, indent=4, sort_keys=False)
+                    logger.debug(f"Saved details for issue {issue.key} to {file_path}")
+                except Exception as e:
+                    logger.error(f"Could not save details for issue {issue.key}: {e}")
 
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}", exc_info=args.debug)
