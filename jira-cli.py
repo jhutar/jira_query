@@ -243,6 +243,17 @@ class Doer():
         self._cache_sprints.set(sprints)
         return sprints
 
+    def _update_status(self, issue, status):
+        if self._args.dry_run:
+            _pretty(f"Would transition to {self._args.status}")
+        else:
+            transitions = self._jira.transitions(issue)
+            status_transitions = {t["name"]: t["id"] for t in transitions}
+            assert (
+                self._args.status in status_transitions
+            ), f"Status {self._args.status} not found in available statuses ({', '.join(status_transitions)})"
+            self._jira.transition_issue(issue, status_transitions[self._args.status])
+            print(f"Transitioned to {self._args.status} status (transition {status_transitions[self._args.status]})")
 
     def do_list(self):
         self._list_sprints()
@@ -350,16 +361,7 @@ class Doer():
 
         # Transition issue to status
         if self._args.status is not None:
-            if self._args.dry_run:
-                _pretty(f"Would transition to {self._args.status}")
-            else:
-                transitions = self._jira.transitions(issue)
-                status_transitions = {t["name"]: t["id"] for t in transitions}
-                assert (
-                    self._args.status in status_transitions
-                ), f"Status {args.status} not found in available statuses ({', '.join(status_transitions)})"
-                self._jira.transition_issue(issue, status_transitions[self._args.status])
-                print(f"Transitioned to {self._args.status} status (transition {status_transitions[self._args.status]})")
+            self._update_status(issue, self._args.status)
 
         # Set custom fields
         custom = {}
@@ -390,9 +392,35 @@ class Doer():
 
         return issue
 
+    def do_update(self):
+        if self._args.issue is not None:
+            issues = []
+            for i in self._args.issue.split(","):
+                i = i.strip()
+                issues.append(self._jira.issue(i))
+        elif self._args.query is not None:
+            issues = self._jira.search_issues(self._args.query, maxResults=False)
+        else:
+            raise Exception("Neither --issue nor --query provided")
 
-    def do_update(jira, args):
-        return jira.change_status(args.issue, args.status)
+        # Load comment as needed
+        if self._args.comment is not None:
+            if self._args.comment == "":
+                self._args.comment = _editor()
+            if self._args.comment.startswith("@"):
+                self._args.comment = open(self._args.description[1:], "r").read()
+
+        for issue in issues:
+            if self._args.status is not None:
+                self._update_status(issue, self._args.status)
+
+            if self._args.comment is not None:
+                if self._args.dry_run:
+                    _pretty(f"Would add this comment:", custom)
+                else:
+                    self._jira.add_comment(issue, self._args.comment)
+                    print(f"Commented on the issue {issue.id}")
+
 
 
 def main():
