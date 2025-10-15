@@ -8,7 +8,9 @@ import os
 from pathlib import Path
 import sys
 from typing import Any, Dict, List, Optional
-
+import re
+import tempfile
+import subprocess
 import jinja2
 import jira
 import json
@@ -136,6 +138,7 @@ def _pretty(heading, data=None):
     if data is not None:
         print(f"=== {heading} ===")
     else:
+        print(f"=== No heading ===")
         data = heading   # no heading provided, use it as data
     print(json.dumps(data, indent=4, default=lambda o: "<" + str(o) + ">"))
 
@@ -276,105 +279,116 @@ class Doer():
                     logger.error(f"Could not save details for issue {issue.key}: {e}")
 
 
-    def do_create(my_jira, my_config, **kwargs):
-        # Load assignee details
-        if args.assignee is not None:
-            assignee_users = my_jira.search_users(
-                user=args.assignee,
-                query=args.assignee,
+    def do_create(self):
+        # Apply issue template if specified
+        if self._args.template is not None:
+            assert self._args.template in self._config["issue_templates"]
+            template = self._config["issue_templates"][self._args.template]
+            for k, v in template.items():
+                if getattr(self._args, k) is None:
+                    setattr(self._args, k, v)
+
+        # Treat description in its special way
+        if self._args.description is None:
+            self._args.description = _editor()
+        if self._args.description.startswith("@"):
+            self._args.description = open(self._args.description[1:], "r").read()
+
+        # Some basic checks
+        assert self._args.type is not None
+        assert self._args.project is not None
+        assert self._args.summary is not None
+        assert self._args.description is not None
+
+        # Create issue skeleton
+        issue = {
+            "issuetype": {"name": self._args.type},
+            "project": self._args.project,
+            "summary": self._args.summary,
+            "description": self._args.description,
+        }
+
+        # Set components if it was set
+        if self._args.components is not None:
+            issue["components"] = [{"name": i} for i in self._args.components if i != ""]
+
+        # Set labels if it was set
+        if self._args.labels is not None:
+            issue["labels"] = [{"name": i} for i in self._args.labels if i != ""]
+
+        # If creating epic, we need to define epic name
+        if self._args.type == "Epic":
+            issue[self._config["custom_fields"]["epic_name"]] = args.summary
+
+        if self._args.dry_run:
+            _pretty("Would create this issue now:", issue)
+        else:
+            issue = self._jira.create_issue(fields=issue)
+            print(f"Created issue {issue.permalink()}")
+
+        # Load assignee details and set it to issue
+        if self._args.assignee is not None:
+            assignee_users = self._jira.search_users(
+                user=self._args.assignee,
+                query=self._args.assignee,
                 includeActive=True,
                 includeInactive=False,
             )
             assert len(assignee_users) == 1
+            assignee = assignee_users[0]
+            #{
+            #    "name": assignee_users[0].name,
+            #    "accountId": assignee_users[0].key,
+            #    "displayName": assignee_users[0].displayName,
+            #}
+            self._logger.debug(f"Found user {assignee}")
+            if self._args.dry_run:
+                _pretty("Would assign the issue to:", assignee)
+            else:
+                self._jira.assign_issue(issue, assignee.name)
+                print(f"Assigned to {assignee.displayName} ({assignee.name})")
 
-        # Create issue
-        issue = {
-            "issuetype": {"name": args.type},
-            "project": args.project,
-            "summary": args.summary,
-            "description": args.description,
-        }
-
-        # Set components if it was set or use defaults
-        if args.component is not None:
-            issue["components"] = [{"name": i} for i in args.component if i != ""]
-        else:
-            try:
-                issue["components"] = [
-                    {"name": i}
-                    for i in my_config["defaults"]["projects"][args.project][
-                        "components"
-                    ]
-                ]
-            except KeyError:
-                pass
-
-        # Set labels if it was set or use defaults
-        if args.label is not None:
-            issue["labels"] = [{"name": i} for i in args.label if i != ""]
-        else:
-            try:
-                issue["labels"] = my_config["defaults"]["projects"][args.project][
-                    "labels"
-                ]
-            except KeyError:
-                pass
-
-        # If creating epic, we need to define epic name
-        if args.type == "Epic":
-            issue[my_config["defaults"]["custom_fields"]["epic_name"]] = args.summary
-
-        issue = create(my_jira, **issue)
-
-        # Set assignee
-        if args.assignee is not None:
-            issue.update(
-                assignee={
-                    "name": assignee_users[0].name,
-                    "accountId": assignee_users[0].key,
-                    "displayName": assignee_users[0].displayName,
-                }
-            )
-            print(
-                f"Assigned to {assignee_users[0].displayName} ({assignee_users[0].name})"
-            )
-
-        # Set status
-        if args.status is not None:
-            transitions = my_jira.transitions(issue)
-            status_transitions = {t["name"]: t["id"] for t in transitions}
-            assert (
-                args.status in status_transitions
-            ), f"Status {args.status} not found in available statuses ({', '.join(status_transitions)})"
-            my_jira.transition_issue(issue, status_transitions[args.status])
-            print(
-                f"Transitioned to {args.status} status (transition {status_transitions[args.status]})"
-            )
+        # Transition issue to status
+        if self._args.status is not None:
+            if self._args.dry_run:
+                _pretty(f"Would transition to {self._args.status}")
+            else:
+                transitions = self._jira.transitions(issue)
+                status_transitions = {t["name"]: t["id"] for t in transitions}
+                assert (
+                    self._args.status in status_transitions
+                ), f"Status {args.status} not found in available statuses ({', '.join(status_transitions)})"
+                self._jira.transition_issue(issue, status_transitions[self._args.status])
+                print(f"Transitioned to {self._args.status} status (transition {status_transitions[self._args.status]})")
 
         # Set custom fields
-        customization = {}
-        if args.epic is not None:
-            customization[my_config["defaults"]["custom_fields"]["epic"]] = args.epic
-        if args.story_points is not None:
-            customization[my_config["defaults"]["custom_fields"]["story_points"]] = (
-                args.story_points
-            )
-        issue.update(**customization)
-        print(f"Configured custom fields {customization}")
+        custom = {}
+        if self._args.epic is not None:
+            custom[self._config["custom_fields"]["epic"]] = self._args.epic
 
-        print(f"Link is {issue.permalink()}")
+        if self._args.story_points is not None:
+            custom[self._config["custom_fields"]["story_points"]] = self._args.story_points
 
-        if "description" not in kwargs or kwargs["description"] is None:
-            kwargs["description"] = _editor()
-        if kwargs["description"].startswith("@"):
-            kwargs["description"] = open(kwargs["description"][1:], "r").read()
+        if self._args.sprint is not None:
+            sprints = self._list_sprints()
+            sprints = [i for i in sprints if i["name"] == self._args.sprint]
+            assert len(sprints) == 1
+            custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
+        elif self._args.sprint_regexp is not None:
+            sprints = self._list_sprints()
+            pattern = re.compile(self._args.sprint_regexp)
+            sprints = [i for i in sprints if i["state"] == "active" and pattern.fullmatch(i["name"])]
+            assert len(sprints) == 1
+            custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
 
-        new_issue = my_jira.create_issue(**kwargs)
-        print("Created %s" % new_issue)
+        if custom != {}:
+            if self._args.dry_run:
+                _pretty(f"Would configure these custom fields:", custom)
+            else:
+                issue.update(**custom)
+                print(f"Configured custom fields {custom}")
 
-        my_jira.assign_issue(new_issue, None)
-
-        return new_issue
+        return issue
 
 
     def do_update(jira, args):
@@ -441,13 +455,15 @@ def main():
         help="Create a ticket",
     )
     parser_create.add_argument(
+        "--template",
+        help="Template for creating issues",
+    )
+    parser_create.add_argument(
         "--project",
-        required=True,
         help="Project of a new ticket (required)",
     )
     parser_create.add_argument(
         "--summary",
-        required=True,
         help="Summary of a new ticket (required)",
     )
     parser_create.add_argument(
@@ -455,15 +471,16 @@ def main():
         help="Description text of a new ticket, if it starts with '@' it is considered a file to load it from",
     )
     parser_create.add_argument(
-        "--assignee", help="Assignee of a new ticket (defaults to unassigned)"
+        "--assignee",
+        help="Assignee of a new ticket (defaults to unassigned)",
     )
     parser_create.add_argument(
-        "--component",
+        "--components",
         action="append",
         help='Component of a new ticket (can be specified multiple times, set to "" to ignore)',
     )
     parser_create.add_argument(
-        "--label",
+        "--labels",
         action="append",
         help='Label of a new ticket (can be specified multiple times, set to "" to ignore)',
     )
@@ -489,6 +506,10 @@ def main():
     parser_create.add_argument(
         "--sprint",
         help="Add to this sprint",
+    )
+    parser_create.add_argument(
+        "--sprint-regexp",
+        help="Add to active sprint whose name matches this regexp",
     )
 
     parser_update = subparsers.add_parser(
