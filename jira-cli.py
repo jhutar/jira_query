@@ -421,6 +421,20 @@ class Doer():
                     self._jira.add_comment(issue, self._args.comment)
                     print(f"Commented on the issue {issue.id}")
 
+            custom = {}
+
+            if self._args.target_start is not None:
+                custom[self._config["custom_fields"]["target_start"]] = self._args.target_start.strftime("%Y-%m-%d")
+
+            if self._args.target_end is not None:
+                custom[self._config["custom_fields"]["target_end"]] = self._args.target_end.strftime("%Y-%m-%d")
+
+            if custom != {}:
+                if self._args.dry_run:
+                    _pretty(f"Would update these custom fields:", custom)
+                else:
+                    issue.update(**custom)
+                    print(f"Updated custom fields {custom}")
 
 
 def main():
@@ -560,6 +574,16 @@ def main():
     parser_update.add_argument(
         "--comment",
         help="New comment to add",
+    )
+    parser_update.add_argument(
+        "--target-start",
+        type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d'),
+        help="Change target start date (provide date in YYYY-MM-DD format)",
+    )
+    parser_update.add_argument(
+        "--target-end",
+        type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d'),
+        help="Change target end date (provide date in YYYY-MM-DD format)",
     )
 
     args = parser.parse_args()
