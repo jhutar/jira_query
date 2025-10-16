@@ -250,7 +250,10 @@ class Doer():
         self._cache_sprints.set(sprints)
         return sprints
 
-    def _update_status(self, issue, status):
+    def _update_status(self, issue):
+        if self._args.status is None:
+            return
+
         if self._args.dry_run:
             _pretty(f"Would transition to {self._args.status}")
         else:
@@ -261,6 +264,40 @@ class Doer():
             ), f"Status {self._args.status} not found in available statuses ({', '.join(status_transitions)})"
             self._jira.transition_issue(issue, status_transitions[self._args.status])
             print(f"Transitioned to {self._args.status} status (transition {status_transitions[self._args.status]})")
+
+    def _update_custom(self, issue):
+        custom = {}
+
+        if self._args.epic is not None:
+            custom[self._config["custom_fields"]["epic"]] = self._args.epic
+
+        if self._args.story_points is not None:
+            custom[self._config["custom_fields"]["story_points"]] = self._args.story_points
+
+        if self._args.target_start is not None:
+            custom[self._config["custom_fields"]["target_start"]] = self._args.target_start.strftime("%Y-%m-%d")
+
+        if self._args.target_end is not None:
+            custom[self._config["custom_fields"]["target_end"]] = self._args.target_end.strftime("%Y-%m-%d")
+
+        if self._args.sprint is not None:
+            sprints = self._list_sprints()
+            sprints = [i for i in sprints if i["name"] == self._args.sprint]
+            assert len(sprints) == 1
+            custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
+        elif self._args.sprint_regexp is not None:
+            sprints = self._list_sprints()
+            pattern = re.compile(self._args.sprint_regexp)
+            sprints = [i for i in sprints if i["state"] == "active" and pattern.fullmatch(i["name"])]
+            assert len(sprints) == 1
+            custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
+
+        if custom != {}:
+            if self._args.dry_run:
+                _pretty(f"Would configure these custom fields:", custom)
+            else:
+                issue.update(**custom)
+                print(f"Configured custom fields {custom}")
 
     def do_list(self):
         self._logger.debug(f"Searching issues: {self._args.query}")
@@ -352,35 +389,10 @@ class Doer():
                 print(f"Assigned to {assignee.displayName} ({assignee.name})")
 
         # Transition issue to status
-        if self._args.status is not None:
-            self._update_status(issue, self._args.status)
+        self._update_status(issue)
 
         # Set custom fields
-        custom = {}
-        if self._args.epic is not None:
-            custom[self._config["custom_fields"]["epic"]] = self._args.epic
-
-        if self._args.story_points is not None:
-            custom[self._config["custom_fields"]["story_points"]] = self._args.story_points
-
-        if self._args.sprint is not None:
-            sprints = self._list_sprints()
-            sprints = [i for i in sprints if i["name"] == self._args.sprint]
-            assert len(sprints) == 1
-            custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
-        elif self._args.sprint_regexp is not None:
-            sprints = self._list_sprints()
-            pattern = re.compile(self._args.sprint_regexp)
-            sprints = [i for i in sprints if i["state"] == "active" and pattern.fullmatch(i["name"])]
-            assert len(sprints) == 1
-            custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
-
-        if custom != {}:
-            if self._args.dry_run:
-                _pretty(f"Would configure these custom fields:", custom)
-            else:
-                issue.update(**custom)
-                print(f"Configured custom fields {custom}")
+        self._update_custom(issue)
 
         return issue
 
@@ -405,31 +417,17 @@ class Doer():
                 self._args.comment = open(self._args.description[1:], "r").read()
 
         for issue in issues:
-            if self._args.status is not None:
-                self._update_status(issue, self._args.status)
+            self._update_status(issue)
 
             if self._args.comment is not None:
                 if self._args.dry_run:
-                    _pretty(f"Would add this comment:", custom)
+                    _pretty(f"Would add this comment:", self._args.comment)
                 else:
                     self._jira.add_comment(issue, self._args.comment)
                     print(f"Commented on the issue {issue.id}")
 
-            custom = {}
-
-            if self._args.target_start is not None:
-                custom[self._config["custom_fields"]["target_start"]] = self._args.target_start.strftime("%Y-%m-%d")
-
-            if self._args.target_end is not None:
-                custom[self._config["custom_fields"]["target_end"]] = self._args.target_end.strftime("%Y-%m-%d")
-
-            if custom != {}:
-                if self._args.dry_run:
-                    _pretty(f"Would update these custom fields:", custom)
-                else:
-                    issue.update(**custom)
-                    print(f"Updated custom fields {custom}")
-
+            # Update custom fields
+            self._update_custom(issue)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -477,6 +475,9 @@ def main():
         help="sub-command help",
     )
 
+    #
+    # Listing issues
+    #
     parser_list = subparsers.add_parser(
         "list",
         help="List my issues in current sprint",
@@ -486,6 +487,9 @@ def main():
         help="Jira Query Language (JQL) string.",
     )
 
+    #
+    # Creating issue
+    #
     parser_create = subparsers.add_parser(
         "create",
         help="Create a ticket",
@@ -537,7 +541,7 @@ def main():
     parser_create.add_argument(
         "--story-points",
         type=int,
-        help="How many story points to add",
+        help="How many story points to set",
     )
     parser_create.add_argument(
         "--sprint",
@@ -548,18 +552,30 @@ def main():
         help="Add to active sprint whose name matches this regexp",
     )
     parser_create.add_argument(
+        "--target-start",
+        type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d'),
+        help="Change target start date (provide date in YYYY-MM-DD format)",
+    )
+    parser_create.add_argument(
+        "--target-end",
+        type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d'),
+        help="Change target end date (provide date in YYYY-MM-DD format)",
+    )
+    parser_create.add_argument(
         "--security",
         default="Red Hat Employee",
         help="Security level of new issue",
     )
 
+    #
+    # Updating issues
+    #
     parser_update = subparsers.add_parser(
         "update",
         help="Update a ticket(s)",
     )
     parser_update.add_argument(
         "--issue",
-        required=True,
         help="Ticket (or coma separated list of tickets) to update (or use --query)",
     )
     parser_update.add_argument(
@@ -572,7 +588,24 @@ def main():
     )
     parser_update.add_argument(
         "--comment",
-        help="New comment to add",
+        help="New comment to add (or set to '' to edit with editor)",
+    )
+    parser_update.add_argument(
+        "--epic",
+        help="Parent epic to put this ticket under",
+    )
+    parser_update.add_argument(
+        "--story-points",
+        type=int,
+        help="How many story points to set",
+    )
+    parser_update.add_argument(
+        "--sprint",
+        help="Add to this sprint",
+    )
+    parser_update.add_argument(
+        "--sprint-regexp",
+        help="Add to active sprint whose name matches this regexp",
     )
     parser_update.add_argument(
         "--target-start",
