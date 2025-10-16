@@ -126,14 +126,6 @@ def _editor():
         return tf.read().decode("utf-8")
 
 
-def _ensure(my_dict, my_key, my_default):
-    """
-    Helper to ensure key exists in a dict and if not set to a given value
-    """
-    if my_key not in my_dict:
-        my_dict[my_key] = my_default
-
-
 def _pretty(heading, data=None):
     if data is not None:
         print(f"=== {heading} ===")
