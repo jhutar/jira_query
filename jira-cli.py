@@ -588,7 +588,7 @@ def main():
     elif args.debug:
         logger = setup_logging(logging.INFO)
     else:
-        logged = setup_logging(logging.WARNING)
+        logger = setup_logging(logging.WARNING)
 
     logger.debug(f"Argumets are {args}")
 
