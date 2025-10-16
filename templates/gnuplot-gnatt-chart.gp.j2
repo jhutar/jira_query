@@ -1,0 +1,40 @@
+# Gnatt chart from: https://gnuplot.sourceforge.net/demo_5.4/gantt.html
+
+$DATA << EOD
+{%- for i in issues %}
+"[{{ i.key }}] {{ i.fields.summary | replace('"', "'") | truncate(50) }}",{{ i.fields.customfield_12313941 | replace("None", "") }},{{ i.fields.customfield_12313942 | replace("None", "") }}
+{%- endfor %}
+EOD
+
+set datafile separator ","
+timeformat = "%Y-%m-%d"
+T(N) = timecolumn(N,timeformat)
+
+print $DATA
+
+set xdata time
+set format x "%d\n%b\n'%y"
+set yrange [-1:]
+set xtics mirror
+set xtics scale 2, 0.5
+set mxtics 6
+set ytics nomirror
+set grid x y
+set offsets graph 0.1, 0.5, 1, 1
+unset key
+
+set title "{/=15Jira target start\\\&end dates}"
+set border 3
+
+# First plot to terminal
+set terminal dumb size 150,0
+plot $DATA \
+    using ((T(2)+T(3))/2.0) : ($0) : ((T(3)-T(2))/2.0) : (0.1) : yticlabel(1) \
+    with boxxyerror fill solid 1.0 noborder linecolor '#0000CD'
+
+# Now plot to PNG image
+set term pngcairo size 1000,500
+set output "output.png"
+plot $DATA \
+    using ((T(2)+T(3))/2.0) : ($0) : ((T(3)-T(2))/2.0) : (0.1) : yticlabel(1) \
+    with boxxyerror fill solid 1.0 noborder linecolor '#0000CD'
