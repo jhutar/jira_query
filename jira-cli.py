@@ -116,14 +116,17 @@ def _editor():
     From
     https://stackoverflow.com/questions/6309587/call-up-an-editor-vim-from-a-python-script
     """
+    logger = logging.getLogger("jira_cli.editor")
     editor = [os.environ.get("EDITOR", "vim")]
     if editor == ["vim"]:
         editor.append("+set backupcopy=yes")
-    logging.debug("Editor detected as %s" % " ".join(editor))
+    logger.debug(f"Editor detected as {' '.join(editor)}")
     with tempfile.NamedTemporaryFile(suffix=".tmp") as tf:
         subprocess.call(editor + [tf.name])
         tf.seek(0)
-        return tf.read().decode("utf-8")
+        data = tf.read().decode("utf-8")
+        logger.debug(f"Editor returned {data}")
+        return data
 
 
 def _pretty(heading, data=None):
