@@ -312,6 +312,10 @@ class Doer():
             "description": self._args.description,
         }
 
+        # Set security level if it was set
+        if self._args.security is not None:
+            issue["security"] = {"name": self._args.security}
+
         # Set components if it was set
         if self._args.components is not None:
             issue["components"] = [{"name": i} for i in self._args.components if i != ""]
@@ -542,6 +546,11 @@ def main():
     parser_create.add_argument(
         "--sprint-regexp",
         help="Add to active sprint whose name matches this regexp",
+    )
+    parser_create.add_argument(
+        "--security",
+        default="Red Hat Employee",
+        help="Security level of new issue",
     )
 
     parser_update = subparsers.add_parser(
