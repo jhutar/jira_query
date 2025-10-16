@@ -144,6 +144,10 @@ def _pretty(heading, data=None):
 
 
 class Cache():
+    """Object representing file with some cached data.
+
+    Allows to get and set cached data and tracks version of that data by
+    last modification date of a file."""
     def __init__(self, filename):
         self._filename = Path(filename).expanduser()
         self._version = None
@@ -195,6 +199,7 @@ class Cache():
 
 
 class Doer():
+    """Do all the work with Jira as per setting in args."""
     def __init__(self, args):
         self._logger = logging.getLogger("jira_cli.Doer")
 
@@ -202,9 +207,16 @@ class Doer():
         self._config = _load_config(self._args.config)
         self._jira = _create_jira_client(self._config["server"]["url"], self._config["server"]["auth"]["token_auth"])
 
-        # Caches
+        # Cache objects
         Path("~/.jira-cli/").expanduser().mkdir(exist_ok=True)
         self._cache_sprints = Cache("~/.jira-cli/sprints.json")
+
+        ###_pretty("jira.project_issue_types", self._jira.project_issue_types(project="KONFLUX"))
+        ###_pretty("jira.project_issue_types id", self._jira.project_issue_types(project="KONFLUX")[0].id)
+        ###_pretty("jira.project_issue_types name", self._jira.project_issue_types(project="KONFLUX")[0].name)
+        ###_pretty("jira.project_issue_types raw", self._jira.project_issue_types(project="KONFLUX")[0].raw)
+        ###_pretty("jira.project_issue_fields", self._jira.project_issue_fields(project="KONFLUX", issue_type="1"))
+        ###_pretty("dir(issue.fields)", dir(issues[0].fields))
 
     def execute(self):
         if self._args.subparser_name == "create":
@@ -256,21 +268,8 @@ class Doer():
             print(f"Transitioned to {self._args.status} status (transition {status_transitions[self._args.status]})")
 
     def do_list(self):
-        self._list_sprints()
-
         self._logger.debug(f"Searching issues: {self._args.query}")
         issues = self._jira.search_issues(self._args.query, maxResults=False)
-        ###_pretty("jira.boards", self._jira.boards(name="Konflux/RHTAP Perf&Scale board", type="scrum"))
-        ###_pretty("jira.sprints", self._jira.sprints(board_id=self._jira.boards(name="Konflux/RHTAP Perf&Scale board", type="scrum")[0].id))
-        ###_pretty("jira.project_issue_types", self._jira.project_issue_types(project="KONFLUX"))
-        ###_pretty("jira.project_issue_types id", self._jira.project_issue_types(project="KONFLUX")[0].id)
-        ###_pretty("jira.project_issue_types name", self._jira.project_issue_types(project="KONFLUX")[0].name)
-        ###_pretty("jira.project_issue_types raw", self._jira.project_issue_types(project="KONFLUX")[0].raw)
-        ###_pretty("jira.project_issue_fields", self._jira.project_issue_fields(project="KONFLUX", issue_type="1"))
-        ###_pretty("dir(issue.fields)", dir(issues[0].fields))
-        ###_pretty("issue.fields.customfield_12310243", issues[0].fields.customfield_12310243)
-        ###_pretty("issue.fields.comment.comments", issues[0].fields.comment.comments)
-        ###_pretty("issue.transitions", self._jira.transitions(issues[0]))
 
         renderer = TemplateRenderer(self._args.template)
         rendered_output = renderer.render({"issues": issues, "query": self._args.query})
@@ -288,7 +287,6 @@ class Doer():
                     logger.info(f"Saved details for issue {issue.key} to {file_path}")
                 except Exception as e:
                     logger.error(f"Could not save details for issue {issue.key}: {e}")
-
 
     def do_create(self):
         # Apply issue template if specified
@@ -347,11 +345,6 @@ class Doer():
             )
             assert len(assignee_users) == 1
             assignee = assignee_users[0]
-            #{
-            #    "name": assignee_users[0].name,
-            #    "accountId": assignee_users[0].key,
-            #    "displayName": assignee_users[0].displayName,
-            #}
             self._logger.debug(f"Found user {assignee}")
             if self._args.dry_run:
                 _pretty("Would assign the issue to:", assignee)
@@ -397,8 +390,10 @@ class Doer():
             issues = []
             for i in self._args.issue.split(","):
                 i = i.strip()
+                self._logger.debug(f"Loading issue: {i}")
                 issues.append(self._jira.issue(i))
         elif self._args.query is not None:
+            self._logger.debug(f"Searching issues: {self._args.query}")
             issues = self._jira.search_issues(self._args.query, maxResults=False)
         else:
             raise Exception("Neither --issue nor --query provided")
@@ -587,8 +582,6 @@ def main():
     )
 
     args = parser.parse_args()
-
-    ###warnings.filterwarnings("ignore")
 
     if args.debug:
         logger = setup_logging(logging.DEBUG)
