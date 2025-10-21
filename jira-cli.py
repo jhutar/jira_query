@@ -332,8 +332,12 @@ class Doer():
         # Treat description in its special way
         if self._args.description is None:
             self._args.description = _editor()
-        if self._args.description.startswith("@"):
+        elif self._args.description.startswith("@"):
             self._args.description = open(self._args.description[1:], "r").read()
+        else:
+            self._args.description = self._args.description \
+                .replace(r"\n", "\n") \
+                .replace(r"\t", "\t")
 
         # Some basic checks
         assert self._args.type is not None
