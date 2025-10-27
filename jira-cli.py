@@ -265,7 +265,7 @@ class Doer():
             self._jira.transition_issue(issue, status_transitions[self._args.status])
             print(f"Transitioned to {self._args.status} status (transition {status_transitions[self._args.status]})")
 
-    def _update_custom(self, issue):
+    def _update_fields(self, issue):
         custom = {}
 
         if self._args.epic is not None:
@@ -292,11 +292,14 @@ class Doer():
             assert len(sprints) == 1
             custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
 
+        if self._args.labels is not None:
+            custom["labels"] = issue.fields.labels + [i for i in self._args.labels if i != ""]
+
         if custom != {}:
             if self._args.dry_run:
                 _pretty(f"Would configure these custom fields:", custom)
             else:
-                issue.update(**custom)
+                issue.update(fields=custom)
                 print(f"Configured custom fields {custom}")
 
     def do_list(self):
@@ -361,10 +364,6 @@ class Doer():
         if self._args.components is not None:
             issue["components"] = [{"name": i} for i in self._args.components if i != ""]
 
-        # Set labels if it was set
-        if self._args.labels is not None:
-            issue["labels"] = [{"name": i} for i in self._args.labels if i != ""]
-
         # If creating epic, we need to define epic name
         if self._args.type == "Epic":
             issue[self._config["custom_fields"]["epic_name"]] = args.summary
@@ -395,8 +394,8 @@ class Doer():
         # Transition issue to status
         self._update_status(issue)
 
-        # Set custom fields
-        self._update_custom(issue)
+        # Set custom fields and labels and possibly more
+        self._update_fields(issue)
 
         return issue
 
@@ -430,8 +429,8 @@ class Doer():
                     self._jira.add_comment(issue, self._args.comment)
                     print(f"Commented on the issue {issue.id}")
 
-            # Update custom fields
-            self._update_custom(issue)
+            # Update custom fields and labels and possibly more
+            self._update_fields(issue)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -620,6 +619,11 @@ def main():
         "--target-end",
         type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d'),
         help="Change target end date (provide date in YYYY-MM-DD format)",
+    )
+    parser_update.add_argument(
+        "--labels",
+        action="append",
+        help='Label to add (can be specified multiple times, set to "" to ignore)',
     )
 
     args = parser.parse_args()
