@@ -319,9 +319,9 @@ class Doer():
                     file_path = output_dir / f"issue-{issue.key}.json"
                     with open(file_path, "w", encoding="utf-8") as fd:
                         json.dump(issue_data, fd, indent=4, sort_keys=False)
-                    logger.info(f"Saved details for issue {issue.key} to {file_path}")
+                    self._logger.info(f"Saved details for issue {issue.key} to {file_path}")
                 except Exception as e:
-                    logger.error(f"Could not save details for issue {issue.key}: {e}")
+                    self._logger.error(f"Could not save details for issue {issue.key}: {e}")
 
     def do_create(self):
         # Apply issue template if specified
