@@ -220,6 +220,8 @@ class Doer():
             self.do_update()
         elif self._args.subparser_name == "list":
             self.do_list()
+        elif self._args.subparser_name == "template":
+            self.do_tempate()
         else:
             logging.error("What shall we do with a drunken sailor?")
 
@@ -285,9 +287,15 @@ class Doer():
             sprints = [i for i in sprints if i["name"] == self._args.sprint]
             assert len(sprints) == 1
             custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
-        elif self._args.sprint_regexp is not None:
+        elif self._args.sprint_regexp is not None and self._args.sprint_regexp != "":
             sprints = self._list_sprints()
             pattern = re.compile(self._args.sprint_regexp)
+            sprints = [i for i in sprints if i["state"] == "active" and pattern.fullmatch(i["name"])]
+            assert len(sprints) == 1
+            custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
+        elif self._args.sprint_current is not None:
+            sprints = self._list_sprints()
+            pattern = re.compile(self._config["sprint_regexps"][issue.fields.project.key])
             sprints = [i for i in sprints if i["state"] == "active" and pattern.fullmatch(i["name"])]
             assert len(sprints) == 1
             custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
@@ -300,7 +308,16 @@ class Doer():
                 _pretty(f"Would configure these custom fields:", custom)
             else:
                 issue.update(fields=custom)
-                print(f"Configured custom fields {custom}")
+                custom_out = {}
+                for k, v in custom.items():
+                    try:
+                        k_readable = list(self._config['custom_fields'].keys())[list(self._config['custom_fields'].values()).index(k)]
+                        k_readable = f"{k_readable} ({k})"
+                    except KeyError:
+                        k_readable = k
+                    custom_out[k_readable] = v
+                custom_txt = ", ".join([f"{k}: {v}" for k, v in custom_out.items()])
+                print(f"Configured custom fields: {custom_txt}")
 
     def do_list(self):
         self._logger.debug(f"Searching issues: {self._args.query}")
@@ -432,6 +449,15 @@ class Doer():
             # Update custom fields and labels and possibly more
             self._update_fields(issue)
 
+    def do_tempate(self):
+        for name, data in self._config["issue_templates"].items():
+            print(f"Template {name}")
+            for k, v in data.items():
+                if type(v) is list:
+                    v = ", ".join(v)
+                print(f"  {k}: {v}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Work with Jira tickets from command line",
@@ -555,6 +581,11 @@ def main():
         help="Add to active sprint whose name matches this regexp",
     )
     parser_create.add_argument(
+        "--sprint-current",
+        action="store_true",
+        help="Add to current sprint",
+    )
+    parser_create.add_argument(
         "--target-start",
         type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d'),
         help="Change target start date (provide date in YYYY-MM-DD format)",
@@ -567,7 +598,7 @@ def main():
     parser_create.add_argument(
         "--security",
         default="Red Hat Employee",
-        help="Security level of new issue",
+        help="Security level of new issue (default 'Red Hat Employee')",
     )
 
     #
@@ -611,6 +642,11 @@ def main():
         help="Add to active sprint whose name matches this regexp",
     )
     parser_update.add_argument(
+        "--sprint-current",
+        action="store_true",
+        help="Add to current sprint",
+    )
+    parser_update.add_argument(
         "--target-start",
         type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d'),
         help="Change target start date (provide date in YYYY-MM-DD format)",
@@ -624,6 +660,14 @@ def main():
         "--labels",
         action="append",
         help='Label to add (can be specified multiple times, set to "" to ignore)',
+    )
+
+    #
+    # Templates
+    #
+    parser_template = subparsers.add_parser(
+        "template",
+        help="Work with issue templates",
     )
 
     args = parser.parse_args()
