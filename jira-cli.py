@@ -293,7 +293,7 @@ class Doer():
             sprints = [i for i in sprints if i["state"] == "active" and pattern.fullmatch(i["name"])]
             assert len(sprints) == 1
             custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
-        elif self._args.sprint_current is not None:
+        elif self._args.sprint_current:
             sprints = self._list_sprints()
             pattern = re.compile(self._config["sprint_regexps"][issue.fields.project.key])
             sprints = [i for i in sprints if i["state"] == "active" and pattern.fullmatch(i["name"])]
