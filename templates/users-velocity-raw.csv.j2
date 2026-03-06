@@ -1,0 +1,7 @@
+Date,Assignee,Issue Key,Story Points,Link
+{% for issue in issues -%}
+{% set sp = issue.fields.customfield_12310243 if issue.fields.customfield_12310243 is not none else 0 -%}
+{% set assignee = issue.fields.assignee.name if issue.fields.assignee else "Unassigned" -%}
+{% set date = issue.fields.resolutiondate[:10] if issue.fields.resolutiondate else "None" -%}
+{{ date }},{{ assignee }},{{ issue.key }},{{ sp }},{{ issue.permalink() }}
+{% endfor %}
