@@ -36,18 +36,19 @@ class JiraQueryError(Exception):
 class JiraClient:
     """A client to interact with Jira."""
 
-    def __init__(self, server_url: str, token: Optional[str] = None):
+    def __init__(self, server_url: str, username: Optional[str] = None, token: Optional[str] = None):
         """
         Initializes the Jira client.
 
         Args:
             server_url: The URL of the Jira server.
+            username: The username for authentication.
             token: The personal access token for authentication.
         """
         try:
             options = {"server": server_url}
-            if token:
-                self.jira = JIRA(options=options, token_auth=token)
+            if username and token:
+                self.jira = JIRA(options=options, basic_auth=(username, token))
             else:
                 self.jira = JIRA(options=options)
             logger.info(f"Successfully connected to Jira server: {server_url}")
@@ -182,7 +183,9 @@ def load_server_config(config_path) -> Dict[str, Any]:
         assert isinstance(server_conf, dict)
         assert "url" in server_conf
         assert "auth" in server_conf
-        assert "token_auth" in server_conf["auth"]
+        assert "basic_auth" in server_conf["auth"]
+        assert "username" in server_conf["auth"]["basic_auth"]
+        assert "token" in server_conf["auth"]["basic_auth"]
     except Exception as e:
         raise JiraQueryError(f"Error reading config {config_path}: {e}") from e
     return server_conf
@@ -209,10 +212,11 @@ def main():
         # 1. Load configuration
         server_conf = load_server_config(args.config)
         jira_url = server_conf["url"]
-        jira_token = server_conf["auth"]["token_auth"]
+        jira_user = server_conf["auth"]["basic_auth"]["username"]
+        jira_token = server_conf["auth"]["basic_auth"]["token"]
 
         # 2. Initialize Jira client
-        jira_client = JiraClient(server_url=jira_url, token=jira_token)
+        jira_client = JiraClient(server_url=jira_url, username=jira_user, token=jira_token)
 
         # 3. Fetch issues
         issues = jira_client.search_issues(args.jql_query)

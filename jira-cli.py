@@ -101,14 +101,16 @@ def _load_config(config_path) -> Dict[str, Any]:
     assert "server" in config_data
     assert "url" in config_data["server"]
     assert "auth" in config_data["server"]
-    assert "token_auth" in config_data["server"]["auth"]
+    assert "basic_auth" in config_data["server"]["auth"]
+    assert "username" in config_data["server"]["auth"]["basic_auth"]
+    assert "token" in config_data["server"]["auth"]["basic_auth"]
     return config_data
 
-def _create_jira_client(url, token):
+def _create_jira_client(url, username, token):
     options = {"server": url}
     return jira.JIRA(
         options=options,
-        token_auth=token,
+        basic_auth=(username, token),
     )
 
 def _editor():
@@ -200,7 +202,8 @@ class Doer():
 
         self._args = args
         self._config = _load_config(self._args.config)
-        self._jira = _create_jira_client(self._config["server"]["url"], self._config["server"]["auth"]["token_auth"])
+        auth = self._config["server"]["auth"]["basic_auth"]
+        self._jira = _create_jira_client(self._config["server"]["url"], auth["username"], auth["token"])
 
         # Cache objects
         Path("~/.jira-cli/").expanduser().mkdir(exist_ok=True)
