@@ -397,19 +397,33 @@ class Doer():
         # Load assignee details and set it to issue
         if self._args.assignee is not None:
             assignee_users = self._jira.search_users(
-                user=self._args.assignee,
                 query=self._args.assignee,
                 includeActive=True,
                 includeInactive=False,
             )
-            assert len(assignee_users) == 1
+            
+            # If we found multiple, try to find an exact match to be helpful
+            if len(assignee_users) > 1:
+                exact_matches = [
+                    u for u in assignee_users 
+                    if u.displayName == self._args.assignee or 
+                       getattr(u, "emailAddress", None) == self._args.assignee or
+                       getattr(u, "accountId", None) == self._args.assignee or
+                       getattr(u, "name", None) == self._args.assignee
+                ]
+                if len(exact_matches) == 1:
+                    assignee_users = exact_matches
+
+            assert len(assignee_users) == 1, f"Expected exactly one user for '{self._args.assignee}', but found {len(assignee_users)}. Please use a more specific name, email, or accountId. Found: {[f'{u.displayName} ({getattr(u, 'accountId', 'no-id')})' for u in assignee_users]}"
             assignee = assignee_users[0]
             self._logger.debug(f"Found user {assignee}")
             if self._args.dry_run:
                 _pretty("Would assign the issue to:", assignee)
             else:
-                self._jira.assign_issue(issue, assignee.name)
-                print(f"Assigned to {assignee.displayName} ({assignee.name})")
+                # In Jira Cloud, we must use accountId instead of name
+                assignee_id = getattr(assignee, "accountId", getattr(assignee, "name", None))
+                self._jira.assign_issue(issue, assignee_id)
+                print(f"Assigned to {assignee.displayName} ({assignee_id})")
 
         # Transition issue to status
         self._update_status(issue)

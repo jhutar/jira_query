@@ -107,7 +107,10 @@ class Doer:
 
         for issue in issues:
             # We assume the user who finished the issue is the current assignee
-            assignee = issue.fields.assignee.name if issue.fields.assignee else None
+            # In Jira Cloud, we must use accountId instead of name
+            assignee = None
+            if issue.fields.assignee:
+                assignee = getattr(issue.fields.assignee, "accountId", getattr(issue.fields.assignee, "name", None))
             
             # If for some reason the assignee is not in our list, skip
             if assignee not in assignees:
@@ -122,7 +125,7 @@ class Doer:
             res_date = datetime.datetime.strptime(resolution_date_str[:10], "%Y-%m-%d").date()
 
             # Retrieve story points using the custom field ID
-            sp_value = getattr(issue.fields, "customfield_12310243", 0)
+            sp_value = getattr(issue.fields, "customfield_10028", 0)
             if sp_value is None:
                 sp_value = 0
             
