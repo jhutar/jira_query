@@ -20,17 +20,6 @@ echo "* New issues"
 q 'project in (KONFLUX, KFLUXINFRA, KFLUXBUGS) AND component = Performance AND created <= now() AND created >= startOfDay(-7d)'
 echo
 
-echo "# RHDH"
-echo "* Finished issues"
-q 'project = RHIDP AND component = Performance AND resolution = Done AND resolved <= now() AND resolved >= startOfDay(-7d)'
-echo "* In review issues"
-q 'project = RHIDP AND component = Performance AND status = Review AND updated <= now() AND updated >= startOfDay(-7d)'
-echo "* In progress issues"
-q 'project = RHIDP AND component = Performance AND type not in (Feature, Outcome) AND status = "In Progress" AND updated <= now() AND updated >= startOfDay(-7d)'
-echo "* New issues"
-q 'project = RHIDP AND component = Performance AND created <= now() AND created >= startOfDay(-7d)'
-echo
-
 echo "# Pipelines"
 echo "* Finished issues"
 q 'project = SRVKP AND component = Performance AND resolution = Done AND resolved <= now() AND resolved >= startOfDay(-7d)'
