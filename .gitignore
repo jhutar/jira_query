@@ -1,2 +1,7 @@
 .*.swp
 venv/
+.gemini/
+__pycache__/
+
+# Cache dir
+jira_issue_details/
