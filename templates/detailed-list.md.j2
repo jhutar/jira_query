@@ -1,0 +1,17 @@
+{%- for i in issues %}
+### [{{ i.fields.status }}{% if i.fields.status|string == "Closed" %}/{{ i.fields.resolution }}{% endif %}] [{{ i.key }}]({{ i.permalink() }}) - {{ i.fields.assignee.displayName }} - {{ i.fields.summary }}
+
+{% if i.fields.description %}
+**Description:**
+{{ i.fields.description | truncate(1500, True, '...') }}
+{% endif %}
+
+{% if i.fields.comment and i.fields.comment.comments %}
+**Comments (Last 3):**
+{% for c in i.fields.comment.comments[-3:] %}
+* **{{ c.author.displayName }}** ({{ c.created[:10] }}): {{ c.body | replace('\n', '\n  ') | truncate(1500, True, '...') }}
+{% endfor %}
+{% endif %}
+
+---
+{%- endfor %}
