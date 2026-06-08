@@ -1,0 +1,19 @@
+# AI Monthly Report Summary Prompt
+
+Use this prompt with an LLM (ChatGPT, Claude, Gemini, etc.) along with the output of `./ai_monthly_report.py` to generate a polished executive summary.
+
+---
+
+**Context:** Attached is a raw monthly status report for the previous month, generated from Jira issues and linked Pull Request descriptions across several engineering teams (Konflux, Pipelines, ConsoleDot, and Satellite).
+
+**Task:** Please synthesize this data into a professional, "executive-ready" monthly summary. 
+
+**Requirements:**
+1. **Executive Summary:** Start with a 3-sentence overview of the most significant achievements across the entire organization this month.
+2. **Team Highlights:** For each team (Konflux, Pipelines, etc.), provide 3-4 bullet points summarizing their major accomplishments. Focus on *outcomes* (what was delivered/fixed) rather than just listing ticket numbers. Use the PR descriptions to provide technical context.
+3. **Trends & Themes:** Identify any recurring themes (e.g., "Heavy focus on performance optimization in Konflux" or "Significant progress on Image Builder stabilization").
+4. **Velocity Snapshot:** Briefly mention the balance between "Finished," "In Review," and "In Progress" issues to indicate momentum.
+5. **Tone:** Professional, concise, and focused on value delivered. Avoid technical jargon where a simpler explanation of the benefit exists.
+
+**Input Data:**
+[PASTE THE OUTPUT OF ./ai_monthly_report.py HERE]
