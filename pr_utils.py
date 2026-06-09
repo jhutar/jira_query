@@ -55,7 +55,9 @@ def enrich_with_prs(text):
         return []
     # Find PR links
     # We stop at delimiters like |, ], ), or whitespace to handle Jira markdown links
-    urls = re.findall(r"https://github.com/[^/\s|\]\)]+/[^/\s|\]\)]+/pull/\d+", text)
+    # GitHub: any path followed by /pull/ and digits
+    urls = re.findall(r"https://github\.com/[^\s|\]\)]+/pull/\d+", text)
+    # GitLab: any path followed by /-/merge_requests/ and digits
     urls += re.findall(r"https://gitlab[^\s|\]\)]*/-/merge_requests/\d+", text)
     urls = list(set(urls))
 
@@ -72,30 +74,33 @@ def enrich_issue_with_prs(issue):
     # Collect text from all possible fields to find PR links
     text_to_search = []
     
-    # Description
-    if hasattr(issue.fields, "description") and issue.fields.description:
-        text_to_search.append(issue.fields.description)
-        
-    # Comments
-    if hasattr(issue.fields, "comment") and issue.fields.comment:
-        for comment in issue.fields.comment.comments:
-            text_to_search.append(comment.body)
-            
-    # Iterate over all other fields (including custom fields like "Git Pull Request")
-    # We look for any string field that might contain a URL
-    for field_name in dir(issue.fields):
-        if field_name in ["description", "comment"]:
-            continue
-        if field_name.startswith("_"):
-            continue
-            
-        val = getattr(issue.fields, field_name)
+    def collect_strings(val):
         if isinstance(val, str):
             text_to_search.append(val)
+        elif isinstance(val, dict):
+            for v in val.values():
+                collect_strings(v)
         elif isinstance(val, (list, tuple)):
             for item in val:
-                if isinstance(item, str):
-                    text_to_search.append(item)
+                collect_strings(item)
     
+    # Use raw data if available to be sure we see everything exactly as Jira sent it
+    if hasattr(issue, 'raw') and 'fields' in issue.raw:
+        collect_strings(issue.raw['fields'])
+    
+    # Also look at issue.fields attributes just in case jira-python did some processing
+    if hasattr(issue, 'fields'):
+        for field_name in dir(issue.fields):
+            if field_name.startswith("_"):
+                continue
+            try:
+                val = getattr(issue.fields, field_name)
+                # Avoid re-scanning large objects we already handled or that might be circular
+                if not isinstance(val, (str, list, tuple, dict)):
+                    continue
+                collect_strings(val)
+            except AttributeError:
+                continue
+
     combined_text = "\n".join(text_to_search)
     issue.prs = enrich_with_prs(combined_text)
