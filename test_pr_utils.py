@@ -48,6 +48,14 @@ def test_enrich_with_prs_patterns(mock_get_pr_info):
         # Smart links (duplicated URL in one pattern)
         ("PR for artifact validation improvements (addressing feedback from PR #67):\n[https://github.com/konflux-ci/perfscale/pull/68|https://github.com/konflux-ci/perfscale/pull/68|smart-link]",
          ["https://github.com/konflux-ci/perfscale/pull/68"]),
+        
+        # GitHub Commit links
+        ("Fix in https://github.com/redhat-performance/opl/commit/82e4d494f495e7406e0ad85b0f4eedef369eda71",
+         ["https://github.com/redhat-performance/opl/commit/82e4d494f495e7406e0ad85b0f4eedef369eda71"]),
+        
+        # GitLab Commit links
+        ("Merged in https://gitlab.cee.redhat.com/konflux/docs/users/-/commit/e8a9f510d4554d129a10af1fc671b3af1c53d729",
+         ["https://gitlab.cee.redhat.com/konflux/docs/users/-/commit/e8a9f510d4554d129a10af1fc671b3af1c53d729"]),
     ]
 
     for text, expected_urls in test_cases:

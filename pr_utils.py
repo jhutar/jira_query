@@ -10,10 +10,10 @@ def get_pr_info(url):
     cmd = []
     try:
         if "github.com" in url:
-            # Pattern: https://github.com/owner/repo/pull/id
-            match = re.search(r"github\.com/([^/]+/[^/]+)/pull/(\d+)", url)
-            if match:
-                repo, pr_id = match.groups()
+            # GitHub PR Pattern: https://github.com/owner/repo/pull/id
+            pr_match = re.search(r"github\.com/([^/]+/[^/]+)/pull/(\d+)", url)
+            if pr_match:
+                repo, pr_id = pr_match.groups()
                 cmd = [
                     "gh",
                     "pr",
@@ -28,12 +28,26 @@ def get_pr_info(url):
                 ]
                 result = subprocess.run(cmd, capture_output=True, text=True, check=True)
                 return result.stdout.strip()
+            
+            # GitHub Commit Pattern: https://github.com/owner/repo/commit/sha
+            commit_match = re.search(r"github\.com/([^/]+/[^/]+)/commit/([0-9a-f]{7,40})", url)
+            if commit_match:
+                repo, sha = commit_match.groups()
+                cmd = [
+                    "gh",
+                    "api",
+                    f"repos/{repo}/commits/{sha}",
+                    "--jq",
+                    '".commit.message"',
+                ]
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                return f"Commit Message:\n{result.stdout.strip()}"
+
         elif "gitlab" in url:
-            # Pattern: https://host/path/to/repo/-/merge_requests/id
-            match = re.search(r"https://([^/]+)/(.+)/-/merge_requests/(\d+)", url)
-            if match:
-                host, repo, mr_id = match.groups()
-                # Setting GL_HOST to gitlab.cee.redhat.com handles instances for this specific context
+            # GitLab MR Pattern: https://host/path/to/repo/-/merge_requests/id
+            mr_match = re.search(r"https://([^/]+)/(.+)/-/merge_requests/(\d+)", url)
+            if mr_match:
+                host, repo, mr_id = mr_match.groups()
                 env = os.environ.copy()
                 env["GL_HOST"] = host
                 cmd = ["glab", "mr", "view", mr_id, "-R", repo, "-F", "json"]
@@ -42,23 +56,45 @@ def get_pr_info(url):
                 )
                 data = json.loads(result.stdout)
                 return f"Title: {data.get('title')}\n{data.get('description')}"
+            
+            # GitLab Commit Pattern: https://host/path/to/repo/-/commit/sha
+            commit_match = re.search(r"https://([^/]+)/(.+)/-/commit/([0-9a-f]{7,40})", url)
+            if commit_match:
+                host, repo, sha = commit_match.groups()
+                env = os.environ.copy()
+                env["GL_HOST"] = host
+                cmd = ["glab", "commit", "view", sha, "-R", repo]
+                result = subprocess.run(
+                    cmd, capture_output=True, text=True, check=True, env=env
+                )
+                # glab commit view returns a lot of info, we just want the message part if possible
+                # or just return the whole thing for now as it's useful
+                return result.stdout.strip()
+
     except subprocess.CalledProcessError as e:
         stderr = e.stderr.strip() if e.stderr else "No stderr"
-        return f"(Failed to fetch PR info: Command {cmd} failed with exit status {e.returncode}.\nStderr: {stderr})"
+        return f"(Failed to fetch info: Command {cmd} failed with exit status {e.returncode}.\nStderr: {stderr})"
     except Exception as e:
-        return f"(Failed to fetch PR info: {e})"
+        return f"(Failed to fetch info: {e})"
     return ""
 
 
 def enrich_with_prs(text):
     if not text:
         return []
-    # Find PR links
+    # Find PR/Commit links
     # We stop at delimiters like |, ], ), or whitespace to handle Jira markdown links
-    # GitHub: any path followed by /pull/ and digits
-    urls = re.findall(r"https://github\.com/[^\s|\]\)]+/pull/\d+", text)
-    # GitLab: any path followed by /-/merge_requests/ and digits
-    urls += re.findall(r"https://gitlab[^\s|\]\)]*/-/merge_requests/\d+", text)
+    patterns = [
+        r"https://github\.com/[^\s|\]\)]+/pull/\d+",
+        r"https://github\.com/[^\s|\]\)]+/commit/[0-9a-f]{7,40}",
+        r"https://gitlab[^\s|\]\)]*/-/merge_requests/\d+",
+        r"https://gitlab[^\s|\]\)]*/-/commit/[0-9a-f]{7,40}",
+    ]
+    
+    urls = []
+    for p in patterns:
+        urls += re.findall(p, text)
+    
     urls = list(set(urls))
 
     enrichment = []
