@@ -28,31 +28,44 @@ logger = logging.getLogger(__name__)
 
 
 def get_pr_info(url):
+    cmd = []
     try:
         if "github.com" in url:
-            cmd = [
-                "gh",
-                "pr",
-                "view",
-                url,
-                "--json",
-                "title,body",
-                "--jq",
-                '."Title: \\(.title)\\n\\(.body)"',
-            ]
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            return result.stdout.strip()
+            # Pattern: https://github.com/owner/repo/pull/id
+            match = re.search(r"github\.com/([^/]+/[^/]+)/pull/(\d+)", url)
+            if match:
+                repo, pr_id = match.groups()
+                cmd = [
+                    "gh",
+                    "pr",
+                    "view",
+                    pr_id,
+                    "--repo",
+                    repo,
+                    "--json",
+                    "title,body",
+                    "--jq",
+                    '."Title: \\(.title)\\n\\(.body)"',
+                ]
+                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+                return result.stdout.strip()
         elif "gitlab" in url:
-            # Setting GL_HOST to gitlab.cee.redhat.com handles instances for this specific context
-            env = os.environ.copy()
-            if "gitlab.cee.redhat.com" in url:
-                env["GL_HOST"] = "gitlab.cee.redhat.com"
-            cmd = ["glab", "mr", "view", url, "-F", "json"]
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, check=True, env=env
-            )
-            data = json.loads(result.stdout)
-            return f"Title: {data.get('title')}\n{data.get('description')}"
+            # Pattern: https://host/path/to/repo/-/merge_requests/id
+            match = re.search(r"https://([^/]+)/(.+)/-/merge_requests/(\d+)", url)
+            if match:
+                host, repo, mr_id = match.groups()
+                # Setting GL_HOST to gitlab.cee.redhat.com handles instances for this specific context
+                env = os.environ.copy()
+                env["GL_HOST"] = host
+                cmd = ["glab", "mr", "view", mr_id, "-R", repo, "-F", "json"]
+                result = subprocess.run(
+                    cmd, capture_output=True, text=True, check=True, env=env
+                )
+                data = json.loads(result.stdout)
+                return f"Title: {data.get('title')}\n{data.get('description')}"
+    except subprocess.CalledProcessError as e:
+        stderr = e.stderr.strip() if e.stderr else "No stderr"
+        return f"(Failed to fetch PR info: Command {cmd} failed with exit status {e.returncode}.\nStderr: {stderr})"
     except Exception as e:
         return f"(Failed to fetch PR info: {e})"
     return ""
