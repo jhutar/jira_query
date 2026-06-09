@@ -50,7 +50,7 @@ def get_pr_info(url):
 
 def enrich_with_prs(text):
     if not text:
-        return ""
+        return []
     # Find PR links
     urls = re.findall(r"https://github.com/[^/\s]+/[^/\s]+/pull/\d+", text)
     urls += re.findall(r"https://gitlab[^\s]*/-/merge_requests/\d+", text)
@@ -60,9 +60,9 @@ def enrich_with_prs(text):
     for url in urls:
         info = get_pr_info(url)
         if info:
-            enrichment.append(f"\n--- PR/MR: {url} ---\n{info}")
+            enrichment.append({"url": url, "info": info})
 
-    return "".join(enrichment)
+    return enrichment
 
 
 def enrich_issue_with_prs(issue):
@@ -72,7 +72,7 @@ def enrich_issue_with_prs(issue):
         for comment in issue.fields.comment.comments:
             text_to_search += "\n" + comment.body
     
-    issue.pr_info = enrich_with_prs(text_to_search)
+    issue.prs = enrich_with_prs(text_to_search)
 
 
 class JiraQueryError(Exception):
