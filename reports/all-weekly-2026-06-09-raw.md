@@ -154,37 +154,6 @@ The last additional PR ([https://github.com/konflux-ci/perfscale/pull/68|https:/
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://github.com/konflux-ci/perfscale/pull/67
-```
-Title: Filter out pods with non-meaningful artifacts in OOM detector
-## Problem
-The OOM/CrashLoopBackOff detector creates Jira tickets for pods whose logs and descriptions cannot be collected because the pods were deleted before the tool runs. Even at 4-hour intervals, short-lived pods (like PipelineRun pods) are often gone by the time artifact collection happens.
-
-This creates noise and unhelpful tickets where users cannot find debugging information (see KONFLUX-11365).
-
-## Solution
-- Add `is_artifact_meaningful()` function to validate collected artifacts
-- Skip pods where `oc describe` or `oc logs` return "pod not found" errors  
-- Delete artifact files for skipped pods to save disk space
-- Track and report count of skipped pods in console output
-
-## Impact
-- ✅ Reduces false-positive Jira tickets for already-deleted pods
-- ✅ Focuses monitoring on actionable incidents with meaningful logs
-- ✅ Users see clear output: "X pod(s) kept (Y skipped - pod deleted)"
-
-## Changes
-- Modified `tools/oomkill-and-crashloopbackoff-detector/oc_get_ooms.py` (+38 lines, -7 lines)
-- Simple validation logic (~20 lines for validation function, ~11 lines for integration)
-
-## Testing
-- Syntax validated with `python3 -m py_compile`
-- Output format changed from "X pod(s) found" to "X pod(s) kept (Y skipped - pod deleted)"
-
-Related: KONFLUX-11365, KONFLUX-11509
-```
-
-
 #### PR/MR: https://github.com/konflux-ci/perfscale/pull/68
 ```
 Title: Improve artifact validation robustness (addresses PR #67 feedback)
@@ -236,18 +205,18 @@ All tests pass.
 ## Example Scenarios
 
 **Before (could skip incorrectly):**
-```
+` ` `
 # 5MB pod log with "config file not found" on line 1000
 if "not found" in content and "error from server" in content:
     return False  # 🚨 Skips 5MB log!
-```
+` ` `
 
 **After (protected by size check):**
-```python
+` ` `python
 if content_size >= 2048:  # 5MB > 2KB
     return True  # ✅ Immediately marked meaningful
 # Pattern check never runs!
-```
+` ` `
 
 ## Files Changed
 
@@ -264,6 +233,35 @@ if content_size >= 2048:  # 5MB > 2KB
 Assisted-by: Claude
 ```
 
+#### PR/MR: https://github.com/konflux-ci/perfscale/pull/67
+```
+Title: Filter out pods with non-meaningful artifacts in OOM detector
+## Problem
+The OOM/CrashLoopBackOff detector creates Jira tickets for pods whose logs and descriptions cannot be collected because the pods were deleted before the tool runs. Even at 4-hour intervals, short-lived pods (like PipelineRun pods) are often gone by the time artifact collection happens.
+
+This creates noise and unhelpful tickets where users cannot find debugging information (see KONFLUX-11365).
+
+## Solution
+- Add `is_artifact_meaningful()` function to validate collected artifacts
+- Skip pods where `oc describe` or `oc logs` return "pod not found" errors  
+- Delete artifact files for skipped pods to save disk space
+- Track and report count of skipped pods in console output
+
+## Impact
+- ✅ Reduces false-positive Jira tickets for already-deleted pods
+- ✅ Focuses monitoring on actionable incidents with meaningful logs
+- ✅ Users see clear output: "X pod(s) kept (Y skipped - pod deleted)"
+
+## Changes
+- Modified `tools/oomkill-and-crashloopbackoff-detector/oc_get_ooms.py` (+38 lines, -7 lines)
+- Simple validation logic (~20 lines for validation function, ~11 lines for integration)
+
+## Testing
+- Syntax validated with `python3 -m py_compile`
+- Output format changed from "X pod(s) found" to "X pod(s) kept (Y skipped - pod deleted)"
+
+Related: KONFLUX-11365, KONFLUX-11509
+```
 
 
 
@@ -397,21 +395,21 @@ As agreed with [~accountid:5a78c7f73297605c78217f31] , since the “Release” s
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://github.com/rebtoor/devfile-sample-python-basic/pull/1
+#### PR/MR: https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006
 ```
-Title: Konflux Staging update devfile-sample-python-basic-c9e78
+Title: Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
+#### What:
 
-# Pipelines as Code configuration proposal
+Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
 
-To start the PipelineRun, add a new comment with content `/ok-to-test`
+Signed-off-by: Roberto Alfieri <ralfieri@redhat.com>
 
-For more detailed information about running a PipelineRun, please refer to Pipelines as Code documentation [Running the PipelineRun](https://pipelinesascode.com/docs/guide/running/)
+#### Why:
+learning about konflux
 
-To customize the proposed PipelineRuns after merge, please refer to [Build Pipeline customization](https://konflux-ci.dev/docs/building/customizing-the-build/)
-
-Please follow the block sequence indentation style introduced by the proprosed PipelineRuns YAMLs, or keep using consistent indentation level through your customized PipelineRuns. When different levels are mixed, it will be changed to the proposed style.
+#### Tickets:
+https://redhat.atlassian.net/browse/KONFLUX-13726
 ```
-
 
 #### PR/MR: https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18005
 ```
@@ -439,23 +437,20 @@ It seems that some fixes already applied for the "non-staging" version `add-name
 n/a
 ```
 
-
-#### PR/MR: https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006
+#### PR/MR: https://github.com/rebtoor/devfile-sample-python-basic/pull/1
 ```
-Title: Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
-#### What:
+Title: Konflux Staging update devfile-sample-python-basic-c9e78
 
-Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
+# Pipelines as Code configuration proposal
 
-Signed-off-by: Roberto Alfieri <ralfieri@redhat.com>
+To start the PipelineRun, add a new comment with content `/ok-to-test`
 
-#### Why:
-learning about konflux
+For more detailed information about running a PipelineRun, please refer to Pipelines as Code documentation [Running the PipelineRun](https://pipelinesascode.com/docs/guide/running/)
 
-#### Tickets:
-https://redhat.atlassian.net/browse/KONFLUX-13726
+To customize the proposed PipelineRuns after merge, please refer to [Build Pipeline customization](https://konflux-ci.dev/docs/building/customizing-the-build/)
+
+Please follow the block sequence indentation style introduced by the proprosed PipelineRuns YAMLs, or keep using consistent indentation level through your customized PipelineRuns. When different levels are mixed, it will be changed to the proposed style.
 ```
-
 
 
 
@@ -590,7 +585,6 @@ Made with [Cursor](https://cursor.com)
 [KONFLUX-13066]: https://redhat.atlassian.net/browse/KONFLUX-13066?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ
 ```
 
-
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
 ```
 Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
@@ -600,7 +594,6 @@ The -min variant patches remove the explicit computeResources so those tasks inh
 
 Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 ```
-
 
 
 
@@ -718,7 +711,6 @@ Made with [Cursor](https://cursor.com)
 [KONFLUX-13063]: https://redhat.atlassian.net/browse/KONFLUX-13063?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ
 ```
 
-
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
 ```
 Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
@@ -728,7 +720,6 @@ The -min variant patches remove the explicit computeResources so those tasks inh
 
 Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 ```
-
 
 
 
@@ -829,17 +820,6 @@ Closing this as PR: [https://github.com/konflux-ci/build-definitions/pull/3568|h
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
-```
-Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
-The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
-
-The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
-
-Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
-```
-
-
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3568
 ```
 Title: fix(package-operator-package): add missing computeResources to all steps
@@ -894,6 +874,15 @@ Assisted-by: CursorAgent@Cursor.com
 Made with [Cursor](https://cursor.com)
 ```
 
+#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
+```
+Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
+The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
+
+The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
+
+Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+```
 
 
 
@@ -1001,7 +990,6 @@ The -min variant patches remove the explicit computeResources so those tasks inh
 Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 ```
 
-
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3566
 ```
 Title: fix(modelcar-oci-ta): add missing computeResources to all steps
@@ -1043,7 +1031,6 @@ Signed-off-by: Subrata Modak <smodak@redhat.com>
 
 Made with [Cursor](https://cursor.com)
 ```
-
 
 
 
@@ -1127,17 +1114,6 @@ Assisted-by: CursorAgent@Cursor.com
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
-```
-Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
-The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
-
-The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
-
-Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
-```
-
-
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3577
 ```
 Title: feat(update-infra-deployments): add computeResources to all steps
@@ -1182,6 +1158,15 @@ Made with [Cursor](https://cursor.com)
 [KONFLUX-13065]: https://redhat.atlassian.net/browse/KONFLUX-13065?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ
 ```
 
+#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
+```
+Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
+The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
+
+The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
+
+Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+```
 
 
 
@@ -1314,7 +1299,6 @@ Made with [Cursor](https://cursor.com)
 [KONFLUX-13063]: https://redhat.atlassian.net/browse/KONFLUX-13063?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ
 ```
 
-
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
 ```
 Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
@@ -1324,7 +1308,6 @@ The -min variant patches remove the explicit computeResources so those tasks inh
 
 Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 ```
-
 
 
 
@@ -1421,17 +1404,6 @@ Assisted-by: CursorAgent@Cursor.com
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
-```
-Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
-The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
-
-The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
-
-Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
-```
-
-
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3571
 ```
 Title: fix(run-script-oci-ta): right-size computeResources per fleet data
@@ -1498,6 +1470,15 @@ Assisted-by: CursorAgent@Cursor.com
 Made with [Cursor](https://cursor.com)
 ```
 
+#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
+```
+Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
+The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
+
+The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
+
+Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+```
 
 
 
@@ -1595,17 +1576,6 @@ Assisted-by: CursorAgent@Cursor.com
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
-```
-Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
-The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
-
-The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
-
-Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
-```
-
-
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3570
 ```
 Title: feat(run-opm-command-oci-ta): add computeResources to all steps
@@ -1665,6 +1635,15 @@ Signed-off-by: Subrata Modak <smodak@redhat.com>
 Assisted-by: CursorAgent@Cursor.com
 ```
 
+#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
+```
+Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
+The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
+
+The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
+
+Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+```
 
 
 
@@ -1791,7 +1770,6 @@ Assisted-by: CursorAgent@Cursor.com
 Made with [Cursor](https://cursor.com)
 ```
 
-
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
 ```
 Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
@@ -1801,7 +1779,6 @@ The -min variant patches remove the explicit computeResources so those tasks inh
 
 Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 ```
-
 
 
 
@@ -2194,6 +2171,15 @@ Analyze whether to keep the current single-Horreum-test approach or split into s
 
 
 
+**Comments (Last 3):**
+
+#### **Aman Vishwakarma** (2026-06-09)
+```
+Analyzed splitting into separate Horreum tests per config combo (8+ tests) versus keeping the current 2-test setup with JS branching. 
+Recommendation: keep a single test per scenario category. Splitting would require over 720 duplicate label definitions and changes to the data upload pipeline, while JS branching on HA/QBT involves only 4 branches—the same pattern as the {{existing missing_pipeline_successes}} function. Separate tests become necessary only if different configs require different alert models or notifications
+```
+
+
 
 
 
@@ -2224,6 +2210,15 @@ Analyze whether to keep the current single-Horreum-test approach or split into s
 * JS calculation functions (like missing_pipeline_successes) handle per-config threshold branching within a single test
 ```
 
+
+
+**Comments (Last 3):**
+
+#### **Aman Vishwakarma** (2026-06-09)
+```
+Analyzed splitting into separate Horreum tests per config combo (8+ tests) versus keeping the current 2-test setup with JS branching. 
+Recommendation: keep a single test per scenario category. Splitting would require over 720 duplicate label definitions and changes to the data upload pipeline, while JS branching on HA/QBT involves only 4 branches—the same pattern as the {{existing missing_pipeline_successes}} function. Separate tests become necessary only if different configs require different alert models or notifications
+```
 
 
 
@@ -2290,16 +2285,6 @@ Cc: [~accountid:5c6d765aca97144c4716967d]
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/128
-```
-Title: Add 1 git-crypt collaborator
-New collaborators:
-
-    4C8E95E940EC90038CA973D59A9CB0F812505DE5
-        Subrata Modak <smodak@redhat.com>
-```
-
-
 #### PR/MR: https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/129
 ```
 Title: feat(HCEPERF-1473): Rotate OOM crash detector SA tokens for all 10 clusters
@@ -2330,6 +2315,14 @@ New 1-year tokens generated via `oc create token --duration=8760h` for SA `perf-
 Assisted-by: CursorAgent
 ```
 
+#### PR/MR: https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/128
+```
+Title: Add 1 git-crypt collaborator
+New collaborators:
+
+    4C8E95E940EC90038CA973D59A9CB0F812505DE5
+        Subrata Modak <smodak@redhat.com>
+```
 
 
 
@@ -2868,7 +2861,6 @@ Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 
 
 
-
 ---
 ### [Closed/Done] [SAT-46021](https://redhat.atlassian.net/browse/SAT-46021) - Pablo Mendez Hernandez - satperf: Improve foremanctl role deployment debugging
 
@@ -2896,7 +2888,6 @@ Commit: [https://github.com/redhat-performance/satperf/commit/e546d739f3e9|https
 Commit Message:
 .commit.message
 ```
-
 
 
 
@@ -2931,7 +2922,6 @@ Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 
 
 
-
 ---
 ### [Closed/Done] [SAT-46010](https://redhat.atlassian.net/browse/SAT-46010) - Pablo Mendez Hernandez - satperf: Support append mode in override_images role
 
@@ -2954,7 +2944,6 @@ Commit: [https://github.com/redhat-performance/satperf/commit/de2b60c0b70f|https
 Commit Message:
 .commit.message
 ```
-
 
 
 
@@ -2985,7 +2974,6 @@ Commit Message:
 
 
 
-
 ---
 ### [Closed/Done] [SAT-46008](https://redhat.atlassian.net/browse/SAT-46008) - Pablo Mendez Hernandez - satperf: Refactor test_campaign_fam to use phased lib calls
 
@@ -3008,7 +2996,6 @@ Commit: [https://github.com/redhat-performance/satperf/commit/42228e5ea880|https
 Commit Message:
 .commit.message
 ```
-
 
 
 
@@ -3047,7 +3034,6 @@ Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 
 
 
-
 ---
 ### [Closed/Done] [SAT-45997](https://redhat.atlassian.net/browse/SAT-45997) - Pablo Mendez Hernandez - satperf: Migrate FAM playbooks to Pattern B with unified content_views API
 
@@ -3080,40 +3066,11 @@ Commits:
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/e3d2f36b3de0
-```
-Commit Message:
-.commit.message
-```
-
-
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/53cd27f56484
-```
-Commit Message:
-.commit.message
-```
-
-
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/d6914714b881
-```
-Commit Message:
-.commit.message
-```
-
-
 #### PR/MR: https://github.com/redhat-performance/satperf/commit/e908d6032310
 ```
 Commit Message:
 .commit.message
 ```
-
-
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/7c0b92e13454
-```
-Commit Message:
-.commit.message
-```
-
 
 #### PR/MR: https://github.com/redhat-performance/satperf/commit/ee768c89cc36
 ```
@@ -3121,6 +3078,29 @@ Commit Message:
 .commit.message
 ```
 
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/7c0b92e13454
+```
+Commit Message:
+.commit.message
+```
+
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/e3d2f36b3de0
+```
+Commit Message:
+.commit.message
+```
+
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/d6914714b881
+```
+Commit Message:
+.commit.message
+```
+
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/53cd27f56484
+```
+Commit Message:
+.commit.message
+```
 
 
 
@@ -3229,7 +3209,6 @@ Please cherry-pick my commits into:
 * [ ] Foreman 3.12/Katello 4.14 (Satellite 6.16; orcharhino 7.2 on EL9 only; orcharhino 7.3)
 * We do not accept PRs for Foreman older than 3.12.
 ```
-
 
 
 
@@ -3348,7 +3327,6 @@ Please cherry-pick my commits into:
 * [ ] Foreman 3.12/Katello 4.14 (Satellite 6.16; orcharhino 7.2 on EL9 only; orcharhino 7.3)
 * We do not accept PRs for Foreman older than 3.12.
 ```
-
 
 
 
@@ -3483,7 +3461,6 @@ Tests:
   * Expanded tests covering planning, bulk refresh behavior, and retry/recovery logic.
 <!-- end of auto-generated comment: release notes by coderabbit.ai -->
 ```
-
 
 
 
@@ -3801,7 +3778,6 @@ Please cherry-pick my commits into:
 
 
 
-
 ---
 ### [Review] [SAT-45993](https://redhat.atlassian.net/browse/SAT-45993) - Imaanpreet Kaur - Replace PCP commands. pmval → pmrep
 
@@ -3920,7 +3896,6 @@ Please cherry-pick my commits into:
 
 
 
-
 ---
 ### [Testing] [SAT-45971](https://redhat.atlassian.net/browse/SAT-45971) - Pablo Mendez Hernandez - satperf: Add UI performance measurement framework
 
@@ -3942,19 +3917,11 @@ Commits:
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/25a5b7fd483f
-```
-Commit Message:
-.commit.message
-```
-
-
 #### PR/MR: https://github.com/redhat-performance/satperf/commit/f60ed4a8bdfa
 ```
 Commit Message:
 .commit.message
 ```
-
 
 #### PR/MR: https://github.com/redhat-performance/satperf/commit/72b736cf80a1
 ```
@@ -3962,6 +3929,11 @@ Commit Message:
 .commit.message
 ```
 
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/25a5b7fd483f
+```
+Commit Message:
+.commit.message
+```
 
 
 
