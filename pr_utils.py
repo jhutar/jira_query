@@ -24,7 +24,7 @@ def get_pr_info(url):
                     "--json",
                     "title,body",
                     "--jq",
-                    '."Title: \\(.title)\\n\\(.body)"',
+                    '"Title: \\(.title)\\n\\(.body)"',
                 ]
                 result = subprocess.run(cmd, capture_output=True, text=True, check=True)
                 return result.stdout.strip()
