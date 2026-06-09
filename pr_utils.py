@@ -71,36 +71,27 @@ def enrich_with_prs(text):
 
 
 def enrich_issue_with_prs(issue):
-    # Collect text from all possible fields to find PR links
+    # Collect text only from explicitly requested fields to find PR links
     text_to_search = []
     
-    def collect_strings(val):
+    # 1. Description
+    if hasattr(issue.fields, "description") and issue.fields.description:
+        text_to_search.append(issue.fields.description)
+        
+    # 2. Comments
+    if hasattr(issue.fields, "comment") and issue.fields.comment:
+        for comment in issue.fields.comment.comments:
+            text_to_search.append(comment.body)
+            
+    # 3. "Git Pull Request" field (customfield_10875 in this workspace)
+    if hasattr(issue.fields, "customfield_10875") and issue.fields.customfield_10875:
+        val = issue.fields.customfield_10875
         if isinstance(val, str):
             text_to_search.append(val)
-        elif isinstance(val, dict):
-            for v in val.values():
-                collect_strings(v)
         elif isinstance(val, (list, tuple)):
             for item in val:
-                collect_strings(item)
-    
-    # Use raw data if available to be sure we see everything exactly as Jira sent it
-    if hasattr(issue, 'raw') and 'fields' in issue.raw:
-        collect_strings(issue.raw['fields'])
-    
-    # Also look at issue.fields attributes just in case jira-python did some processing
-    if hasattr(issue, 'fields'):
-        for field_name in dir(issue.fields):
-            if field_name.startswith("_"):
-                continue
-            try:
-                val = getattr(issue.fields, field_name)
-                # Avoid re-scanning large objects we already handled or that might be circular
-                if not isinstance(val, (str, list, tuple, dict)):
-                    continue
-                collect_strings(val)
-            except AttributeError:
-                continue
+                if isinstance(item, str):
+                    text_to_search.append(item)
 
     combined_text = "\n".join(text_to_search)
     issue.prs = enrich_with_prs(combined_text)
