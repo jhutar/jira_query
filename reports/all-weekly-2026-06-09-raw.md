@@ -139,9 +139,7 @@ Impact:
 ✅ False positive rate unchanged: <1% (same as before)
 
 Testing:
-All 7 test cases pass - covering empty content, typical errors, small meaningful logs, large logs, edge cases, and boundary conditions.
-
-Assisted-by: Claude
+All 7 test cases pass - covering empty content, typical errors, small meaningful logs, large logs, edge cases, and boundary ...
 ```
 
 #### **Subrata Modak** (2026-06-04)
@@ -174,14 +172,7 @@ This creates noise and unhelpful tickets where users cannot find debugging infor
 - ✅ Users see clear output: "X pod(s) kept (Y skipped - pod deleted)"
 
 ## Changes
-- Modified `tools/oomkill-and-crashloopbackoff-detector/oc_get_ooms.py` (+38 lines, -7 lines)
-- Simple validation logic (~20 lines for validation function, ~11 lines for integration)
-
-## Testing
-- Syntax validated with `python3 -m py_compile`
-- Output format changed from "X pod(s) found" to "X pod(s) kept (Y skipped - pod deleted)"
-
-Related: KONFLUX-11365, KONFLUX-11509
+- Modified `...
 ```
 
 #### PR/MR: https://github.com/konflux-ci/perfscale/pull/68
@@ -209,58 +200,7 @@ Implemented a **two-stage validation approach**:
 Applied **only when content < 2KB**:
 - Only check patterns if file has **< 10 lines**
 - More specific error patterns:
-  - Require: `"error from server"` + `"pods"` + `"not found"`
-  - Check for lines starting with `"error"`
-- Multi-pattern matching for different `oc` error formats
-
-## Impact
-
-✅ **Prevents false negatives**: 50-100x reduction in incorrectly skipped meaningful logs  
-✅ **Performance**: 10-1000x faster for large logs (size check vs full pattern scan)  
-✅ **False positive rate unchanged**: <1% (same as before)
-
-## Testing
-
-Added comprehensive test suite (`test_artifact_validation.py`) with 7 test cases:
-- ✅ Empty/whitespace content
-- ✅ Typical `oc` pod-not-found errors
-- ✅ Small meaningful logs (OOM errors, config status)
-- ✅ Large logs (>2KB) with "not found" buried inside
-- ✅ Edge case: 10+ line logs with "not found" in middle
-- ✅ Multi-line `oc` error output
-- ✅ Exact 2KB threshold boundary
-
-All tests pass.
-
-## Example Scenarios
-
-**Before (could skip incorrectly):**
-\`\`\`
-# 5MB pod log with "config file not found" on line 1000
-if "not found" in content and "error from server" in content:
-    return False  # 🚨 Skips 5MB log!
-\`\`\`
-
-**After (protected by size check):**
-\`\`\`python
-if content_size >= 2048:  # 5MB > 2KB
-    return True  # ✅ Immediately marked meaningful
-# Pattern check never runs!
-\`\`\`
-
-## Files Changed
-
-- `oc_get_ooms.py`: Improved `is_artifact_meaningful()` function (+32 lines)
-- `test_artifact_validation.py`: Comprehensive test suite (new file)
-- `IMPROVEMENT_SUMMARY.md`: Detailed explanation and rationale (new file)
-
-## Related
-
-- Original PR: #67
-- Jira: KONFLUX-14241
-- Addresses feedback from: @jhutar
-
-Assisted-by: Claude
+  - Require: `"error from server"` + `"pods"` +...
 ```
 
 
@@ -360,15 +300,7 @@ Status update:
 * Setup the konflux ci on that repo → [https://github.com/rebtoor/devfile-sample-python-basic/pull/1|https://github.com/rebtoor/devfile-sample-python-basic/pull/1|smart-link]
 * Created the required resources (service accounts, secrets) in order to push containers into a specified registry → [https://quay.io/repository/ralfieri/ralfieri-tenant/devfile-sample-python-basic-c9e78?tab=tags|https://quay.io/repository/ralfieri/ralfieri-tenant/devfile-sample-python-basic-c9e78?tab=tags|smart-link]
 *  Become familiar with the concept of “Release” and related resources (releaseplan, releaseplanadmission, release)
-* Tested a release and analyzed the results: failure was expected because the staging cluster doesn’t have the proper infra needed for release
-
-A couple of screenshots from the Konflux UI
-
-!Screenshot 2026-06-03 at 10.56.47.png|width=593,alt="Screenshot 2026-06-03 at 10.56.47.png"!
-
-!Screenshot 2026-06-03 at 10.56.55.png|width=593,alt="Screenshot 2026-06-03 at 10.56.55.png"!
-
-!Screenshot 2026-06-03 at 10.58.20.png|width=593,alt="Screenshot 2026-06-03 at 10.58.20.png"!
+* Tes...
 ```
 
 #### **Jan Hutar** (2026-06-03)
@@ -386,6 +318,21 @@ As agreed with [~accountid:5a78c7f73297605c78217f31] , since the “Release” s
 
 **Linked Pull Requests & Merge Requests**
 
+#### PR/MR: https://github.com/rebtoor/devfile-sample-python-basic/pull/1
+```
+Title: Konflux Staging update devfile-sample-python-basic-c9e78
+
+# Pipelines as Code configuration proposal
+
+To start the PipelineRun, add a new comment with content `/ok-to-test`
+
+For more detailed information about running a PipelineRun, please refer to Pipelines as Code documentation [Running the PipelineRun](https://pipelinesascode.com/docs/guide/running/)
+
+To customize the proposed PipelineRuns after merge, please refer to [Build Pipeline customization](https://konflux-ci.dev/docs/building/customizing-the-build/)
+
+Please follow the block sequence indentation style introduced by the proprosed PipelineRuns YAMLs, or keep using consistent indentation level through your customized PipelineRuns. When different levels are mixed, it will be changed to the proposed style.
+```
+
 #### PR/MR: https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006
 ```
 Title: Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
@@ -400,21 +347,6 @@ learning about konflux
 
 #### Tickets:
 https://redhat.atlassian.net/browse/KONFLUX-13726
-```
-
-#### PR/MR: https://github.com/rebtoor/devfile-sample-python-basic/pull/1
-```
-Title: Konflux Staging update devfile-sample-python-basic-c9e78
-
-# Pipelines as Code configuration proposal
-
-To start the PipelineRun, add a new comment with content `/ok-to-test`
-
-For more detailed information about running a PipelineRun, please refer to Pipelines as Code documentation [Running the PipelineRun](https://pipelinesascode.com/docs/guide/running/)
-
-To customize the proposed PipelineRuns after merge, please refer to [Build Pipeline customization](https://konflux-ci.dev/docs/building/customizing-the-build/)
-
-Please follow the block sequence indentation style introduced by the proprosed PipelineRuns YAMLs, or keep using consistent indentation level through your customized PipelineRuns. When different levels are mixed, it will be changed to the proposed style.
 ```
 
 #### PR/MR: https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18005
@@ -488,11 +420,7 @@ Fleet analysis over a 60-day window across all 12 Konflux clusters returned *zer
 
 Without real execution data, any resource values would be guesswork. PR reviewers (@chmeliik, @arewm) correctly raised this concern — and closing is the right call.
 
-This ticket can be revisited when {{verify-source}} graduates to production use and real fleet data becomes available. Additionally, [KONFLUX-11510|https://redhat.atlassian.net/browse/KONFLUX-11510] will introduce a CI enforcement check ensuring {{requests == limits}} for all new/changed tasks — meaning that when {{verify-source}} eventually gets updated for production, proper resource settings will be automatically required by the CI gate.
-
-Signed-off-by: Subrata Modak [smodak@redhat.com|mailto:smodak@redhat.com]
-
-Assisted-by: CursorAgent@Cursor.com
+This ticket can be revisited when {{verify-source}} graduates to production use and real fleet data becomes available. Additionally, [KONFLUX-11510|https://redhat.atlassian.net/browse/KONFLUX-11510] will introduce a CI enforcement che...
 ```
 
 
@@ -529,12 +457,7 @@ The step now satisfies the Konflux compute-resource policy:
 - Ticket: [KONFLUX-13066](https://redhat.atlassian.net/browse/KONFLUX-13066)
 
 Assisted-by: CursorAI
-Co-authored-by: Cursor <cursoragent@cursor.com>
-
-Made with [Cursor](https://cursor.com)
-
-[KONFLUX-11509]: https://redhat.atlassian.net/browse/KONFLUX-11509?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ
-[KONFLUX-13066]: https://redhat.atlassian.net/browse/KONFLUX-13066?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ
+Co...
 ```
 
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
@@ -629,28 +552,7 @@ throughout. Full analysis: [KONFLUX-13063](https://redhat.atlassian.net/browse/K
 | `tkn-bundle-oci-ta` | `modify-task-files` | 64Mi | 50m |
 | `tkn-bundle-oci-ta` | `build` | 64Mi | 50m |
 
-### Note on `use-trusted-artifact` (OCI-TA variant)
-
-`tkn-bundle-oci-ta` is a **generated** task (`recipe.yaml` +
-`hack/generate-ta-tasks.sh`). The generator injects the
-`use-trusted-artifact` step but does not currently support
-propagating `computeResources` for it. Manually adding them would
-cause the "Check Trusted Artifact variants" CI check to fail (the
-generator re-run would strip them). This generator gap is tracked in
-[#3405](https://github.com/konflux-ci/build-definitions/pull/3405).
-
-### Policy compliance
-
-- ✅ `memory.request == memory.limit` for all changed steps
-- ✅ `cpu.request` set, no `cpu.limit`
-- ✅ OCI-TA YAML regenerated via `hack/generate-ta-tasks.sh`
-
-Signed-off-by: Subrata Modak <smodak@redhat.com>
-Assisted-by: CursorAgent@Cursor.com
-
-Made with [Cursor](https://cursor.com)
-
-[KONFLUX-13063]: https://redhat.atlassian.net/browse/KONFLUX-13063?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ
+### Note on `use-...
 ```
 
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
@@ -720,15 +622,7 @@ OCI-TA variant -- package-operator-package-oci-ta (regenerated via hack/generate
 ||Step||Before||After||
 |use-trusted-artifact|MISSING|memory: 64Mi req=limit, cpu: 50m req (manual -- generator limitation)|
 |build-pkg|MISSING|memory: 64Mi req=limit, cpu: 50m req|
-|build-sbom|MISSING|memory: 64Mi req=limit, cpu: 50m req|
-|push-sbom|MISSING|memory: 64Mi req=limit, cpu: 50m req|
-
-h2. Sizing Rationale
-
-* No fleet data available (0 pod executions across all 12 clusters over 60 days) for either variant.
-* Floor values applied: memory 64Mi request=limit, cpu 50m request -- the minimum safe baseline per project policy.
-* use-trusted-artifact resources added manually to oci-ta as the trusted-artifact generator does not propagate computeResources to injected steps.
-* No cpu.limit is set on...
+|build-sbom|MISSING|memory...
 ```
 
 #### **Subrata Modak** (2026-06-03)
@@ -743,13 +637,7 @@ The CI workflow re-runs {{hack/generate-ta-tasks.sh}} and diffs the result again
 
 h4. Fix Applied
 
-Removed the {{computeResources}} block from {{use-trusted-artifact}} in {{package-operator-package-oci-ta.yaml}} so the committed file matches generator output exactly. The three task-specific steps ({{build-pkg}}, {{build-sbom}}, {{push-sbom}}) retain their floor {{computeResources}} as those are correctly generated from the base task. A follow-up commit was pushed to [PR #3568|https://github.com/konflux-ci/build-definitions/pull/3568].
-
-Note: Supporting {{computeResources}} on the generator-injected {{use-trusted-artifact}} step requires a fix in {{hack/generate-ta-tasks.sh}} itself (tracked separately).
-
-Signed-off-by: Subrata Modak <smodak@redhat.com>
-
-Assisted-by: CursorAgent@Cursor.com
+Removed the {{computeResources}} block from {{use-trusted-artifact}} in {{package-operator-package-oci-ta.yaml}} so the committed file matches generator output exactly. The three task-specific steps ({{build-pkg}}, {{build-sbom}}, {{push-sbom}}) retain their floor {{computeResources}} as those are correctly generated from the ...
 ```
 
 #### **Subrata Modak** (2026-06-04)
@@ -789,31 +677,7 @@ its generated oci-ta variant
 | `use-trusted-artifact` | MISSING | `memory: 64Mi` req=limit, `cpu: 50m` req |
 | `build-pkg` | MISSING | `memory: 64Mi` req=limit, `cpu: 50m` req |
 | `build-sbom` | MISSING | `memory: 64Mi` req=limit, `cpu: 50m` req |
-| `push-sbom` | MISSING | `memory: 64Mi` req=limit, `cpu: 50m` req |
-
-## Sizing rationale
-
-Fleet analysis across all Konflux clusters over a 60-day window returned
-no execution data for either task, indicating negligible production usage.
-Floor values (`memory: 64Mi` request=limit, `cpu: 50m` request) are
-applied as the minimum safe baseline. These can be tuned upward once
-real usage data is available.
-
-Note: `use-trusted-artifact` resources were added manually to the oci-ta
-variant as the trusted-artifact generator does not currently propagate
-`computeResources` to injected steps.
-
-## Policy
-
-All steps comply with the project compute resource policy:
-- `memory.request == memory.limit`
-- `cpu.request` set on every step
-- No `cpu.limit`
-
-Signed-off-by: Subrata Modak <smodak@redhat.com>
-Assisted-by: CursorAgent@Cursor.com
-
-Made with [Cursor](https://cursor.com)
+| `push...
 ```
 
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
@@ -877,15 +741,7 @@ h2. Changes Applied
 |create-modelcar-base-image|MISSING|memory: 64Mi req=limit, cpu: 50m req|
 |copy-model-files|MISSING|memory: 64Mi req=limit, cpu: 50m req|
 |push-image|MISSING|memory: 64Mi req=limit, cpu: 50m req|
-|sbom-generate|MISSING|memory: 64Mi req=limit, cpu: 50m req|
-|upload-sbom|MISSING|memory: 64Mi req=limit, cpu: 50m req|
-|report-sbom-url|MISSING|memory: 64Mi req=limit, cpu: 50m req|
-
-h2. Sizing Rationale
-
-* No fleet data available (0 pod executions across all clusters over 60 days).
-* Floor values applied: memory 64Mi request=limit, cpu 50m request -- the minimum safe baseline per project policy.
-* Values can be tuned upward once real usage data is available. Teams with heavier model files may need to override via pipeline-l...
+|sbom-generate|MISSING|memory: ...
 ```
 
 #### **Subrata Modak** (2026-06-03)
@@ -922,6 +778,16 @@ CLOSING this as PR: [https://github.com/konflux-ci/build-definitions/pull/3566|h
 
 **Linked Pull Requests & Merge Requests**
 
+#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
+```
+Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
+The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
+
+The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
+
+Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+```
+
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3566
 ```
 Title: fix(modelcar-oci-ta): add missing computeResources to all steps
@@ -944,34 +810,7 @@ leaving all steps unconstrained.
 | `upload-sbom` | MISSING | `memory: 64Mi` req=limit, `cpu: 50m` req |
 | `report-sbom-url` | MISSING | `memory: 64Mi` req=limit, `cpu: 50m` req |
 
-## Sizing rationale
-
-Fleet analysis across all Konflux clusters over a 60-day window returned
-no execution data for this task, indicating negligible production usage.
-Floor values (`memory: 64Mi` request=limit, `cpu: 50m` request) are
-applied as the minimum safe baseline. These can be tuned upward once
-real usage data is available.
-
-## Policy
-
-All steps comply with the project compute resource policy:
-- `memory.request == memory.limit`
-- `cpu.request` set on every step
-- No `cpu.limit`
-
-Signed-off-by: Subrata Modak <smodak@redhat.com>
-
-Made with [Cursor](https://cursor.com)
-```
-
-#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
-```
-Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
-The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
-
-The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
-
-Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+## Sizing rati...
 ```
 
 
@@ -1036,7 +875,7 @@ No OCI-TA variant exists for this task.
 
 Signed-off-by: Subrata Modak [smodak@redhat.com|mailto:smodak@redhat.com]
 
-Assisted-by: CursorAgent@Cursor.com
+Assisted-by: CursorAgent...
 ```
 
 
@@ -1071,21 +910,7 @@ Full analysis: [KONFLUX-13065](https://redhat.atlassian.net/browse/KONFLUX-13065
 | `race-condition-update-check` | 64Mi | 50m | No observability data |
 | `git-clone-infra-deployments` | 64Mi | 50m | Floor (P95 = 0 MB) |
 | `run-update-script` | 64Mi | 50m | Floor (P95 = 1 MB) |
-| `get-diff-files` | 64Mi | 50m | Floor (P95 = 1 MB) |
-| `create-mr` | 64Mi | 50m | No observability data |
-
-### Policy compliance
-
-- ✅ `memory.request == memory.limit` for all steps
-- ✅ `cpu.request` set, no `cpu.limit`
-- ✅ No OCI-TA variant exists for this task
-
-Signed-off-by: Subrata Modak <smodak@redhat.com>
-Assisted-by: CursorAgent@Cursor.com
-
-Made with [Cursor](https://cursor.com)
-
-[KONFLUX-13065]: https://redhat.atlassian.net/browse/KONFLUX-13065?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ
+| `get-diff-files` ...
 ```
 
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
@@ -1151,15 +976,7 @@ All steps: P95 memory ≤ 8 MB, P95 CPU ≤ 2m → floor values applied (64Mi / 
 |{{tkn-bundle-oci-ta}}|{{modify-task-files}}|64Mi|50m|
 |{{tkn-bundle-oci-ta}}|{{build}}|64Mi|50m|
 
-*Note on* {{use-trusted-artifact}}: {{tkn-bundle-oci-ta}} is a generated task ({{recipe.yaml}} + {{hack/generate-ta-tasks.sh}}). The generator injects {{use-trusted-artifact}} but does not support propagating {{computeResources}} for it. Manually adding them would break the "Check Trusted Artifact variants" CI check. This generator gap is tracked in [build-definitions PR #3405|https://github.com/konflux-ci/build-definitions/pull/3405].
-
-*PR:* [konflux-ci/build-definitions#3576|https://github.com/konflux-ci/build-definitions/pull/3576]
-
-*KONFLUX-13064* ({{tkn-bundle-oci-ta}}) is covered by the same PR and has been closed as Won't Do (duplicate).
-
-Signed-off-by: Subrata Modak [smodak@redhat.com|mailto:smodak@redhat.com]
-
-Assisted-by: CursorAgent@Cursor.com
+*Note on* {{use-trusted-artifact}}: {{tkn-bundle-oci-ta}} is a generated task ({{recipe.yaml}} + {{hack/generate-ta-tasks.sh}}). The generator injects {{use-trusted-artifact}} but does not support propagating {{computeResources}} for it. Manually adding them would break the "Check Trusted Artifact variants" CI check. This generator gap is tracked in [build-definitions PR #3405|https://github.com/konfl...
 ```
 
 
@@ -1196,28 +1013,7 @@ throughout. Full analysis: [KONFLUX-13063](https://redhat.atlassian.net/browse/K
 | `tkn-bundle-oci-ta` | `modify-task-files` | 64Mi | 50m |
 | `tkn-bundle-oci-ta` | `build` | 64Mi | 50m |
 
-### Note on `use-trusted-artifact` (OCI-TA variant)
-
-`tkn-bundle-oci-ta` is a **generated** task (`recipe.yaml` +
-`hack/generate-ta-tasks.sh`). The generator injects the
-`use-trusted-artifact` step but does not currently support
-propagating `computeResources` for it. Manually adding them would
-cause the "Check Trusted Artifact variants" CI check to fail (the
-generator re-run would strip them). This generator gap is tracked in
-[#3405](https://github.com/konflux-ci/build-definitions/pull/3405).
-
-### Policy compliance
-
-- ✅ `memory.request == memory.limit` for all changed steps
-- ✅ `cpu.request` set, no `cpu.limit`
-- ✅ OCI-TA YAML regenerated via `hack/generate-ta-tasks.sh`
-
-Signed-off-by: Subrata Modak <smodak@redhat.com>
-Assisted-by: CursorAgent@Cursor.com
-
-Made with [Cursor](https://cursor.com)
-
-[KONFLUX-13063]: https://redhat.atlassian.net/browse/KONFLUX-13063?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ
+### Note on `use-...
 ```
 
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
@@ -1278,13 +1074,7 @@ h4. Per-Step Recommendations
 ||Step||Before (mem req/limit)||Before (CPU req)||mem P95 (max across clusters)||Memory (req=limit)||cpu P95 (max across clusters)||CPU request||
 |{{use-trusted-artifact}}|1Gi / 4Gi (stepTemplate)|1 (stepTemplate)|5 MB (stone-prod-p02)|*64Mi* (floor)|0m|*50m* (floor)|
 |{{run-script}}|1Gi / 4Gi (stepTemplate)|1 (stepTemplate)|*4351 MB* (stone-prd-rh01, max 10,022 MB)|*5Gi*|*1284m* (stone-prd-rh01)|*1500m*|
-|{{create-trusted-artifact}}|3Gi / 3Gi (per-step)|1 (per-step)|10 MB (stone-prod-p02)|*64Mi* (floor)|42m (stone-prod-p02)|*50m* (floor)|
-
-h4. Policy Violations Fixed
-
-# {{stepTemplate}} had {{memory.request (1Gi) != memory.limit (4Gi)}} — removed entirely; replaced with per-step values.
-# {{run-script}} was *under-provisioned* — inherited 4Gi limit despite P95 of 4351 MB on stone-prd-rh01, driven by {{clair-in-ci-db-hermetic}} ({{rhtap-integration-tenant}}) fetching a large Clair vulnerability database. Raised to *5Gi*.
-# {{create-trusted-artifact}} was *~30x over-...
+|{{create-trusted-artifact}}|3Gi / 3Gi (per-step)|1 (per-step)|10 MB (s...
 ```
 
 #### **Subrata Modak** (2026-06-08)
@@ -1303,11 +1093,7 @@ Although our fleet data (6,989 pod executions, P95 ≤ 10 MB for both steps) sup
 
 The {{run-script}} step sizing (5Gi / 1500m) is unchanged.
 
-Going forward, {{use-trusted-artifact}} and {{create-trusted-artifact}} will be set to *4Gi* and *3Gi* respectively in all future tasks, regardless of per-task fleet data for those steps.
-
-Signed-off-by: Subrata Modak [smodak@redhat.com|mailto:smodak@redhat.com]
-
-Assisted-by: CursorAgent@Cursor.com
+Going forward, {{use-trusted-artifact}} and {{create-trusted-artifact}...
 ```
 
 
@@ -1337,48 +1123,7 @@ policy violations in the existing partial configuration.
 1. **`stepTemplate` had `memory.request (1Gi) != memory.limit (4Gi)`** — removed
    the `stepTemplate.computeResources` block entirely and replaced with
    per-step values so each step is sized independently from fleet data.
-2. **`run-script` was under-provisioned** — inherited the 4Gi limit despite
-   a fleet P95 of 4351 MB on `stone-prd-rh01` (driven by
-   `clair-in-ci-db-hermetic` fetching a large Clair vulnerability DB).
-   Raised to **5Gi** to cover the fleet P95 envelope.
-3. **`create-trusted-artifact` was ~30x over-provisioned** — had a
-   hardcoded 3Gi/1CPU override vs. an actual P95 of only 10 MB.
-   Right-sized to **64Mi**.
-
-## Sizing rationale
-
-Fleet analysis across all 12 Konflux clusters over a 60-day window
-(**6,989 pod executions**), using **P95 + 5% margin** as the base metric.
-The absolute maximum is noted for context but is not used for sizing —
-outlier spikes are excluded so that default limits don't over-provision
-every execution. Tenants whose workloads regularly exceed the proposed
-limits should use
-[pipeline-level compute resource overrides](https://konflux.pages.redhat.com/docs/users/building/overriding-compute-resources.html).
-
-**run-script (5Gi / 1500m):**
-Memory P95 is 4351 MB on `stone-prd-rh01` (driven by
-`clair-in-ci-db-hermetic` / `rhtap-integration-tenant` fetching a large
-vulnerability DB), with a 10,022 MB absolute max.
-P95 + 5% margin = 4568 MB ≈ 4.46 GiB → rounded up to **5Gi**.
-CPU P95 is 1284m on `stone-prd-rh01` (driven by `ansible-plugins-main`)
-→ +5% = 1348m → rounded to **1500m**.
-
-**use-trusted-artifact and create-trusted-artifact (64Mi / 50m):**
-Memory P95 ≤ 10 MB and CPU P95 ≤ 42m across all clusters — floor values
-applied.
-
-## Policy
-
-All steps comply with the project compute resource policy:
-
-* `memory.request == memory.limit`
-* `cpu.request` set on every step
-* No `cpu.limit`
-
-Signed-off-by: Subrata Modak <smodak@redhat.com>
-Assisted-by: CursorAgent@Cursor.com
-
-Made with [Cursor](https://cursor.com)
+2. **`run-script` was under-provisioned** — inherited the ...
 ```
 
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
@@ -1440,13 +1185,7 @@ h4. Per-Step Recommendations
 |{{use-trusted-artifact}}|7 MB (stone-stg-rh01)|*64Mi* (floor)|0m|*50m* (floor)|
 |{{run-opm-with-user-args}}|*431 MB* (stone-prd-rh01, max 626 MB)|*512Mi*|78m (stone-prd-rh01)|*100m*|
 |{{convert-image-tags-to-digests}}|13 MB (stone-prod-p02)|*64Mi* (floor)|*204m* (stone-prod-p02)|*250m*|
-|{{replace-related-images-pullspec-in-file}}|5 MB (kflux-prd-rh02)|*64Mi* (floor)|0m|*50m* (floor)|
-|{{create-trusted-artifact}}|8 MB (kflux-prd-rh02)|*64Mi* (floor)|1m|*50m* (floor)|
-
-h4. Key Observations
-
-* {{run-opm-with-user-args}} is the dominant step — P95 of 431 MB on stone-prd-rh01 (driven by large OCP catalog renders from {{rh-openshift-gitops-tenant}}). Max observed: 626 MB. Sized to 512Mi.
-* {{convert-image-tags-to-digests}} has non-trivial CPU (P95 204m on stone-prod-p02) despite low memory, driven by parallel {{skopeo inspect}} calls for tag-to-digest conversion. CPU...
+|{{replace-related-images-pullspec-in-file}}|5 MB (kflux-prd-rh02)|*64Mi* (floor)|0m|*...
 ```
 
 #### **Subrata Modak** (2026-06-08)
@@ -1510,38 +1249,7 @@ steps unconstrained.
 Fleet analysis across all 12 Konflux clusters over a 60-day window
 (12,613 pod executions), using **P95 + 5% margin** as the base metric.
 The absolute maximum is noted for context but is not used for sizing —
-outlier spikes are deliberately excluded so that default limits don't
-over-provision every execution for rare heavy runs. Tenants whose
-workloads regularly exceed the proposed limits should use
-[pipeline-level compute resource overrides](https://konflux.pages.redhat.com/docs/users/building/overriding-compute-resources.html).
-
-**run-opm-with-user-args (512Mi / 100m):**
-The step runs `opm` to render OCI-based file-based catalogs (FBCs).
-Memory P95 is 431Mi on `stone-prd-rh01` (driven by large OCP catalog
-renders from `rh-openshift-gitops-tenant`), with a 626Mi absolute max.
-P95 + 5% margin = 453Mi → rounded up to the next standard value: **512Mi**.
-CPU P95 is 78m (+5% → 82m), rounded to **100m**.
-
-**convert-image-tags-to-digests (64Mi / 250m):**
-Memory is very low (P95 ≤ 13Mi across all clusters → 64Mi floor).
-CPU P95 is 204m on `stone-prod-p02` (+5% → 214m), driven by parallel
-`skopeo inspect` calls resolving image tags to digests. Rounded to
-**250m**.
-
-**All other steps (64Mi / 50m):**
-Memory P95 ≤ 8Mi and CPU P95 ≤ 1m across all clusters — floor values
-applied.
-
-## Policy
-
-All steps comply with the project compute resource policy:
-
-* `memory.request == memory.limit`
-* `cpu.request` set on every step
-* No `cpu.limit`
-
-Signed-off-by: Subrata Modak <smodak@redhat.com>
-Assisted-by: CursorAgent@Cursor.com
+outlier spikes are deliberate...
 ```
 
 
@@ -1599,23 +1307,23 @@ h2. Changes Applied
 h2. Sizing Rationale
 
 * No fleet data available (0 pod executions across all clusters over 60 days).
-* Floor values applied: memory 64Mi request=limit, cpu 50m request -- the minimum safe baseline per project policy.
-* apiVersion upgrade to tekton.dev/v1 is required to use the computeResources field (v1beta1 resources field is deprecated) and aligns this task with the rest of the catalogue.
-* No cpu.limit is set on any step (per policy).
-
-h2. Pull Request
-
-PR #3567: [https://github.com/konflux-ci/build-definitions/pull/3567|https://github.com/konflux-ci/build-definitions/pull/3567|smart-link]
-
-----
-
-_Signed-off-by: Subrata Modak <smodak...
+* Floor values applied: memory 64Mi request...
 ```
 
 
 
 
 **Linked Pull Requests & Merge Requests**
+
+#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
+```
+Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
+The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
+
+The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
+
+Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+```
 
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3567
 ```
@@ -1644,30 +1352,7 @@ applied as the minimum safe baseline. These can be tuned upward once
 real usage data is available.
 
 The `apiVersion` upgrade to `tekton.dev/v1` is required to use the
-`computeResources` field (the `v1beta1` equivalent `resources` is
-deprecated) and aligns this task with the rest of the catalogue.
-
-## Policy
-
-All steps comply with the project compute resource policy:
-- `memory.request == memory.limit`
-- `cpu.request` set on every step
-- No `cpu.limit`
-
-Signed-off-by: Subrata Modak <smodak@redhat.com>
-Assisted-by: CursorAgent@Cursor.com
-
-Made with [Cursor](https://cursor.com)
-```
-
-#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
-```
-Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
-The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
-
-The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
-
-Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+`computeResources` field (the `v1beta1` equiva...
 ```
 
 
@@ -1748,19 +1433,7 @@ NEW IMPROVEMENTS (ROSA → OHSS Routing):
 
 4. Pattern-Based Component Assignment
    - Auto-assign Component based on error patterns:
-     * "splunk" or "metrics-exporter" → Component: monitoring
-     * "router" or "ovnk" → Component: Networking
-   - Best effort - assign what we can detect
-   - Helps with auto-routing to correct OHSS sub-teams
-
-5. Add Access Instructions to OHSS Tickets
-   - Include note: "Access to Konflux clusters are OAUTH based. Triagers may need to reach out to @konflux-infra for access if needed."
-   - Helps OHSS SRE understand access model
-
-UPDATED ROUTING LOGIC:
-
-OLD:
-• ALL namespaces are openshift-* (except openshift-pipelines) →...
+     * "splunk" or "metrics-e...
 ```
 
 #### **Subrata Modak** (2026-06-05)
@@ -1790,20 +1463,7 @@ COMPONENT AUTO-DETECTION ✅
 • Best-effort assignment (Component field left blank if no match)
 
 ENHANCED ADF FORMATTING ✅
-• Incident Overview Panel with cluster type indicators (🔴 ROSA, 🔵 OSD, ⚪ OCP)
-• Cluster metadata table (environment, region, platform)
-• Last 50 lines of error logs inline (when available)
-• Diagnostic artifacts panel listing attached files
-• Access instructions for OHSS tickets
-
-FILE ATTACHMENTS ✅
-• Pod logs automatically attached
-• Pod YAML descriptions attached
-• Files permanently stored with Jira ticket
-
-CONFIGURATION & SECURITY ✅
-• Jenkins URLs externalized (JENKINS_BASE_URL env var)
-• ROSA cluster patterns configurable (ROSA...
+• Incident Overview Panel with clust...
 ```
 
 #### **Subrata Modak** (2026-06-05)
@@ -1926,19 +1586,7 @@ NEW IMPROVEMENTS (ROSA → OHSS Routing):
 
 4. Pattern-Based Component Assignment
    - Auto-assign Component based on error patterns:
-     * "splunk" or "metrics-exporter" → Component: monitoring
-     * "router" or "ovnk" → Component: Networking
-   - Best effort - assign what we can detect
-   - Helps with auto-routing to correct OHSS sub-teams
-
-5. Add Access Instructions to OHSS Tickets
-   - Include note: "Access to Konflux clusters are OAUTH based. Triagers may need to reach out to @konflux-infra for access if needed."
-   - Helps OHSS SRE understand access model
-
-UPDATED ROUTING LOGIC:
-
-OLD:
-• ALL namespaces are openshift-* (except openshift-pipelines) →...
+     * "splunk" or "metrics-e...
 ```
 
 #### **Subrata Modak** (2026-06-05)
@@ -1968,20 +1616,7 @@ COMPONENT AUTO-DETECTION ✅
 • Best-effort assignment (Component field left blank if no match)
 
 ENHANCED ADF FORMATTING ✅
-• Incident Overview Panel with cluster type indicators (🔴 ROSA, 🔵 OSD, ⚪ OCP)
-• Cluster metadata table (environment, region, platform)
-• Last 50 lines of error logs inline (when available)
-• Diagnostic artifacts panel listing attached files
-• Access instructions for OHSS tickets
-
-FILE ATTACHMENTS ✅
-• Pod logs automatically attached
-• Pod YAML descriptions attached
-• Files permanently stored with Jira ticket
-
-CONFIGURATION & SECURITY ✅
-• Jenkins URLs externalized (JENKINS_BASE_URL env var)
-• ROSA cluster patterns configurable (ROSA...
+• Incident Overview Panel with clust...
 ```
 
 #### **Subrata Modak** (2026-06-05)
@@ -2250,15 +1885,7 @@ What was done:
 # Copied 10 fresh 1-year SA tokens (generated via {{oc create token --duration=8760h}} for SA {{perf-team-prometheus-reader-oomcrash-sa}} in ns {{perf-team-prometheus-reader}}) into {{secrets/}}.
 # Committed, pushed to fork, and raised [MR !129|https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/129].
 
-*Pending:* [MR !129|https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/129] review/merge → CasC auto-syncs to Jenkins → trigger {{StoneSoupOOMDetector}} run to verify all 10 clusters authenticate successfully.
-
-----
-
-*Future token rotation runbook (saved locally in perf-casc-master as TOKEN_ROTATION_RUNBOOK.md):*
-
-# Log into all clusters: {{~/bin/oclogin-all}}
-# Generate new tokens for each cluster: {{oc create token perf-team-prometheus-reader-oomcrash-sa -n perf-team-prometheus-reader --duration=8760h}}, save each as {{Konflux-oom-crash-detector-TOKEN-<nickname>}}
-# In {{perf-casc-master}}: {{git fetch && rebase}} →...
+*Pending:* [MR !129|https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/129] review/merge → CasC auto-syncs to Jenkins → trigg...
 ```
 
 #### **Subrata Modak** (2026-06-05)
@@ -2303,15 +1930,6 @@ Cc: [~accountid:5c6d765aca97144c4716967d]
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/128
-```
-Title: Add 1 git-crypt collaborator
-New collaborators:
-
-    4C8E95E940EC90038CA973D59A9CB0F812505DE5
-        Subrata Modak <smodak@redhat.com>
-```
-
 #### PR/MR: https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/129
 ```
 Title: feat(HCEPERF-1473): Rotate OOM crash detector SA tokens for all 10 clusters
@@ -2340,6 +1958,15 @@ New 1-year tokens generated via `oc create token --duration=8760h` for SA `perf-
 - Incident: INC4624779
 
 Assisted-by: CursorAgent
+```
+
+#### PR/MR: https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/128
+```
+Title: Add 1 git-crypt collaborator
+New collaborators:
+
+    4C8E95E940EC90038CA973D59A9CB0F812505DE5
+        Subrata Modak <smodak@redhat.com>
 ```
 
 
@@ -3122,13 +2749,19 @@ Commits:
 
 **Linked Pull Requests & Merge Requests**
 
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/ee768c89cc36
+```
+Commit Message:
+.commit.message
+```
+
 #### PR/MR: https://github.com/redhat-performance/satperf/commit/e908d6032310
 ```
 Commit Message:
 .commit.message
 ```
 
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/ee768c89cc36
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/7c0b92e13454
 ```
 Commit Message:
 .commit.message
@@ -3147,12 +2780,6 @@ Commit Message:
 ```
 
 #### PR/MR: https://github.com/redhat-performance/satperf/commit/d6914714b881
-```
-Commit Message:
-.commit.message
-```
-
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/7c0b92e13454
 ```
 Commit Message:
 .commit.message
@@ -3251,19 +2878,7 @@ Title: Add SSH tunnel documentation for remote Grafana access
 #### Contributor checklists
 
 * [x] I am okay with my commits getting squashed when you merge this PR.
-* [ ] I am familiar with the [contributing](https://github.com/theforeman/foreman-documentation/blob/master/CONTRIBUTING.md) guidelines.
-
-Please cherry-pick my commits into:
-
-* [ ] Foreman 3.19/Katello 4.21
-* [ ] Foreman 3.18/Katello 4.20 (Satellite 6.19)
-* [ ] Foreman 3.17/Katello 4.19
-* [ ] Foreman 3.16/Katello 4.18 (Satellite 6.18; orcharhino 7.6, 7.7, and 7.8)
-* [ ] Foreman 3.15/Katello 4.17
-* [ ] Foreman 3.14/Katello 4.16 (Satellite 6.17; orcharhino 7.4; orcharhino 7.5)
-* [ ] Foreman 3.13/Katello 4.15 (EL9 only)
-* [ ] Foreman 3.12/Katello 4.14 (Satellite 6.16; orcharhino 7.2 on EL9 only; orcharhino 7.3)
-* We do not accept PRs for Foreman older than 3.12.
+* [ ] I am familiar with the [contributing](https://git...
 ```
 
 
@@ -3302,37 +2917,7 @@ Research indicates that the command *pmrep(1)* should replace *pmval(1)* due to 
 
   pmrep -a /var/log/pcp/pmlogger/satellite.example.com/20230831.00.10 \
 
-    disk.partitions.write{quote}
-
-*Example 3*
-
-{quote}  *OLD (current docs):*
-
-  pmval --archive /var/log/pcp/pmlogger/satellite.example.com/20230831.00.10 \
-
-    -d -t 2sec \
-
-    -f 3 disk.partitions.write \
-
-    -S @14:00 -T @14:15
-
-  *NEW (what to replace it with):*
-
-  pmrep -a /var/log/pcp/pmlogger/satellite.example.com/20230831.00.10 \
-
-    -t 2sec \
-
-    -S @14:00 -T @14:15 \
-
-    disk.partitions.write{quote}
-
-*Example 4*
-
-{quote}  *OLD (current docs):*
-
-  pmstat -t 2sec
-
-  *NEW* *(what* *to* *replace* *it* *...
+    disk.partitions.w...
 ```
 
 #### **Imaanpreet Kaur** (2026-06-05)
@@ -3369,19 +2954,7 @@ Title: Replace pmval and pmstat with pmrep in PCP metrics documentation   - …
 #### Contributor checklists
 
 * [x] I am okay with my commits getting squashed when you merge this PR.
-* [ ] I am familiar with the [contributing](https://github.com/theforeman/foreman-documentation/blob/master/CONTRIBUTING.md) guidelines.
-
-Please cherry-pick my commits into:
-
-* [ ] Foreman 3.19/Katello 4.21
-* [ ] Foreman 3.18/Katello 4.20 (Satellite 6.19)
-* [ ] Foreman 3.17/Katello 4.19
-* [ ] Foreman 3.16/Katello 4.18 (Satellite 6.18; orcharhino 7.6, 7.7, and 7.8)
-* [ ] Foreman 3.15/Katello 4.17
-* [ ] Foreman 3.14/Katello 4.16 (Satellite 6.17; orcharhino 7.4; orcharhino 7.5)
-* [ ] Foreman 3.13/Katello 4.15 (EL9 only)
-* [ ] Foreman 3.12/Katello 4.14 (Satellite 6.16; orcharhino 7.2 on EL9 only; orcharhino 7.3)
-* We do not accept PRs for Foreman older than 3.12.
+* [ ] I am familiar with the ...
 ```
 
 
@@ -3452,50 +3025,7 @@ Two changes working together:
 
 Move distribution refresh out of per-repo `GenerateMetadata` into a single `RefreshAllDistributions` action planned by `SyncCapsule` after all sync batches complete. Distributions for all repos are refreshed concurrently (`concurrence` block).
 
-This also gives consumers a more consistent view of the capsule: content becomes accessible for all repos together rather than repo-by-repo as each finishes syncing. This mirrors the approach Pulp upstream adopted for its own replication task in pulpcore 3.107.0 (issue #7333).
-
-**2. `rescue_external_task` in `RefreshDistribution`**
-
-If two `RefreshDistribution` actions still race (e.g. two repos sharing the same distribution path), the loser recovers: re-invokes `refresh_distributions`, which finds the existing distribution and issues a `partial_update` instead of a create. Dynflow re-polls the new task automatically via `suspend_and_ping` after the rescue returns without raising (confirmed against Dynflow 2.0.0 source).
-
-## Test plan
-
-- [ ] Existing capsule sync planning tests updated to assert `RefreshAllDistributions` at the sync level
-- [ ] New `RefreshAllDistributionsTest`: plans `RefreshDistribution` per repo, handles empty list
-- [ ] New `RefreshDistributionTest`: `rescue_external_task` recovers on uniqueness conflict, re-raises unrelated errors
-- [ ] Run capsule sync stress test with concurrent repos to verify no uniqueness failures
-
-Generated with [Claude Code](https://claude.ai/claude-code)
-
-## Summary by Sourcery
-
-Coordinate capsule distribution refreshes after sync completion to avoid Pulp3 distribution uniqueness races and make distribution refresh more resilient under concurrency.
-
-Bug Fixes:
-- Prevent Pulp3 distribution uniqueness conflicts when multiple capsule syncs target the same distribution concurrently by centralizing refresh planning and adding targeted error recovery.
-
-Enhancements:
-- Introduce a RefreshAllDistributions action that refreshes Pulp3 distributions for all synced repositories in a single concurrent step after capsule sync.
-- Update RefreshDistribution to detect and transparently recover from concurrent distribution creation races by retrying as an update when a uniqueness conflict is encountered.
-
-Tests:
-- Adjust existing capsule sync planning tests to expect RefreshAllDistributions at the sync level instead of per-repository RefreshDistribution.
-- Add tests covering RefreshAllDistributions planning behavior, including handling empty repository lists, and RefreshDistribution rescue behavior for both uniqueness and non-uniqueness Pulp3 errors.
-
-<!-- This is an auto-generated comment: release notes by coderabbit.ai -->
-## Summary by CodeRabbit
-
-* **New Features**
-  * Added a concurrent bulk distribution-refresh task to schedule distribution refreshes across multiple Pulp3 repositories.
-
-* **Bug Fixes**
-  * Automatic retry for certain distribution-creation conflicts (uniqueness/overlap) during refresh.
-  * Capsule sync now schedules Pulp3 distribution refreshes only for Pulp3-supported repositories.
-  * Metadata generation no longer inlines distribution refreshes.
-
-* **Tests**
-  * Expanded tests covering planning, bulk refresh behavior, and retry/recovery logic.
-<!-- end of auto-generated comment: release notes by coderabbit.ai -->
+This also gives consumers a more consistent view of the capsule: c...
 ```
 
 
@@ -3782,19 +3312,7 @@ Title: Add SSH tunnel documentation for remote Grafana access
 #### Contributor checklists
 
 * [x] I am okay with my commits getting squashed when you merge this PR.
-* [ ] I am familiar with the [contributing](https://github.com/theforeman/foreman-documentation/blob/master/CONTRIBUTING.md) guidelines.
-
-Please cherry-pick my commits into:
-
-* [ ] Foreman 3.19/Katello 4.21
-* [ ] Foreman 3.18/Katello 4.20 (Satellite 6.19)
-* [ ] Foreman 3.17/Katello 4.19
-* [ ] Foreman 3.16/Katello 4.18 (Satellite 6.18; orcharhino 7.6, 7.7, and 7.8)
-* [ ] Foreman 3.15/Katello 4.17
-* [ ] Foreman 3.14/Katello 4.16 (Satellite 6.17; orcharhino 7.4; orcharhino 7.5)
-* [ ] Foreman 3.13/Katello 4.15 (EL9 only)
-* [ ] Foreman 3.12/Katello 4.14 (Satellite 6.16; orcharhino 7.2 on EL9 only; orcharhino 7.3)
-* We do not accept PRs for Foreman older than 3.12.
+* [ ] I am familiar with the [contributing](https://git...
 ```
 
 
@@ -3833,37 +3351,7 @@ Research indicates that the command *pmrep(1)* should replace *pmval(1)* due to 
 
   pmrep -a /var/log/pcp/pmlogger/satellite.example.com/20230831.00.10 \
 
-    disk.partitions.write{quote}
-
-*Example 3*
-
-{quote}  *OLD (current docs):*
-
-  pmval --archive /var/log/pcp/pmlogger/satellite.example.com/20230831.00.10 \
-
-    -d -t 2sec \
-
-    -f 3 disk.partitions.write \
-
-    -S @14:00 -T @14:15
-
-  *NEW (what to replace it with):*
-
-  pmrep -a /var/log/pcp/pmlogger/satellite.example.com/20230831.00.10 \
-
-    -t 2sec \
-
-    -S @14:00 -T @14:15 \
-
-    disk.partitions.write{quote}
-
-*Example 4*
-
-{quote}  *OLD (current docs):*
-
-  pmstat -t 2sec
-
-  *NEW* *(what* *to* *replace* *it* *...
+    disk.partitions.w...
 ```
 
 #### **Imaanpreet Kaur** (2026-06-05)
@@ -3900,19 +3388,7 @@ Title: Replace pmval and pmstat with pmrep in PCP metrics documentation   - …
 #### Contributor checklists
 
 * [x] I am okay with my commits getting squashed when you merge this PR.
-* [ ] I am familiar with the [contributing](https://github.com/theforeman/foreman-documentation/blob/master/CONTRIBUTING.md) guidelines.
-
-Please cherry-pick my commits into:
-
-* [ ] Foreman 3.19/Katello 4.21
-* [ ] Foreman 3.18/Katello 4.20 (Satellite 6.19)
-* [ ] Foreman 3.17/Katello 4.19
-* [ ] Foreman 3.16/Katello 4.18 (Satellite 6.18; orcharhino 7.6, 7.7, and 7.8)
-* [ ] Foreman 3.15/Katello 4.17
-* [ ] Foreman 3.14/Katello 4.16 (Satellite 6.17; orcharhino 7.4; orcharhino 7.5)
-* [ ] Foreman 3.13/Katello 4.15 (EL9 only)
-* [ ] Foreman 3.12/Katello 4.14 (Satellite 6.16; orcharhino 7.2 on EL9 only; orcharhino 7.3)
-* We do not accept PRs for Foreman older than 3.12.
+* [ ] I am familiar with the ...
 ```
 
 
@@ -3938,12 +3414,6 @@ Commits:
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/72b736cf80a1
-```
-Commit Message:
-.commit.message
-```
-
 #### PR/MR: https://github.com/redhat-performance/satperf/commit/f60ed4a8bdfa
 ```
 Commit Message:
@@ -3951,6 +3421,12 @@ Commit Message:
 ```
 
 #### PR/MR: https://github.com/redhat-performance/satperf/commit/25a5b7fd483f
+```
+Commit Message:
+.commit.message
+```
+
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/72b736cf80a1
 ```
 Commit Message:
 .commit.message
