@@ -1,7 +1,7 @@
 # Konflux
 ## Finished issues
 
-### [Closed/Done] [KONFLUX-14313](https://redhat.atlassian.net/browse/KONFLUX-14313) - Jan Hutar - Annual Access Revalidation for PERF-017 CMDB
+### [Closed/Done] [Task] [KONFLUX-14313](https://redhat.atlassian.net/browse/KONFLUX-14313) - 1sp - Jan Hutar - Annual Access Revalidation for PERF-017 CMDB
 
 
 **Description:**
@@ -36,7 +36,7 @@ based on your specific review frequency. You will r...
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Jan Hutar** (2026-06-07)
 ```
@@ -58,7 +58,7 @@ Added screenshots of [admins|https://rover.redhat.com/groups/group/it-cloud-aws-
 
 
 ---
-### [Closed/Done] [KONFLUX-14288](https://redhat.atlassian.net/browse/KONFLUX-14288) - Subrata Modak - Spend time for Q2 day of learning
+### [Closed/Done] [Task] [KONFLUX-14288](https://redhat.atlassian.net/browse/KONFLUX-14288) - 1sp - Subrata Modak - Spend time for Q2 day of learning
 
 
 **Description:**
@@ -68,7 +68,7 @@ Attend the presentation/training on “Talk Agent Skills with Burr Sutter“ (5t
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Subrata Modak** (2026-06-08)
 ```
@@ -80,7 +80,7 @@ Attended some presentations.
 
 
 ---
-### [Closed/Done] [KONFLUX-14241](https://redhat.atlassian.net/browse/KONFLUX-14241) - Subrata Modak - Filter out pods with non-meaningful artifacts in OOM detector
+### [Closed/Done] [Task] [KONFLUX-14241](https://redhat.atlassian.net/browse/KONFLUX-14241) - 3sp - Subrata Modak - Filter out pods with non-meaningful artifacts in OOM detector
 
 
 **Description:**
@@ -117,7 +117,7 @@ Assisted-by: Claude
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Subrata Modak** (2026-06-03)
 ```
@@ -153,6 +153,36 @@ The last additional PR ([https://github.com/konflux-ci/perfscale/pull/68|https:/
 
 
 **Linked Pull Requests & Merge Requests**
+
+#### PR/MR: https://github.com/konflux-ci/perfscale/pull/67
+```
+Title: Filter out pods with non-meaningful artifacts in OOM detector
+## Problem
+The OOM/CrashLoopBackOff detector creates Jira tickets for pods whose logs and descriptions cannot be collected because the pods were deleted before the tool runs. Even at 4-hour intervals, short-lived pods (like PipelineRun pods) are often gone by the time artifact collection happens.
+
+This creates noise and unhelpful tickets where users cannot find debugging information (see KONFLUX-11365).
+
+## Solution
+- Add `is_artifact_meaningful()` function to validate collected artifacts
+- Skip pods where `oc describe` or `oc logs` return "pod not found" errors  
+- Delete artifact files for skipped pods to save disk space
+- Track and report count of skipped pods in console output
+
+## Impact
+- ✅ Reduces false-positive Jira tickets for already-deleted pods
+- ✅ Focuses monitoring on actionable incidents with meaningful logs
+- ✅ Users see clear output: "X pod(s) kept (Y skipped - pod deleted)"
+
+## Changes
+- Modified `tools/oomkill-and-crashloopbackoff-detector/oc_get_ooms.py` (+38 lines, -7 lines)
+- Simple validation logic (~20 lines for validation function, ~11 lines for integration)
+
+## Testing
+- Syntax validated with `python3 -m py_compile`
+- Output format changed from "X pod(s) found" to "X pod(s) kept (Y skipped - pod deleted)"
+
+Related: KONFLUX-11365, KONFLUX-11509
+```
 
 #### PR/MR: https://github.com/konflux-ci/perfscale/pull/68
 ```
@@ -233,54 +263,15 @@ if content_size >= 2048:  # 5MB > 2KB
 Assisted-by: Claude
 ```
 
-#### PR/MR: https://github.com/konflux-ci/perfscale/pull/67
-```
-Title: Filter out pods with non-meaningful artifacts in OOM detector
-## Problem
-The OOM/CrashLoopBackOff detector creates Jira tickets for pods whose logs and descriptions cannot be collected because the pods were deleted before the tool runs. Even at 4-hour intervals, short-lived pods (like PipelineRun pods) are often gone by the time artifact collection happens.
-
-This creates noise and unhelpful tickets where users cannot find debugging information (see KONFLUX-11365).
-
-## Solution
-- Add `is_artifact_meaningful()` function to validate collected artifacts
-- Skip pods where `oc describe` or `oc logs` return "pod not found" errors  
-- Delete artifact files for skipped pods to save disk space
-- Track and report count of skipped pods in console output
-
-## Impact
-- ✅ Reduces false-positive Jira tickets for already-deleted pods
-- ✅ Focuses monitoring on actionable incidents with meaningful logs
-- ✅ Users see clear output: "X pod(s) kept (Y skipped - pod deleted)"
-
-## Changes
-- Modified `tools/oomkill-and-crashloopbackoff-detector/oc_get_ooms.py` (+38 lines, -7 lines)
-- Simple validation logic (~20 lines for validation function, ~11 lines for integration)
-
-## Testing
-- Syntax validated with `python3 -m py_compile`
-- Output format changed from "X pod(s) found" to "X pod(s) kept (Y skipped - pod deleted)"
-
-Related: KONFLUX-11365, KONFLUX-11509
-```
-
 
 
 ---
-### [Closed/Done] [KONFLUX-14193](https://redhat.atlassian.net/browse/KONFLUX-14193) - Subrata Modak - Raising new issues and tracking old unresolved issues for OOM & Crashloopbackoff detector in Sprint41
+### [Closed/Done] [Task] [KONFLUX-14193](https://redhat.atlassian.net/browse/KONFLUX-14193) - 2sp - Subrata Modak - Raising new issues and tracking old unresolved issues for OOM & Crashloopbackoff detector in Sprint41
 
 
 
 
-**Comments (Last 3):**
-
-#### **Subrata Modak** (2026-05-28)
-```
-Today’s issues:
-
-# [https://redhat.atlassian.net/browse/OCPBUGS-86689|https://redhat.atlassian.net/browse/OCPBUGS-86689|smart-link] 
-# [https://redhat.atlassian.net/browse/OCPBUGS-86691|https://redhat.atlassian.net/browse/OCPBUGS-86691|smart-link] 
-# [https://redhat.atlassian.net/browse/OCPBUGS-86696|https://redhat.atlassian.net/browse/OCPBUGS-86696|smart-link] 
-```
+**Comments:**
 
 #### **Subrata Modak** (2026-06-03)
 ```
@@ -299,7 +290,7 @@ Closing this now. Tracking the other improvement effort here: [https://redhat.at
 
 
 ---
-### [Closed/Done] [KONFLUX-14094](https://redhat.atlassian.net/browse/KONFLUX-14094) - Jan Hutar - Review requirements for KONFLUX-12751 - Jan
+### [Closed/Done] [Sub-task] [KONFLUX-14094](https://redhat.atlassian.net/browse/KONFLUX-14094) - Jan Hutar - Review requirements for KONFLUX-12751 - Jan
 
 
 **Description:**
@@ -335,7 +326,7 @@ AI review sits after linting (Level 1) and before tests (Level 3). This is delib
 
 
 ---
-### [Closed/Done] [KONFLUX-13726](https://redhat.atlassian.net/browse/KONFLUX-13726) - Roberto Alfieri - Onboarding: Hands-on learning with Konflux main usage
+### [Closed/Done] [Task] [KONFLUX-13726](https://redhat.atlassian.net/browse/KONFLUX-13726) - Roberto Alfieri - Onboarding: Hands-on learning with Konflux main usage
 
 
 **Description:**
@@ -358,7 +349,7 @@ Follow the official Konflux [Hands-on learning guide|https://konflux.pages.redha
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Roberto Alfieri** (2026-06-03)
 ```
@@ -395,6 +386,37 @@ As agreed with [~accountid:5a78c7f73297605c78217f31] , since the “Release” s
 
 **Linked Pull Requests & Merge Requests**
 
+#### PR/MR: https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006
+```
+Title: Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
+#### What:
+
+Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
+
+Signed-off-by: Roberto Alfieri <ralfieri@redhat.com>
+
+#### Why:
+learning about konflux
+
+#### Tickets:
+https://redhat.atlassian.net/browse/KONFLUX-13726
+```
+
+#### PR/MR: https://github.com/rebtoor/devfile-sample-python-basic/pull/1
+```
+Title: Konflux Staging update devfile-sample-python-basic-c9e78
+
+# Pipelines as Code configuration proposal
+
+To start the PipelineRun, add a new comment with content `/ok-to-test`
+
+For more detailed information about running a PipelineRun, please refer to Pipelines as Code documentation [Running the PipelineRun](https://pipelinesascode.com/docs/guide/running/)
+
+To customize the proposed PipelineRuns after merge, please refer to [Build Pipeline customization](https://konflux-ci.dev/docs/building/customizing-the-build/)
+
+Please follow the block sequence indentation style introduced by the proprosed PipelineRuns YAMLs, or keep using consistent indentation level through your customized PipelineRuns. When different levels are mixed, it will be changed to the proposed style.
+```
+
 #### PR/MR: https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18005
 ```
 Title: Fix staging add-namespace.sh for macOS compatibility
@@ -421,41 +443,10 @@ It seems that some fixes already applied for the "non-staging" version `add-name
 n/a
 ```
 
-#### PR/MR: https://github.com/rebtoor/devfile-sample-python-basic/pull/1
-```
-Title: Konflux Staging update devfile-sample-python-basic-c9e78
-
-# Pipelines as Code configuration proposal
-
-To start the PipelineRun, add a new comment with content `/ok-to-test`
-
-For more detailed information about running a PipelineRun, please refer to Pipelines as Code documentation [Running the PipelineRun](https://pipelinesascode.com/docs/guide/running/)
-
-To customize the proposed PipelineRuns after merge, please refer to [Build Pipeline customization](https://konflux-ci.dev/docs/building/customizing-the-build/)
-
-Please follow the block sequence indentation style introduced by the proprosed PipelineRuns YAMLs, or keep using consistent indentation level through your customized PipelineRuns. When different levels are mixed, it will be changed to the proposed style.
-```
-
-#### PR/MR: https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006
-```
-Title: Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
-#### What:
-
-Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
-
-Signed-off-by: Roberto Alfieri <ralfieri@redhat.com>
-
-#### Why:
-learning about konflux
-
-#### Tickets:
-https://redhat.atlassian.net/browse/KONFLUX-13726
-```
-
 
 
 ---
-### [Closed/Won't Do] [KONFLUX-13066](https://redhat.atlassian.net/browse/KONFLUX-13066) - Subrata Modak - Implement proper compute resources for task 'verify-source'
+### [Closed/Won't Do] [Task] [KONFLUX-13066](https://redhat.atlassian.net/browse/KONFLUX-13066) - 1sp - Subrata Modak - Implement proper compute resources for task 'verify-source'
 
 
 **Description:**
@@ -483,46 +474,7 @@ From your development machine, ensure kubeconfig/VPN access to the Konflux clust
 
 
 
-**Comments (Last 3):**
-
-#### **Subrata Modak** (2026-04-09)
-```
-Observed on 2026-04-09
-
-||serial_⁠no||task||version_⁠dir||task_⁠yaml||step_⁠count||flagged_⁠step_⁠count||ok_⁠step_⁠count||task_⁠flagged||step||memory_⁠requests||memory_⁠limits||memory_⁠requests_⁠bytes||memory_⁠limits_⁠bytes||memory_⁠diff_⁠bytes||memory_⁠diff_⁠MiB||cpu_⁠requests||status||flagged||
-|57|verify-source|0.1|verify-source/0.1/verify-source.yaml|1|1|0|yes|slsa-verify|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-```
-
-#### **Subrata Modak** (2026-05-29)
-```
-h2. Analysis and Resolution — verify-source (v0.1)
-
-h3. Fleet Analysis Results
-
-Fleet analysis was run using {{analyze_resource_limits.py}} over a 60-day window across all 12 Konflux clusters (kflux-ocp-p01, kflux-osp-p01, kflux-prd-es01, kflux-prd-rh02, kflux-prd-rh03, kflux-rhel-p01, kflux-stg-es01, stone-prd-rh01, stone-prod-p01, stone-prod-p02, stone-stage-p01, stone-stg-rh01).
-
-||*Variant*||*Clusters with data*||*Pod executions*||*Coverage*||
-|{{verify-source}}|*0 of 12*|0|No data (60 days)|
-
-No pod executions found across all clusters. The task has very low production usage. *Floor values* ({{memory: 64Mi}} req=limit, {{cpu: 50m}} req, no cpu limit) are used.
-
-h3. Policy Violations Found (v0.1)
-
-||*Step*||*Violation*||*Resolution*||
-|{{slsa-verify}}|No resources defined|Added floor values (memory: 64Mi req=limit, cpu: 50m req)|
-
-h3. Notes
-
-* Only one version (0.1) exists and it is not archived.
-* No OCI-TA variant exists for this task -- only one file was modified.
-* {{apiVersion: tekton.dev/v1}} -- {{computeResources:}} field used (correct for v1).
-
-h3. Pull Request
-
-[build-definitions PR #3560|https://github.com/konflux-ci/build-definitions/pull/3560]
-
-{{Assisted-by: CursorAI}}
-```
+**Comments:**
 
 #### **Subrata Modak** (2026-06-08)
 ```
@@ -598,7 +550,7 @@ Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 
 
 ---
-### [Closed/Won't Do] [KONFLUX-13064](https://redhat.atlassian.net/browse/KONFLUX-13064) - Subrata Modak - Implement proper compute resources for task 'tkn-bundle-oci-ta'
+### [Closed/Won't Do] [Task] [KONFLUX-13064](https://redhat.atlassian.net/browse/KONFLUX-13064) - Subrata Modak - Implement proper compute resources for task 'tkn-bundle-oci-ta'
 
 
 **Description:**
@@ -626,17 +578,7 @@ From your development machine, ensure kubeconfig/VPN access to the Konflux clust
 
 
 
-**Comments (Last 3):**
-
-#### **Subrata Modak** (2026-04-09)
-```
-Observed on 2026-04-09
-
-||serial_⁠no||task||version_⁠dir||task_⁠yaml||step_⁠count||flagged_⁠step_⁠count||ok_⁠step_⁠count||task_⁠flagged||step||memory_⁠requests||memory_⁠limits||memory_⁠requests_⁠bytes||memory_⁠limits_⁠bytes||memory_⁠diff_⁠bytes||memory_⁠diff_⁠MiB||cpu_⁠requests||status||flagged||
-|54|tkn-bundle-oci-ta|0.2|tkn-bundle-oci-ta/0.2/tkn-bundle-oci-ta.yaml|3|3|0|yes|use-trusted-artifact|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-|54|tkn-bundle-oci-ta|0.2|tkn-bundle-oci-ta/0.2/tkn-bundle-oci-ta.yaml|3|3|0|yes|modify-task-files|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-|54|tkn-bundle-oci-ta|0.2|tkn-bundle-oci-ta/0.2/tkn-bundle-oci-ta.yaml|3|3|0|yes|build|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-```
+**Comments:**
 
 #### **Subrata Modak** (2026-06-08)
 ```
@@ -724,7 +666,7 @@ Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 
 
 ---
-### [Closed/Done] [KONFLUX-13049](https://redhat.atlassian.net/browse/KONFLUX-13049) - Subrata Modak - Implement proper compute resources for task 'package-operator-package'
+### [Closed/Done] [Task] [KONFLUX-13049](https://redhat.atlassian.net/browse/KONFLUX-13049) - 2sp - Subrata Modak - Implement proper compute resources for task 'package-operator-package'
 
 
 **Description:**
@@ -752,7 +694,7 @@ From your development machine, ensure kubeconfig/VPN access to the Konflux clust
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Subrata Modak** (2026-06-03)
 ```
@@ -887,7 +829,7 @@ Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 
 
 ---
-### [Closed/Done] [KONFLUX-13043](https://redhat.atlassian.net/browse/KONFLUX-13043) - Subrata Modak - Implement proper compute resources for task 'modelcar-oci-ta'
+### [Closed/Done] [Task] [KONFLUX-13043](https://redhat.atlassian.net/browse/KONFLUX-13043) - 2sp - Subrata Modak - Implement proper compute resources for task 'modelcar-oci-ta'
 
 
 **Description:**
@@ -915,7 +857,7 @@ From your development machine, ensure kubeconfig/VPN access to the Konflux clust
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Subrata Modak** (2026-06-03)
 ```
@@ -1037,7 +979,7 @@ Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 ---
 ## In review issues
 
-### [Review] [KONFLUX-13065](https://redhat.atlassian.net/browse/KONFLUX-13065) - Subrata Modak - Implement proper compute resources for task 'update-infra-deployments'
+### [Review] [Task] [KONFLUX-13065](https://redhat.atlassian.net/browse/KONFLUX-13065) - 2sp - Subrata Modak - Implement proper compute resources for task 'update-infra-deployments'
 
 
 **Description:**
@@ -1065,19 +1007,7 @@ From your development machine, ensure kubeconfig/VPN access to the Konflux clust
 
 
 
-**Comments (Last 3):**
-
-#### **Subrata Modak** (2026-04-09)
-```
-Observed on 2026-04-09
-
-||serial_⁠no||task||version_⁠dir||task_⁠yaml||step_⁠count||flagged_⁠step_⁠count||ok_⁠step_⁠count||task_⁠flagged||step||memory_⁠requests||memory_⁠limits||memory_⁠requests_⁠bytes||memory_⁠limits_⁠bytes||memory_⁠diff_⁠bytes||memory_⁠diff_⁠MiB||cpu_⁠requests||status||flagged||
-|55|update-infra-deployments|0.1|update-infra-deployments/0.1/update-infra-deployments.yaml|5|5|0|yes|race-condition-update-check|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-|55|update-infra-deployments|0.1|update-infra-deployments/0.1/update-infra-deployments.yaml|5|5|0|yes|git-clone-infra-deployments|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-|55|update-infra-deployments|0.1|update-infra-deployments/0.1/update-infra-deployments.yaml|5|5|0|yes|run-update-script|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-|55|update-infra-deployments|0.1|update-infra-deployments/0.1/update-infra-deployments.yaml|5|5|0|yes|get-diff-files|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-|55|update-infra-deployments|0.1|update-infra-deployments/0.1/update-infra-deployments.yaml|5|5|0|yes|create-mr|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-```
+**Comments:**
 
 #### **Subrata Modak** (2026-06-08)
 ```
@@ -1113,16 +1043,6 @@ Assisted-by: CursorAgent@Cursor.com
 
 
 **Linked Pull Requests & Merge Requests**
-
-#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
-```
-Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
-The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
-
-The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
-
-Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
-```
 
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3577
 ```
@@ -1168,10 +1088,20 @@ Made with [Cursor](https://cursor.com)
 [KONFLUX-13065]: https://redhat.atlassian.net/browse/KONFLUX-13065?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ
 ```
 
+#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
+```
+Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
+The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
+
+The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
+
+Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+```
+
 
 
 ---
-### [Review] [KONFLUX-13063](https://redhat.atlassian.net/browse/KONFLUX-13063) - Subrata Modak - Implement proper compute resources for task 'tkn-bundle'
+### [Review] [Task] [KONFLUX-13063](https://redhat.atlassian.net/browse/KONFLUX-13063) - 2sp - Subrata Modak - Implement proper compute resources for task 'tkn-bundle'
 
 
 **Description:**
@@ -1199,16 +1129,7 @@ From your development machine, ensure kubeconfig/VPN access to the Konflux clust
 
 
 
-**Comments (Last 3):**
-
-#### **Subrata Modak** (2026-04-09)
-```
-Observed on 2026-04-09
-
-||serial_⁠no||task||version_⁠dir||task_⁠yaml||step_⁠count||flagged_⁠step_⁠count||ok_⁠step_⁠count||task_⁠flagged||step||memory_⁠requests||memory_⁠limits||memory_⁠requests_⁠bytes||memory_⁠limits_⁠bytes||memory_⁠diff_⁠bytes||memory_⁠diff_⁠MiB||cpu_⁠requests||status||flagged||
-|53|tkn-bundle|0.2|tkn-bundle/0.2/tkn-bundle.yaml|2|2|0|yes|modify-task-files|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-|53|tkn-bundle|0.2|tkn-bundle/0.2/tkn-bundle.yaml|2|2|0|yes|build|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-```
+**Comments:**
 
 #### **Subrata Modak** (2026-06-08)
 ```
@@ -1312,7 +1233,7 @@ Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 
 
 ---
-### [Review] [KONFLUX-13056](https://redhat.atlassian.net/browse/KONFLUX-13056) - Subrata Modak - Implement proper compute resources for task 'run-script-oci-ta'
+### [Review] [Task] [KONFLUX-13056](https://redhat.atlassian.net/browse/KONFLUX-13056) - 2sp - Subrata Modak - Implement proper compute resources for task 'run-script-oci-ta'
 
 
 **Description:**
@@ -1340,17 +1261,7 @@ From your development machine, ensure kubeconfig/VPN access to the Konflux clust
 
 
 
-**Comments (Last 3):**
-
-#### **Subrata Modak** (2026-04-09)
-```
-Observed on 2026-04-09
-
-||serial_⁠no||task||version_⁠dir||task_⁠yaml||step_⁠count||flagged_⁠step_⁠count||ok_⁠step_⁠count||task_⁠flagged||step||memory_⁠requests||memory_⁠limits||memory_⁠requests_⁠bytes||memory_⁠limits_⁠bytes||memory_⁠diff_⁠bytes||memory_⁠diff_⁠MiB||cpu_⁠requests||status||flagged||
-|45|run-script-oci-ta|0.1|run-script-oci-ta/0.1/run-script-oci-ta.yaml|3|2|1|yes|use-trusted-artifact|1Gi|4Gi|1073741824|4294967296|3221225472|3072.00|1|MEM_MISMATCH|yes|
-|45|run-script-oci-ta|0.1|run-script-oci-ta/0.1/run-script-oci-ta.yaml|3|2|1|yes|run-script|1Gi|4Gi|1073741824|4294967296|3221225472|3072.00|1|MEM_MISMATCH|yes|
-|45|run-script-oci-ta|0.1|run-script-oci-ta/0.1/run-script-oci-ta.yaml|3|2|1|yes|create-trusted-artifact|3Gi|3Gi|3221225472|3221225472|0|0.00|1|Ok|no|
-```
+**Comments:**
 
 #### **Subrata Modak** (2026-06-05)
 ```
@@ -1403,16 +1314,6 @@ Assisted-by: CursorAgent@Cursor.com
 
 
 **Linked Pull Requests & Merge Requests**
-
-#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
-```
-Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
-The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
-
-The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
-
-Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
-```
 
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3571
 ```
@@ -1480,10 +1381,20 @@ Assisted-by: CursorAgent@Cursor.com
 Made with [Cursor](https://cursor.com)
 ```
 
+#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
+```
+Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
+The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
+
+The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
+
+Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+```
+
 
 
 ---
-### [Review] [KONFLUX-13055](https://redhat.atlassian.net/browse/KONFLUX-13055) - Subrata Modak - Implement proper compute resources for task 'run-opm-command-oci-ta'
+### [Review] [Task] [KONFLUX-13055](https://redhat.atlassian.net/browse/KONFLUX-13055) - 3sp - Subrata Modak - Implement proper compute resources for task 'run-opm-command-oci-ta'
 
 
 **Description:**
@@ -1511,19 +1422,7 @@ From your development machine, ensure kubeconfig/VPN access to the Konflux clust
 
 
 
-**Comments (Last 3):**
-
-#### **Subrata Modak** (2026-04-09)
-```
-Observed on 2026-04-09
-
-||serial_⁠no||task||version_⁠dir||task_⁠yaml||step_⁠count||flagged_⁠step_⁠count||ok_⁠step_⁠count||task_⁠flagged||step||memory_⁠requests||memory_⁠limits||memory_⁠requests_⁠bytes||memory_⁠limits_⁠bytes||memory_⁠diff_⁠bytes||memory_⁠diff_⁠MiB||cpu_⁠requests||status||flagged||
-|44|run-opm-command-oci-ta|0.1|run-opm-command-oci-ta/0.1/run-opm-command-oci-ta.yaml|5|5|0|yes|use-trusted-artifact|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-|44|run-opm-command-oci-ta|0.1|run-opm-command-oci-ta/0.1/run-opm-command-oci-ta.yaml|5|5|0|yes|run-opm-with-user-args|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-|44|run-opm-command-oci-ta|0.1|run-opm-command-oci-ta/0.1/run-opm-command-oci-ta.yaml|5|5|0|yes|convert-image-tags-to-digests|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-|44|run-opm-command-oci-ta|0.1|run-opm-command-oci-ta/0.1/run-opm-command-oci-ta.yaml|5|5|0|yes|replace-related-images-pullspec-in-file|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-|44|run-opm-command-oci-ta|0.1|run-opm-command-oci-ta/0.1/run-opm-command-oci-ta.yaml|5|5|0|yes|create-trusted-artifact|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-```
+**Comments:**
 
 #### **Subrata Modak** (2026-06-03)
 ```
@@ -1648,7 +1547,7 @@ Assisted-by: CursorAgent@Cursor.com
 
 
 ---
-### [Review] [KONFLUX-13047](https://redhat.atlassian.net/browse/KONFLUX-13047) - Subrata Modak - Implement proper compute resources for task 'opm-get-bundle-version'
+### [Review] [Task] [KONFLUX-13047](https://redhat.atlassian.net/browse/KONFLUX-13047) - 2sp - Subrata Modak - Implement proper compute resources for task 'opm-get-bundle-version'
 
 
 **Description:**
@@ -1676,16 +1575,7 @@ From your development machine, ensure kubeconfig/VPN access to the Konflux clust
 
 
 
-**Comments (Last 3):**
-
-#### **Subrata Modak** (2026-04-09)
-```
-Observed on 2026-04-09
-
-||serial_⁠no||task||version_⁠dir||task_⁠yaml||step_⁠count||flagged_⁠step_⁠count||ok_⁠step_⁠count||task_⁠flagged||step||memory_⁠requests||memory_⁠limits||memory_⁠requests_⁠bytes||memory_⁠limits_⁠bytes||memory_⁠diff_⁠bytes||memory_⁠diff_⁠MiB||cpu_⁠requests||status||flagged||
-|34|opm-get-bundle-version|0.1|opm-get-bundle-version/0.1/opm-get-bundle-version.yaml|2|2|0|yes|opm-render-bundle|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-|34|opm-get-bundle-version|0.1|opm-get-bundle-version/0.1/opm-get-bundle-version.yaml|2|2|0|yes|jq-get-olm-package-version|​|​|​|​|​|​|​|BOTH_MEM_MISSING, CPU_REQ_MISSING|yes|
-```
+**Comments:**
 
 #### **Subrata Modak** (2026-06-03)
 ```
@@ -1785,7 +1675,7 @@ Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 ---
 ## In progress issues
 
-### [In Progress] [KONFLUX-14299](https://redhat.atlassian.net/browse/KONFLUX-14299) - Subrata Modak - OOM/CrashLoopBackOff Jira Enhancement: ROSA→OHSS Routing, ADF Formatting, and Permanent Artifacts
+### [In Progress] [Task] [KONFLUX-14299](https://redhat.atlassian.net/browse/KONFLUX-14299) - 3sp - Subrata Modak - OOM/CrashLoopBackOff Jira Enhancement: ROSA→OHSS Routing, ADF Formatting, and Permanent Artifacts
 
 
 **Description:**
@@ -1822,7 +1712,56 @@ h3. Improvements to Implement
 
 
 
-**Comments (Last 3):**
+**Comments:**
+
+#### **Subrata Modak** (2026-06-04)
+```
+Starting implementation of enhanced Jira formatting with permanent artifacts.
+
+Assisted-by: Claude
+```
+
+#### **Subrata Modak** (2026-06-04)
+```
+SCOPE UPDATE - Additional Improvements Added
+
+Based on continued Slack discussion with OHSS/OCPBUGS teams, the following improvements are now IN SCOPE for this story:
+
+NEW IMPROVEMENTS (ROSA → OHSS Routing):
+
+1. Route ROSA Platform Issues to OHSS (Not OCPBUGS)
+   - Current: ROSA clusters with openshift-* namespaces → OCPBUGS
+   - New: ROSA clusters with openshift-* namespaces → OHSS project
+   - Reason: Murali Krishnasamy confirmed "OHSS is the right one" for ROSA cluster issues
+
+2. Add Cluster Metadata for OHSS Tickets
+   - Cluster ID/Name (e.g., kflux-prd-rh03)
+   - Environment (prod, stage, etc.)
+   - Region (e.g., us-east-1, us-west-2)
+   - Subscription details if available
+   - Reason: SRE needs this info to access clusters
+
+3. Set Product Field for ROSA Tickets
+   - Field: Product
+   - Value: "Red Hat Openshift Services on AWS"
+   - Required for OHSS tickets
+
+4. Pattern-Based Component Assignment
+   - Auto-assign Component based on error patterns:
+     * "splunk" or "metrics-exporter" → Component: monitoring
+     * "router" or "ovnk" → Component: Networking
+   - Best effort - assign what we can detect
+   - Helps with auto-routing to correct OHSS sub-teams
+
+5. Add Access Instructions to OHSS Tickets
+   - Include note: "Access to Konflux clusters are OAUTH based. Triagers may need to reach out to @konflux-infra for access if needed."
+   - Helps OHSS SRE understand access model
+
+UPDATED ROUTING LOGIC:
+
+OLD:
+• ALL namespaces are openshift-* (except openshift-pipelines) →...
+```
 
 #### **Subrata Modak** (2026-06-05)
 ```
@@ -1886,7 +1825,7 @@ Because these issues only provided links rather than having the logs or data att
 
 
 ---
-### [In Progress] [KONFLUX-13720](https://redhat.atlassian.net/browse/KONFLUX-13720) - Roberto Alfieri - Onboarding: Understand Loadtest architecture and performance testing
+### [In Progress] [Task] [KONFLUX-13720](https://redhat.atlassian.net/browse/KONFLUX-13720) - Roberto Alfieri - Onboarding: Understand Loadtest architecture and performance testing
 
 
 **Description:**
@@ -1914,7 +1853,7 @@ Research the {{load-test}} tool used by the Performance & Scale team. Understand
 ---
 ## New issues
 
-### [In Progress] [KONFLUX-14299](https://redhat.atlassian.net/browse/KONFLUX-14299) - Subrata Modak - OOM/CrashLoopBackOff Jira Enhancement: ROSA→OHSS Routing, ADF Formatting, and Permanent Artifacts
+### [In Progress] [Task] [KONFLUX-14299](https://redhat.atlassian.net/browse/KONFLUX-14299) - 3sp - Subrata Modak - OOM/CrashLoopBackOff Jira Enhancement: ROSA→OHSS Routing, ADF Formatting, and Permanent Artifacts
 
 
 **Description:**
@@ -1951,7 +1890,56 @@ h3. Improvements to Implement
 
 
 
-**Comments (Last 3):**
+**Comments:**
+
+#### **Subrata Modak** (2026-06-04)
+```
+Starting implementation of enhanced Jira formatting with permanent artifacts.
+
+Assisted-by: Claude
+```
+
+#### **Subrata Modak** (2026-06-04)
+```
+SCOPE UPDATE - Additional Improvements Added
+
+Based on continued Slack discussion with OHSS/OCPBUGS teams, the following improvements are now IN SCOPE for this story:
+
+NEW IMPROVEMENTS (ROSA → OHSS Routing):
+
+1. Route ROSA Platform Issues to OHSS (Not OCPBUGS)
+   - Current: ROSA clusters with openshift-* namespaces → OCPBUGS
+   - New: ROSA clusters with openshift-* namespaces → OHSS project
+   - Reason: Murali Krishnasamy confirmed "OHSS is the right one" for ROSA cluster issues
+
+2. Add Cluster Metadata for OHSS Tickets
+   - Cluster ID/Name (e.g., kflux-prd-rh03)
+   - Environment (prod, stage, etc.)
+   - Region (e.g., us-east-1, us-west-2)
+   - Subscription details if available
+   - Reason: SRE needs this info to access clusters
+
+3. Set Product Field for ROSA Tickets
+   - Field: Product
+   - Value: "Red Hat Openshift Services on AWS"
+   - Required for OHSS tickets
+
+4. Pattern-Based Component Assignment
+   - Auto-assign Component based on error patterns:
+     * "splunk" or "metrics-exporter" → Component: monitoring
+     * "router" or "ovnk" → Component: Networking
+   - Best effort - assign what we can detect
+   - Helps with auto-routing to correct OHSS sub-teams
+
+5. Add Access Instructions to OHSS Tickets
+   - Include note: "Access to Konflux clusters are OAUTH based. Triagers may need to reach out to @konflux-infra for access if needed."
+   - Helps OHSS SRE understand access model
+
+UPDATED ROUTING LOGIC:
+
+OLD:
+• ALL namespaces are openshift-* (except openshift-pipelines) →...
+```
 
 #### **Subrata Modak** (2026-06-05)
 ```
@@ -2015,7 +2003,7 @@ Because these issues only provided links rather than having the logs or data att
 
 
 ---
-### [New] [KONFLUX-14287](https://redhat.atlassian.net/browse/KONFLUX-14287) - Subrata Modak - Readup about AI Skills (E.g KONFLUX-13490)
+### [New] [Task] [KONFLUX-14287](https://redhat.atlassian.net/browse/KONFLUX-14287) - Subrata Modak - Readup about AI Skills (E.g KONFLUX-13490)
 
 
 **Description:**
@@ -2034,7 +2022,7 @@ Readup about AI Skills (E.g KONFLUX-13490), something like why AGENT.MD, CLAUDE.
 # Pipelines
 ## Finished issues
 
-### [Closed/Done] [SRVKP-12102](https://redhat.atlassian.net/browse/SRVKP-12102) - Jawed Khelil - tkn-cli-serve pod in CrashLoopBackOff
+### [Closed/Done] [Bug] [SRVKP-12102](https://redhat.atlassian.net/browse/SRVKP-12102) - Jawed Khelil - tkn-cli-serve pod in CrashLoopBackOff
 
 
 **Description:**
@@ -2056,7 +2044,7 @@ The {{TektonConfig}} CR shows {{profile: all}} and {{pipelinesAsCode.enable: tru
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Deekshith Kumar Netha Bamandla N** (2026-06-08)
 ```
@@ -2068,7 +2056,7 @@ tkn-cli-serve issue is fixed with the fix. Thanks!!
 
 
 ---
-### [Closed/Done] [SRVKP-11914](https://redhat.atlassian.net/browse/SRVKP-11914) - Deekshith Kumar Netha Bamandla N - Chains Controller CPT Scenarios
+### [Closed/Done] [Epic] [SRVKP-11914](https://redhat.atlassian.net/browse/SRVKP-11914) - Deekshith Kumar Netha Bamandla N - Chains Controller CPT Scenarios
 
 
 **Description:**
@@ -2095,12 +2083,7 @@ h2. *Acceptance Criteria (Mandatory)*
 
 
 
-**Comments (Last 3):**
-
-#### **Automation for Jira** (2026-05-06)
-```
-removed label *groomable* from the issue as Deekshith Kumar Netha Bamandla N transitioned it to In Progress
-```
+**Comments:**
 
 #### **Automation for Jira** (2026-06-02)
 ```
@@ -2114,7 +2097,7 @@ If Release Note is not required, set *Release Note Type* to '*Release Note Not R
 
 
 ---
-### [Closed/Done] [SRVKP-8004](https://redhat.atlassian.net/browse/SRVKP-8004) - Deekshith Kumar Netha Bamandla N - Have an agreement with engineering on a notification strategy
+### [Closed/Done] [Task] [SRVKP-8004](https://redhat.atlassian.net/browse/SRVKP-8004) - 2sp - Deekshith Kumar Netha Bamandla N - Have an agreement with engineering on a notification strategy
 
 
 **Description:**
@@ -2126,19 +2109,7 @@ h3. Acceptance criteria
 
 
 
-**Comments (Last 3):**
-
-#### **Automation for Jira** (2026-05-26)
-```
-removed label *groomable* from the issue as Deekshith Kumar Netha Bamandla N transitioned it to In Progress
-```
-
-#### **Deekshith Kumar Netha Bamandla N** (2026-05-29)
-```
-Automation strategies for pipeline monitoring and alerting were reviewed and standardized via hard-coded threshold implementations.
-
-The team decided to implement hard-coded upper and lower bounds for metrics, replacing complex percentage-based alerts. Specific operational labels were retained while irrelevant components were removed. Engineering will define specific upper bounds for acceptable pipeline failures per scenario. This prevents excessive notifications and streamlines responses for testing environments.
-```
+**Comments:**
 
 #### **Deekshith Kumar Netha Bamandla N** (2026-06-08)
 ```
@@ -2154,7 +2125,7 @@ Thresholds and alerts will be handled in a separate ticket: [https://redhat.atla
 
 ## In progress issues
 
-### [In Progress] [SRVKP-12325](https://redhat.atlassian.net/browse/SRVKP-12325) - Aman Vishwakarma - Analyze one test vs separate tests per scenario/config for Horreum alert thresholds
+### [In Progress] [Spike] [SRVKP-12325](https://redhat.atlassian.net/browse/SRVKP-12325) - 1sp - Aman Vishwakarma - Analyze one test vs separate tests per scenario/config for Horreum alert thresholds
 
 
 **Description:**
@@ -2171,7 +2142,7 @@ Analyze whether to keep the current single-Horreum-test approach or split into s
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Aman Vishwakarma** (2026-06-09)
 ```
@@ -2184,7 +2155,7 @@ Recommendation: keep a single test per scenario category. Splitting would requir
 
 
 ---
-### [In Progress] [SRVKP-12049](https://redhat.atlassian.net/browse/SRVKP-12049) - Deekshith Kumar Netha Bamandla N - Identify the test scenarios for Results Controllers
+### [In Progress] [Task] [SRVKP-12049](https://redhat.atlassian.net/browse/SRVKP-12049) - 2sp - Deekshith Kumar Netha Bamandla N - Identify the test scenarios for Results Controllers
 
 
 
@@ -2195,7 +2166,7 @@ Recommendation: keep a single test per scenario category. Splitting would requir
 ---
 ## New issues
 
-### [In Progress] [SRVKP-12325](https://redhat.atlassian.net/browse/SRVKP-12325) - Aman Vishwakarma - Analyze one test vs separate tests per scenario/config for Horreum alert thresholds
+### [In Progress] [Spike] [SRVKP-12325](https://redhat.atlassian.net/browse/SRVKP-12325) - 1sp - Aman Vishwakarma - Analyze one test vs separate tests per scenario/config for Horreum alert thresholds
 
 
 **Description:**
@@ -2212,7 +2183,7 @@ Analyze whether to keep the current single-Horreum-test approach or split into s
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Aman Vishwakarma** (2026-06-09)
 ```
@@ -2230,7 +2201,7 @@ Recommendation: keep a single test per scenario category. Splitting would requir
 # ConsoleDot
 ## Finished issues
 
-### [Closed/Done] [HCEPERF-1473](https://redhat.atlassian.net/browse/HCEPERF-1473) - Subrata Modak - Konflux: OOM crash detector related secrets
+### [Closed/Done] [Task] [HCEPERF-1473](https://redhat.atlassian.net/browse/HCEPERF-1473) - 3sp - Subrata Modak - Konflux: OOM crash detector related secrets
 
 
 **Description:**
@@ -2246,7 +2217,54 @@ h3. OOM and Crash Detector (Managed by Subrata)
 
 
 
-**Comments (Last 3):**
+**Comments:**
+
+#### **Subrata Modak** (2026-06-02)
+```
+*Progress update — Jun 2, 2026*
+
+* Generated fresh 1-year SA tokens for all 10 clusters (SA: perf-team-prometheus-reader-oomcrash-sa, ns: perf-team-prometheus-reader).
+* Shared all 10 tokens securely with Raj via PrivateBin and requested him to:
+*# add new GPG key (4C8E95E940EC90038CA973D59A9CB0F812505DE5) as a git-crypt collaborator in perf-casc-master, and
+*# update the secrets.
+* Will wait for [~accountid:712020:742fe929-2f70-4ced-ad2f-464a9ba181a7] to add GPG key. Once done, will unlock the repo, update all 10 secret files, and open the MR.
+
+_Assisted-by: CursorAgent_
+```
+
+#### **Subrata Modak** (2026-06-03)
+```
+*Jun 3, 2026:* Raj encountered a GPG trust issue while adding the new key as a git-crypt collaborator in {{perf-casc-master}}; provided fix instructions and a clean key export — waiting on confirmation.
+
+_Assisted-by: CursorAgent_
+```
+
+#### **Subrata Modak** (2026-06-04)
+```
+*Jun 4, 2026 — Token rotation complete, MR raised*
+
+What was done:
+
+# Fetched latest {{perf-casc-master}} (includes [MR !128|https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/128] by [~accountid:712020:742fe929-2f70-4ced-ad2f-464a9ba181a7] adding our new GPG key as a git-crypt collaborator).
+# Created branch {{rotate_oom_detector_tokens}} and ran {{git crypt unlock}} using new no-passphrase GPG key {{4C8E95E940EC90038CA973D59A9CB0F812505DE5}}.
+# Copied 10 fresh 1-year SA tokens (generated via {{oc create token --duration=8760h}} for SA {{perf-team-prometheus-reader-oomcrash-sa}} in ns {{perf-team-prometheus-reader}}) into {{secrets/}}.
+# Committed, pushed to fork, and raised [MR !129|https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/129].
+
+*Pending:* [MR !129|https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/129] review/merge → CasC auto-syncs to Jenkins → trigger {{StoneSoupOOMDetector}} run to verify all 10 clusters authenticate successfully.
+
+----
+
+*Future token rotation runbook (saved locally in perf-casc-master as TOKEN_ROTATION_RUNBOOK.md):*
+
+# Log into all clusters: {{~/bin/oclogin-all}}
+# Generate new tokens for each cluster: {{oc create token perf-team-prometheus-reader-oomcrash-sa -n perf-team-prometheus-reader --duration=8760h}}, save each as {{Konflux-oom-crash-detector-TOKEN-<nickname>}}
+# In {{perf-casc-master}}: {{git fetch && rebase}} →...
+```
+
+#### **Subrata Modak** (2026-06-05)
+```
+MR: [https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/129|https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/129] has been merged.
+```
 
 #### **Subrata Modak** (2026-06-05)
 ```
@@ -2327,7 +2345,7 @@ Assisted-by: CursorAgent
 
 
 ---
-### [Closed/Done] [HCEPERF-1145](https://redhat.atlassian.net/browse/HCEPERF-1145) - Pravin Satpute - No tests were run for ContentSources service in last 7 days
+### [Closed/Done] [Task] [HCEPERF-1145](https://redhat.atlassian.net/browse/HCEPERF-1145) - 1sp - Pravin Satpute - No tests were run for ContentSources service in last 7 days
 
 
 **Description:**
@@ -2337,13 +2355,7 @@ No tests were run for ContentSources service in last 7 days
 
 
 
-**Comments (Last 3):**
-
-#### **Pravin Satpute** (2026-05-11)
-```
-Hi [~accountid:712020:4ec21e0e-87d5-43a6-9ef4-52bb8736eb33]    
-  Do we still need to run this CPT? Lets disable this for couple of months and see if we get any ping from someone to enable this again.
-```
+**Comments:**
 
 #### **Pablo Mendez Hernandez** (2026-06-08)
 ```
@@ -2364,7 +2376,7 @@ Lets close this and reopen a new ticket.
 
 ## In progress issues
 
-### [In Progress] [HCEPERF-1497](https://redhat.atlassian.net/browse/HCEPERF-1497) - Krishna Magar - Profile workqueue cache_shard path to identify CPU hotspots
+### [In Progress] [Task] [HCEPERF-1497](https://redhat.atlassian.net/browse/HCEPERF-1497) - 3sp - Krishna Magar - Profile workqueue cache_shard path to identify CPU hotspots
 
 
 **Description:**
@@ -2378,7 +2390,7 @@ Following the tests comparing {{cache}} and {{cache_shard}} affinity scopes, {{c
 
 
 ---
-### [In Progress] [HCEPERF-1496](https://redhat.atlassian.net/browse/HCEPERF-1496) - Krishna Magar - Verify reproducibility of 2% throughput gap between cache and cache_shard affinity scopes
+### [In Progress] [Task] [HCEPERF-1496](https://redhat.atlassian.net/browse/HCEPERF-1496) - 3sp - Krishna Magar - Verify reproducibility of 2% throughput gap between cache and cache_shard affinity scopes
 
 
 **Description:**
@@ -2397,7 +2409,7 @@ We need to determine if this 2% gap is a consistent, reproducible regression or 
 
 
 ---
-### [In Progress] [HCEPERF-1493](https://redhat.atlassian.net/browse/HCEPERF-1493) - Rajaditya Chauhan - Export Builder: quay image issue
+### [In Progress] [Bug] [HCEPERF-1493](https://redhat.atlassian.net/browse/HCEPERF-1493) - 2sp - Rajaditya Chauhan - Export Builder: quay image issue
 
 
 **Description:**
@@ -2419,7 +2431,7 @@ from events:
 
 
 ---
-### [In Progress] [HCEPERF-1492](https://redhat.atlassian.net/browse/HCEPERF-1492) - Rajaditya Chauhan - HBI Export: runner.sh was not picking latest HBI DB creds 
+### [In Progress] [Bug] [HCEPERF-1492](https://redhat.atlassian.net/browse/HCEPERF-1492) - 2sp - Rajaditya Chauhan - HBI Export: runner.sh was not picking latest HBI DB creds 
 
 
 **Description:**
@@ -2435,7 +2447,7 @@ error:
 
 
 ---
-### [In Progress] [HCEPERF-1491](https://redhat.atlassian.net/browse/HCEPERF-1491) - Krishna Magar - Request permissions to access Perf&Scale Department Grafana via INTLAB
+### [In Progress] [Task] [HCEPERF-1491](https://redhat.atlassian.net/browse/HCEPERF-1491) - 1sp - Krishna Magar - Request permissions to access Perf&Scale Department Grafana via INTLAB
 
 
 **Description:**
@@ -2449,7 +2461,7 @@ Request permissions to access Perf&Scale Department Grafana via an INTLAB ticket
 
 
 ---
-### [In Progress] [HCEPERF-1490](https://redhat.atlassian.net/browse/HCEPERF-1490) - Krishna Magar - Request file storage with web interface access for test artifacts via INTLAB
+### [In Progress] [Task] [HCEPERF-1490](https://redhat.atlassian.net/browse/HCEPERF-1490) - 1sp - Krishna Magar - Request file storage with web interface access for test artifacts via INTLAB
 
 
 **Description:**
@@ -2463,7 +2475,7 @@ Request file storage with read-only access via web interface (possibility to scp
 
 
 ---
-### [In Progress] [HCEPERF-1483](https://redhat.atlassian.net/browse/HCEPERF-1483) - Krishna Magar - Add support to pass_or_fail OPL tool to fetch historical data from PostgreSQL
+### [In Progress] [Task] [HCEPERF-1483](https://redhat.atlassian.net/browse/HCEPERF-1483) - 5sp - Krishna Magar - Add support to pass_or_fail OPL tool to fetch historical data from PostgreSQL
 
 
 **Description:**
@@ -2477,7 +2489,7 @@ Add support to {{pass_or_fail}} OPL tool [https://github.com/redhat-performance/
 
 
 ---
-### [In Progress] [HCEPERF-1482](https://redhat.atlassian.net/browse/HCEPERF-1482) - Krishna Magar - Coordinate with Release Engineering for RHEL release/nightly signal to trigger Jenkins
+### [In Progress] [Task] [HCEPERF-1482](https://redhat.atlassian.net/browse/HCEPERF-1482) - 2sp - Krishna Magar - Coordinate with Release Engineering for RHEL release/nightly signal to trigger Jenkins
 
 
 **Description:**
@@ -2487,7 +2499,29 @@ Get in touch with Release Engineering team to figure out how to get a signal whe
 
 
 
-**Comments (Last 3):**
+**Comments:**
+
+#### **Jan Hutar** (2026-06-02)
+```
+Hello [~accountid:70121:cdcb3870-d5c0-4d82-ac3a-0b20c312205a] ! Looking at [https://redhat.atlassian.net/wiki/spaces/SP/pages/333970499/File+a+JIRA+with+Software+Production|https://redhat.atlassian.net/wiki/spaces/SP/pages/333970499/File+a+JIRA+with+Software+Production] I seen your name, so figure I'll ask you directly. Could you please point me to somebody who could help me to figure out where we can find some signal for _"new RHEL release/nightly landed on_ [_https://download.devel.redhat.com/_|https://download.devel.redhat.com/]_"_? We want to run some our test every time this happens. I head something like that was available in UMB, but that is going away now, so I have no idea on where to look now.
+```
+
+#### **Lisa Smith** (2026-06-02)
+```
+You’ll want to ask the RHELDST team about this, as they are the ones that release the bits to CDN.  Pinging [~accountid:6358337efe5ff3752359dee3] [~accountid:70121:9bfc1e15-f831-42e6-ad56-f3be0513c063] [~accountid:712020:1daed54b-8595-48ed-a963-a8141efa0b50] to help get you started. If they don’t have the answer, they will know who you should ping next.
+```
+
+#### **Michal Haluza** (2026-06-03)
+```
+[https://download.devel.redhat.com/|https://download.devel.redhat.com/] is a HTTP server that makes /mnt/redhat content available, so I guess this would be a question for the team creating the composes. Pinging [~accountid:70121:d437710c-1a92-411a-9d57-86054816be34] (also cc [~accountid:712020:e7a85896-5643-4378-be1b-ebca4f6a672b] )
+```
+
+#### **Lubomir Sedlar** (2026-06-03)
+```
+UMB is the only source of the data for now: [https://datagrepper.engineering.redhat.com/raw?topic=/topic/VirtualTopic.eng.cts.compose-tagged|https://datagrepper.engineering.redhat.com/raw?topic=/topic/VirtualTopic.eng.cts.compose-tagged]
+
+Eventually it will be replaced with Kafka, but I do not have a timeline for that.
+```
 
 #### **Krishna Magar** (2026-06-05)
 ```
@@ -2509,7 +2543,7 @@ Hello [~accountid:712020:e7a85896-5643-4378-be1b-ebca4f6a672b] . Is there a jira
 
 
 ---
-### [In Progress] [HCEPERF-1073](https://redhat.atlassian.net/browse/HCEPERF-1073) - Vishal Vijayraghavan - Perf&Scale validation of HCC gateways, phase 3
+### [In Progress] [Epic] [HCEPERF-1073](https://redhat.atlassian.net/browse/HCEPERF-1073) - Vishal Vijayraghavan - Perf&Scale validation of HCC gateways, phase 3
 
 
 **Description:**
@@ -2538,7 +2572,7 @@ Goal of phase 3 is to evaluate the performance characteristics of transaction to
 ---
 ## New issues
 
-### [In Progress] [HCEPERF-1497](https://redhat.atlassian.net/browse/HCEPERF-1497) - Krishna Magar - Profile workqueue cache_shard path to identify CPU hotspots
+### [In Progress] [Task] [HCEPERF-1497](https://redhat.atlassian.net/browse/HCEPERF-1497) - 3sp - Krishna Magar - Profile workqueue cache_shard path to identify CPU hotspots
 
 
 **Description:**
@@ -2552,7 +2586,7 @@ Following the tests comparing {{cache}} and {{cache_shard}} affinity scopes, {{c
 
 
 ---
-### [In Progress] [HCEPERF-1496](https://redhat.atlassian.net/browse/HCEPERF-1496) - Krishna Magar - Verify reproducibility of 2% throughput gap between cache and cache_shard affinity scopes
+### [In Progress] [Task] [HCEPERF-1496](https://redhat.atlassian.net/browse/HCEPERF-1496) - 3sp - Krishna Magar - Verify reproducibility of 2% throughput gap between cache and cache_shard affinity scopes
 
 
 **Description:**
@@ -2571,7 +2605,7 @@ We need to determine if this 2% gap is a consistent, reproducible regression or 
 
 
 ---
-### [To Do] [HCEPERF-1495](https://redhat.atlassian.net/browse/HCEPERF-1495) - Pablo Mendez Hernandez - Disable content sources CPT
+### [To Do] [Task] [HCEPERF-1495](https://redhat.atlassian.net/browse/HCEPERF-1495) - Pablo Mendez Hernandez - Disable content sources CPT
 
 
 **Description:**
@@ -2585,7 +2619,7 @@ We do not have any requirements from the Business Unit for content sources. Lets
 
 
 ---
-### [New] [HCEPERF-1494](https://redhat.atlassian.net/browse/HCEPERF-1494) - Rajaditya Chauhan - HBI API: direct insertion error
+### [New] [Bug] [HCEPERF-1494](https://redhat.atlassian.net/browse/HCEPERF-1494) - Rajaditya Chauhan - HBI API: direct insertion error
 
 
 **Description:**
@@ -2603,7 +2637,7 @@ runner job: [https://jenkins-csb-perf-master.dno.corp.redhat.com/job/InsightsInv
 
 
 ---
-### [In Progress] [HCEPERF-1493](https://redhat.atlassian.net/browse/HCEPERF-1493) - Rajaditya Chauhan - Export Builder: quay image issue
+### [In Progress] [Bug] [HCEPERF-1493](https://redhat.atlassian.net/browse/HCEPERF-1493) - 2sp - Rajaditya Chauhan - Export Builder: quay image issue
 
 
 **Description:**
@@ -2625,7 +2659,7 @@ from events:
 
 
 ---
-### [In Progress] [HCEPERF-1492](https://redhat.atlassian.net/browse/HCEPERF-1492) - Rajaditya Chauhan - HBI Export: runner.sh was not picking latest HBI DB creds 
+### [In Progress] [Bug] [HCEPERF-1492](https://redhat.atlassian.net/browse/HCEPERF-1492) - 2sp - Rajaditya Chauhan - HBI Export: runner.sh was not picking latest HBI DB creds 
 
 
 **Description:**
@@ -2641,7 +2675,7 @@ error:
 
 
 ---
-### [In Progress] [HCEPERF-1491](https://redhat.atlassian.net/browse/HCEPERF-1491) - Krishna Magar - Request permissions to access Perf&Scale Department Grafana via INTLAB
+### [In Progress] [Task] [HCEPERF-1491](https://redhat.atlassian.net/browse/HCEPERF-1491) - 1sp - Krishna Magar - Request permissions to access Perf&Scale Department Grafana via INTLAB
 
 
 **Description:**
@@ -2655,7 +2689,7 @@ Request permissions to access Perf&Scale Department Grafana via an INTLAB ticket
 
 
 ---
-### [In Progress] [HCEPERF-1490](https://redhat.atlassian.net/browse/HCEPERF-1490) - Krishna Magar - Request file storage with web interface access for test artifacts via INTLAB
+### [In Progress] [Task] [HCEPERF-1490](https://redhat.atlassian.net/browse/HCEPERF-1490) - 1sp - Krishna Magar - Request file storage with web interface access for test artifacts via INTLAB
 
 
 **Description:**
@@ -2669,7 +2703,7 @@ Request file storage with read-only access via web interface (possibility to scp
 
 
 ---
-### [New] [HCEPERF-1489](https://redhat.atlassian.net/browse/HCEPERF-1489) - Krishna Magar - Research and configure Jenkins email notifications and request service account
+### [New] [Task] [HCEPERF-1489](https://redhat.atlassian.net/browse/HCEPERF-1489) - 5sp - Krishna Magar - Research and configure Jenkins email notifications and request service account
 
 
 **Description:**
@@ -2685,7 +2719,7 @@ Request file storage with read-only access via web interface (possibility to scp
 
 
 ---
-### [In Progress] [HCEPERF-1488](https://redhat.atlassian.net/browse/HCEPERF-1488) - Krishna Magar - Request PostgreSQL database with read-write and read-only accounts via INTLAB
+### [In Progress] [Task] [HCEPERF-1488](https://redhat.atlassian.net/browse/HCEPERF-1488) - 1sp - Krishna Magar - Request PostgreSQL database with read-write and read-only accounts via INTLAB
 
 
 **Description:**
@@ -2702,7 +2736,7 @@ Request a PostgreSQL database via INTLAB jira (Perf department Integration Lab) 
 
 
 ---
-### [New] [HCEPERF-1487](https://redhat.atlassian.net/browse/HCEPERF-1487) - Krishna Magar - Create Jenkinsfile and JOBDSL config for the database CPT workflow
+### [New] [Task] [HCEPERF-1487](https://redhat.atlassian.net/browse/HCEPERF-1487) - 3sp - Krishna Magar - Create Jenkinsfile and JOBDSL config for the database CPT workflow
 
 
 **Description:**
@@ -2721,7 +2755,7 @@ Note: For now, no alert emails when regression is detected, make it simple.
 
 
 ---
-### [New] [HCEPERF-1486](https://redhat.atlassian.net/browse/HCEPERF-1486) - Krishna Magar - Create initial Grafana dashboard for database CPT performance monitoring
+### [New] [Task] [HCEPERF-1486](https://redhat.atlassian.net/browse/HCEPERF-1486) - 5sp - Krishna Magar - Create initial Grafana dashboard for database CPT performance monitoring
 
 
 **Description:**
@@ -2739,7 +2773,7 @@ Create initial basic Grafana dashboard that allows filtering by HW (e.g. "R650" 
 
 
 ---
-### [New] [HCEPERF-1485](https://redhat.atlassian.net/browse/HCEPERF-1485) - Krishna Magar - Update playbook to upload master JSON to PostgreSQL and test artifacts to file storage
+### [New] [Task] [HCEPERF-1485](https://redhat.atlassian.net/browse/HCEPERF-1485) - 3sp - Krishna Magar - Update playbook to upload master JSON to PostgreSQL and test artifacts to file storage
 
 
 **Description:**
@@ -2757,7 +2791,7 @@ Alter relevant playbook (or create new one) to upload main JSON file to PostgreS
 
 
 ---
-### [New] [HCEPERF-1484](https://redhat.atlassian.net/browse/HCEPERF-1484) - Krishna Magar - Create initial config for pass_or_fail and update playbook to detect regressions
+### [New] [Task] [HCEPERF-1484](https://redhat.atlassian.net/browse/HCEPERF-1484) - 3sp - Krishna Magar - Create initial config for pass_or_fail and update playbook to detect regressions
 
 
 **Description:**
@@ -2772,7 +2806,7 @@ Alter relevant playbook (or create new one) to upload main JSON file to PostgreS
 
 
 ---
-### [In Progress] [HCEPERF-1483](https://redhat.atlassian.net/browse/HCEPERF-1483) - Krishna Magar - Add support to pass_or_fail OPL tool to fetch historical data from PostgreSQL
+### [In Progress] [Task] [HCEPERF-1483](https://redhat.atlassian.net/browse/HCEPERF-1483) - 5sp - Krishna Magar - Add support to pass_or_fail OPL tool to fetch historical data from PostgreSQL
 
 
 **Description:**
@@ -2786,7 +2820,7 @@ Add support to {{pass_or_fail}} OPL tool [https://github.com/redhat-performance/
 
 
 ---
-### [In Progress] [HCEPERF-1482](https://redhat.atlassian.net/browse/HCEPERF-1482) - Krishna Magar - Coordinate with Release Engineering for RHEL release/nightly signal to trigger Jenkins
+### [In Progress] [Task] [HCEPERF-1482](https://redhat.atlassian.net/browse/HCEPERF-1482) - 2sp - Krishna Magar - Coordinate with Release Engineering for RHEL release/nightly signal to trigger Jenkins
 
 
 **Description:**
@@ -2796,7 +2830,29 @@ Get in touch with Release Engineering team to figure out how to get a signal whe
 
 
 
-**Comments (Last 3):**
+**Comments:**
+
+#### **Jan Hutar** (2026-06-02)
+```
+Hello [~accountid:70121:cdcb3870-d5c0-4d82-ac3a-0b20c312205a] ! Looking at [https://redhat.atlassian.net/wiki/spaces/SP/pages/333970499/File+a+JIRA+with+Software+Production|https://redhat.atlassian.net/wiki/spaces/SP/pages/333970499/File+a+JIRA+with+Software+Production] I seen your name, so figure I'll ask you directly. Could you please point me to somebody who could help me to figure out where we can find some signal for _"new RHEL release/nightly landed on_ [_https://download.devel.redhat.com/_|https://download.devel.redhat.com/]_"_? We want to run some our test every time this happens. I head something like that was available in UMB, but that is going away now, so I have no idea on where to look now.
+```
+
+#### **Lisa Smith** (2026-06-02)
+```
+You’ll want to ask the RHELDST team about this, as they are the ones that release the bits to CDN.  Pinging [~accountid:6358337efe5ff3752359dee3] [~accountid:70121:9bfc1e15-f831-42e6-ad56-f3be0513c063] [~accountid:712020:1daed54b-8595-48ed-a963-a8141efa0b50] to help get you started. If they don’t have the answer, they will know who you should ping next.
+```
+
+#### **Michal Haluza** (2026-06-03)
+```
+[https://download.devel.redhat.com/|https://download.devel.redhat.com/] is a HTTP server that makes /mnt/redhat content available, so I guess this would be a question for the team creating the composes. Pinging [~accountid:70121:d437710c-1a92-411a-9d57-86054816be34] (also cc [~accountid:712020:e7a85896-5643-4378-be1b-ebca4f6a672b] )
+```
+
+#### **Lubomir Sedlar** (2026-06-03)
+```
+UMB is the only source of the data for now: [https://datagrepper.engineering.redhat.com/raw?topic=/topic/VirtualTopic.eng.cts.compose-tagged|https://datagrepper.engineering.redhat.com/raw?topic=/topic/VirtualTopic.eng.cts.compose-tagged]
+
+Eventually it will be replaced with Kafka, but I do not have a timeline for that.
+```
 
 #### **Krishna Magar** (2026-06-05)
 ```
@@ -2823,7 +2879,7 @@ Hello [~accountid:712020:e7a85896-5643-4378-be1b-ebca4f6a672b] . Is there a jira
 # Satellite
 ## Finished issues
 
-### [Closed/Done] [SAT-46022](https://redhat.atlassian.net/browse/SAT-46022) - Pablo Mendez Hernandez - contperf: Re-enable downstream image overrides for foremanctl
+### [Closed/Done] [Task] [SAT-46022](https://redhat.atlassian.net/browse/SAT-46022) - 3sp - Pablo Mendez Hernandez - contperf: Re-enable downstream image overrides for foremanctl
 
 
 **Description:**
@@ -2862,7 +2918,7 @@ Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 
 
 ---
-### [Closed/Done] [SAT-46021](https://redhat.atlassian.net/browse/SAT-46021) - Pablo Mendez Hernandez - satperf: Improve foremanctl role deployment debugging
+### [Closed/Done] [Task] [SAT-46021](https://redhat.atlassian.net/browse/SAT-46021) - 5sp - Pablo Mendez Hernandez - satperf: Improve foremanctl role deployment debugging
 
 
 **Description:**
@@ -2892,7 +2948,7 @@ Commit Message:
 
 
 ---
-### [Closed/Done] [SAT-46011](https://redhat.atlassian.net/browse/SAT-46011) - Pablo Mendez Hernandez - contperf: Extract DDNS cleanup to reusable lib/utils.sh
+### [Closed/Done] [Task] [SAT-46011](https://redhat.atlassian.net/browse/SAT-46011) - 2sp - Pablo Mendez Hernandez - contperf: Extract DDNS cleanup to reusable lib/utils.sh
 
 
 **Description:**
@@ -2923,7 +2979,7 @@ Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 
 
 ---
-### [Closed/Done] [SAT-46010](https://redhat.atlassian.net/browse/SAT-46010) - Pablo Mendez Hernandez - satperf: Support append mode in override_images role
+### [Closed/Done] [Task] [SAT-46010](https://redhat.atlassian.net/browse/SAT-46010) - 3sp - Pablo Mendez Hernandez - satperf: Support append mode in override_images role
 
 
 **Description:**
@@ -2948,7 +3004,7 @@ Commit Message:
 
 
 ---
-### [Closed/Done] [SAT-46009](https://redhat.atlassian.net/browse/SAT-46009) - Pablo Mendez Hernandez - satperf: Fix num_container_hosts division by zero in hammer.sh
+### [Closed/Done] [Task] [SAT-46009](https://redhat.atlassian.net/browse/SAT-46009) - 2sp - Pablo Mendez Hernandez - satperf: Fix num_container_hosts division by zero in hammer.sh
 
 
 **Description:**
@@ -2975,7 +3031,7 @@ Commit Message:
 
 
 ---
-### [Closed/Done] [SAT-46008](https://redhat.atlassian.net/browse/SAT-46008) - Pablo Mendez Hernandez - satperf: Refactor test_campaign_fam to use phased lib calls
+### [Closed/Done] [Task] [SAT-46008](https://redhat.atlassian.net/browse/SAT-46008) - 2sp - Pablo Mendez Hernandez - satperf: Refactor test_campaign_fam to use phased lib calls
 
 
 **Description:**
@@ -3000,7 +3056,7 @@ Commit Message:
 
 
 ---
-### [Closed/Done] [SAT-46007](https://redhat.atlassian.net/browse/SAT-46007) - Pablo Mendez Hernandez - ansible-kvm-host-mgr: Skip volume wiping during VM erasure to save ~40 min per run
+### [Closed/Done] [Task] [SAT-46007](https://redhat.atlassian.net/browse/SAT-46007) - 2sp - Pablo Mendez Hernandez - ansible-kvm-host-mgr: Skip volume wiping during VM erasure to save ~40 min per run
 
 
 **Description:**
@@ -3035,7 +3091,7 @@ Co-Authored-By: Claude Opus 4.6 (1M context) <noreply@anthropic.com>
 
 
 ---
-### [Closed/Done] [SAT-45997](https://redhat.atlassian.net/browse/SAT-45997) - Pablo Mendez Hernandez - satperf: Migrate FAM playbooks to Pattern B with unified content_views API
+### [Closed/Done] [Task] [SAT-45997](https://redhat.atlassian.net/browse/SAT-45997) - 7sp - Pablo Mendez Hernandez - satperf: Migrate FAM playbooks to Pattern B with unified content_views API
 
 
 **Description:**
@@ -3066,19 +3122,13 @@ Commits:
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/d6914714b881
-```
-Commit Message:
-.commit.message
-```
-
 #### PR/MR: https://github.com/redhat-performance/satperf/commit/e908d6032310
 ```
 Commit Message:
 .commit.message
 ```
 
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/e3d2f36b3de0
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/ee768c89cc36
 ```
 Commit Message:
 .commit.message
@@ -3090,7 +3140,13 @@ Commit Message:
 .commit.message
 ```
 
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/ee768c89cc36
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/e3d2f36b3de0
+```
+Commit Message:
+.commit.message
+```
+
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/d6914714b881
 ```
 Commit Message:
 .commit.message
@@ -3105,7 +3161,7 @@ Commit Message:
 
 
 ---
-### [Closed/Done] [SAT-45992](https://redhat.atlassian.net/browse/SAT-45992) - Imaanpreet Kaur - share monthly report with stakeholders - May 2026
+### [Closed/Done] [Task] [SAT-45992](https://redhat.atlassian.net/browse/SAT-45992) - 3sp - Imaanpreet Kaur - share monthly report with stakeholders - May 2026
 
 
 
@@ -3114,7 +3170,7 @@ Commit Message:
 
 
 ---
-### [Closed/Done] [SAT-45801](https://redhat.atlassian.net/browse/SAT-45801) - Pablo Mendez Hernandez - SPIKE - Investigate UI performance regression-finding and diagnostics producer contract for Satellite
+### [Closed/Done] [Spike] [SAT-45801](https://redhat.atlassian.net/browse/SAT-45801) - 5sp - Pablo Mendez Hernandez - SPIKE - Investigate UI performance regression-finding and diagnostics producer contract for Satellite
 
 
 **Description:**
@@ -3153,12 +3209,12 @@ Out of scope for this spike:
 ---
 ## In review issues
 
-### [Review] [SAT-45994](https://redhat.atlassian.net/browse/SAT-45994) - Imaanpreet Kaur - Add SSH Tunnel Instructions for Grafana
+### [Review] [Sub-task] [SAT-45994](https://redhat.atlassian.net/browse/SAT-45994) - 5sp - Imaanpreet Kaur - Add SSH Tunnel Instructions for Grafana
 
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Imaanpreet Kaur** (2026-06-08)
 ```
@@ -3213,12 +3269,12 @@ Please cherry-pick my commits into:
 
 
 ---
-### [Review] [SAT-45993](https://redhat.atlassian.net/browse/SAT-45993) - Imaanpreet Kaur - Replace PCP commands. pmval → pmrep
+### [Review] [Sub-task] [SAT-45993](https://redhat.atlassian.net/browse/SAT-45993) - 3sp - Imaanpreet Kaur - Replace PCP commands. pmval → pmrep
 
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Imaanpreet Kaur** (2026-06-04)
 ```
@@ -3331,7 +3387,7 @@ Please cherry-pick my commits into:
 
 
 ---
-### [Review] [SAT-31994](https://redhat.atlassian.net/browse/SAT-31994) -  - Error on "Synchronize Capsule" task: (Katello::Errors::Pulp3Error) - ErrorDetail(string='This field must be unique.', code='unique')
+### [Review] [Bug] [SAT-31994](https://redhat.atlassian.net/browse/SAT-31994) - 3sp -  - Error on "Synchronize Capsule" task: (Katello::Errors::Pulp3Error) - ErrorDetail(string='This field must be unique.', code='unique')
 
 
 **Description:**
@@ -3373,26 +3429,6 @@ an immediate capsule Library synchronization may end up in Warning state with th
  ac8e083a | /usr/share/gems/gems/katello-4.16.0/a...
 ```
 
-
-
-**Comments (Last 3):**
-
-#### **Satellite Jira-Automation** (2025-12-15)
-```
-Upon review of our valid but aging backlog, the Satellite Team has concluded that this issue does not meet the criteria for a resolution in the near term, and are planning to close in a month. This message may be a repeat of a previous update and the issue is again being considered to be closed. If you have any concerns about this, please contact your Red Hat Account team. Thank you.
-```
-
-#### **Ron Lavi** (2025-12-16)
-```
-Apologies for the notification. This ticket was incorrectly targeted by the auto-closure script due to a logic error in the filter.
-
-This ticket is still valid and has not expired. We have corrected the automation logic. Please disregard the previous closure notification.
-```
-
-#### **Pablo Mendez Hernandez** (2026-04-02)
-```
-PR opened upstream: [Katello/katello#11700|https://github.com/Katello/katello/pull/11700] — Redmine: [#39205|https://projects.theforeman.org/issues/39205]
-```
 
 
 
@@ -3465,7 +3501,7 @@ Tests:
 
 
 ---
-### [Review] [SAT-31672](https://redhat.atlassian.net/browse/SAT-31672) - Pablo Mendez Hernandez - Improve Repo sync and Capsule sync testing to mimic end-user operations
+### [Review] [Story] [SAT-31672](https://redhat.atlassian.net/browse/SAT-31672) - 13sp - Pablo Mendez Hernandez - Improve Repo sync and Capsule sync testing to mimic end-user operations
 
 
 **Description:**
@@ -3504,28 +3540,13 @@ Red Hat Satellite Client 6 for RHEL 7 Server R...
 
 
 
-**Comments (Last 3):**
-
-#### **Sayan Das** (2025-03-10)
-```
-CC [~accountid:70121:1789d494-d5af-4951-ba10-3f23fb43eaba] [~accountid:70121:843ee2a6-4309-44bf-8ff5-75c4dd1ada07] [~accountid:712020:4ec21e0e-87d5-43a6-9ef4-52bb8736eb33] [~accountid:712020:219ca791-225a-4c34-a291-66c6aab3079d] [~accountid:712020:cec31564-1531-4a52-b374-94bafaaa95cb] [~accountid:712020:79a294b8-c8a7-40d8-94f9-dfafcc12c919] 
-
-As discussed during the Monthly Cadence, This is what i could come up so far as a proposal and opened it as a story for the time being. 
-```
-
-#### **Pablo Mendez Hernandez** (2025-04-14)
-```
-I have some code already implemented in one of my dev trees, so I'm keeping the assignment.
-```
-
-
 
 
 
 ---
 ## In progress issues
 
-### [In Progress] [SAT-45959](https://redhat.atlassian.net/browse/SAT-45959) - Imaanpreet Kaur - Performance Optimization: Use a cache of existing artifacts during sync
+### [In Progress] [Story] [SAT-45959](https://redhat.atlassian.net/browse/SAT-45959) - 5sp - Imaanpreet Kaur - Performance Optimization: Use a cache of existing artifacts during sync
 
 
 **Description:**
@@ -3564,7 +3585,7 @@ Perform the following on a patched and unpatched system.
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Daniel Alley** (2026-06-03)
 ```
@@ -3576,7 +3597,7 @@ This is related to [https://redhat.atlassian.net/browse/SAT-45821|https://redhat
 
 
 ---
-### [In Progress] [SAT-45821](https://redhat.atlassian.net/browse/SAT-45821) - Imaanpreet Kaur - Performance / Memory optimization: Use a cache of existing Package objects from the latest repo version during sync 
+### [In Progress] [Story] [SAT-45821](https://redhat.atlassian.net/browse/SAT-45821) - 5sp - Imaanpreet Kaur - Performance / Memory optimization: Use a cache of existing Package objects from the latest repo version during sync 
 
 
 **Description:**
@@ -3597,7 +3618,7 @@ An 87% reduction in...
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Daniel Alley** (2026-06-03)
 ```
@@ -3613,7 +3634,7 @@ I would expect most syncs and resyncs, including of repos that were previously d
 ---
 ## New issues
 
-### [Release Pending - Upstream] [SAT-46106](https://redhat.atlassian.net/browse/SAT-46106) - Pablo Mendez Hernandez - Eliminate redundant Candlepin GETs during host registration
+### [Release Pending - Upstream] [Bug] [SAT-46106](https://redhat.atlassian.net/browse/SAT-46106) - Pablo Mendez Hernandez - Eliminate redundant Candlepin GETs during host registration
 
 
 **Description:**
@@ -3627,7 +3648,7 @@ POST /rhsm/consumers makes 3 Candlepin HTTP calls per registration: 1 POST (unav
 
 
 ---
-### [Release Pending - Upstream] [SAT-46105](https://redhat.atlassian.net/browse/SAT-46105) - Pablo Mendez Hernandez - Concurrent registration fails with "PG::UniqueViolation: ERROR: duplicate key value violates unique constraint \"index_operatingsystems_on_title\"
+### [Release Pending - Upstream] [Bug] [SAT-46105](https://redhat.atlassian.net/browse/SAT-46105) - 2sp - Pablo Mendez Hernandez - Concurrent registration fails with "PG::UniqueViolation: ERROR: duplicate key value violates unique constraint \"index_operatingsystems_on_title\"
 
 
 **Description:**
@@ -3685,7 +3706,7 @@ We can see the following in production.log:
 
 
 ---
-### [New] [SAT-46099](https://redhat.atlassian.net/browse/SAT-46099) - Imaanpreet Kaur - Sync memory consumption too high in pathological cases
+### [New] [Bug] [SAT-46099](https://redhat.atlassian.net/browse/SAT-46099) - 5sp - Imaanpreet Kaur - Sync memory consumption too high in pathological cases
 
 
 **Description:**
@@ -3707,7 +3728,7 @@ Are known to cause very high memory consumption of pulp_rpm when synced - often 
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **SFDC Integration** (2026-06-08)
 ```
@@ -3719,12 +3740,12 @@ Are known to cause very high memory consumption of pulp_rpm when synced - often 
 
 
 ---
-### [Review] [SAT-45994](https://redhat.atlassian.net/browse/SAT-45994) - Imaanpreet Kaur - Add SSH Tunnel Instructions for Grafana
+### [Review] [Sub-task] [SAT-45994](https://redhat.atlassian.net/browse/SAT-45994) - 5sp - Imaanpreet Kaur - Add SSH Tunnel Instructions for Grafana
 
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Imaanpreet Kaur** (2026-06-08)
 ```
@@ -3779,12 +3800,12 @@ Please cherry-pick my commits into:
 
 
 ---
-### [Review] [SAT-45993](https://redhat.atlassian.net/browse/SAT-45993) - Imaanpreet Kaur - Replace PCP commands. pmval → pmrep
+### [Review] [Sub-task] [SAT-45993](https://redhat.atlassian.net/browse/SAT-45993) - 3sp - Imaanpreet Kaur - Replace PCP commands. pmval → pmrep
 
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Imaanpreet Kaur** (2026-06-04)
 ```
@@ -3897,7 +3918,7 @@ Please cherry-pick my commits into:
 
 
 ---
-### [Testing] [SAT-45971](https://redhat.atlassian.net/browse/SAT-45971) - Pablo Mendez Hernandez - satperf: Add UI performance measurement framework
+### [Testing] [Task] [SAT-45971](https://redhat.atlassian.net/browse/SAT-45971) - 7sp - Pablo Mendez Hernandez - satperf: Add UI performance measurement framework
 
 
 **Description:**
@@ -3917,6 +3938,12 @@ Commits:
 
 **Linked Pull Requests & Merge Requests**
 
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/72b736cf80a1
+```
+Commit Message:
+.commit.message
+```
+
 #### PR/MR: https://github.com/redhat-performance/satperf/commit/f60ed4a8bdfa
 ```
 Commit Message:
@@ -3929,16 +3956,10 @@ Commit Message:
 .commit.message
 ```
 
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/72b736cf80a1
-```
-Commit Message:
-.commit.message
-```
-
 
 
 ---
-### [In Progress] [SAT-45959](https://redhat.atlassian.net/browse/SAT-45959) - Imaanpreet Kaur - Performance Optimization: Use a cache of existing artifacts during sync
+### [In Progress] [Story] [SAT-45959](https://redhat.atlassian.net/browse/SAT-45959) - 5sp - Imaanpreet Kaur - Performance Optimization: Use a cache of existing artifacts during sync
 
 
 **Description:**
@@ -3977,7 +3998,7 @@ Perform the following on a patched and unpatched system.
 
 
 
-**Comments (Last 3):**
+**Comments:**
 
 #### **Daniel Alley** (2026-06-03)
 ```
