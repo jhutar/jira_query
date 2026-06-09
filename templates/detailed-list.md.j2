@@ -3,21 +3,30 @@
 
 {% if i.fields.description %}
 **Description:**
+```
 {{ i.fields.description | truncate(1500, True, '...') }}
+```
 {% endif %}
 
 {% if i.fields.comment and i.fields.comment.comments %}
 **Comments (Last 3):**
 {% for c in i.fields.comment.comments[-3:] %}
-* **{{ c.author.displayName }}** ({{ c.created[:10] }}): {{ c.body | replace('\n', '\n  ') | truncate(1500, True, '...') }}
+#### **{{ c.author.displayName }}** ({{ c.created[:10] }})
+```
+{{ c.body | truncate(1500, True, '...') }}
+```
+
 {% endfor %}
 {% endif %}
 
 {% if i.prs %}
 **Linked Pull Requests & Merge Requests**
 {% for pr in i.prs %}
---- PR/MR: {{ pr.url }} ---
+#### PR/MR: {{ pr.url }}
+```
 {{ pr.info }}
+```
+
 {% endfor %}
 {% endif %}
 

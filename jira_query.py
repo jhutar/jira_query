@@ -62,8 +62,9 @@ def enrich_with_prs(text):
     if not text:
         return []
     # Find PR links
-    urls = re.findall(r"https://github.com/[^/\s]+/[^/\s]+/pull/\d+", text)
-    urls += re.findall(r"https://gitlab[^\s]*/-/merge_requests/\d+", text)
+    # We stop at delimiters like |, ], ), or whitespace to handle Jira markdown links
+    urls = re.findall(r"https://github.com/[^/\s|\]\)]+/[^/\s|\]\)]+/pull/\d+", text)
+    urls += re.findall(r"https://gitlab[^\s|\]\)]*/-/merge_requests/\d+", text)
     urls = list(set(urls))
 
     enrichment = []
