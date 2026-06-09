@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-import json
 import os
-import re
-import subprocess
 import sys
 
-from jira_query import JiraClient, load_server_config, TemplateRenderer
+from jira_query import JiraClient, load_server_config, TemplateRenderer, enrich_issue_with_prs
 
 
 # Configure queries from the shell script
@@ -124,54 +121,6 @@ PROJECTS = {
 }
 
 
-def get_pr_info(url):
-    try:
-        if "github.com" in url:
-            cmd = [
-                "gh",
-                "pr",
-                "view",
-                url,
-                "--json",
-                "title,body",
-                "--jq",
-                '."Title: \\(.title)\\n\\(.body)"',
-            ]
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            return result.stdout.strip()
-        elif "gitlab" in url:
-            # Setting GL_HOST to gitlab.cee.redhat.com handles instances for this specific context
-            env = os.environ.copy()
-            if "gitlab.cee.redhat.com" in url:
-                env["GL_HOST"] = "gitlab.cee.redhat.com"
-            cmd = ["glab", "mr", "view", url, "-F", "json"]
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, check=True, env=env
-            )
-            data = json.loads(result.stdout)
-            return f"Title: {data.get('title')}\n{data.get('description')}"
-    except Exception as e:
-        return f"(Failed to fetch PR info: {e})"
-    return ""
-
-
-def enrich_with_prs(text):
-    if not text:
-        return ""
-    # Find PR links
-    urls = re.findall(r"https://github.com/[^/\s]+/[^/\s]+/pull/\d+", text)
-    urls += re.findall(r"https://gitlab[^\s]*/-/merge_requests/\d+", text)
-    urls = list(set(urls))
-
-    enrichment = []
-    for url in urls:
-        info = get_pr_info(url)
-        if info:
-            enrichment.append(f"\n--- PR/MR: {url} ---\n{info}")
-
-    return "".join(enrichment)
-
-
 def main():
     server_conf = load_server_config("~/.jira_query.yaml")
     jira = JiraClient(
@@ -197,15 +146,13 @@ def main():
     for project, queries in PROJECTS.items():
         output.append(f"# {project}")
         for title, jql in queries:
-            output.append(f"* {title}")
+            output.append(f"## {title}")
             issues = jira.search_issues(jql)
+
+            for issue in issues:
+                enrich_issue_with_prs(issue)
+
             rendered = renderer.render({"issues": issues})
-
-            # Enrich the rendered text with PR infos
-            pr_info = enrich_with_prs(rendered)
-            if pr_info:
-                rendered += "\n\n### Linked Pull Requests & Merge Requests\n" + pr_info
-
             output.append(rendered)
         output.append("\n")
 

@@ -11,18 +11,68 @@ import jinja2
 from jira import JIRA
 from jira.resources import Issue
 import json
+import re
+import subprocess
 import yaml
 
-# Configuration
-DEFAULT_CONFIG_PATH = "~/.jira_query.yaml"
-DEFAULT_TEMPLATE_PATH = "templates/default.md.j2"
+# ... (existing imports)
 
-# Logging Setup
-logging.basicConfig(
-    level=logging.WARNING,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
+def get_pr_info(url):
+    try:
+        if "github.com" in url:
+            cmd = [
+                "gh",
+                "pr",
+                "view",
+                url,
+                "--json",
+                "title,body",
+                "--jq",
+                '."Title: \\(.title)\\n\\(.body)"',
+            ]
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            return result.stdout.strip()
+        elif "gitlab" in url:
+            # Setting GL_HOST to gitlab.cee.redhat.com handles instances for this specific context
+            env = os.environ.copy()
+            if "gitlab.cee.redhat.com" in url:
+                env["GL_HOST"] = "gitlab.cee.redhat.com"
+            cmd = ["glab", "mr", "view", url, "-F", "json"]
+            result = subprocess.run(
+                cmd, capture_output=True, text=True, check=True, env=env
+            )
+            data = json.loads(result.stdout)
+            return f"Title: {data.get('title')}\n{data.get('description')}"
+    except Exception as e:
+        return f"(Failed to fetch PR info: {e})"
+    return ""
+
+
+def enrich_with_prs(text):
+    if not text:
+        return ""
+    # Find PR links
+    urls = re.findall(r"https://github.com/[^/\s]+/[^/\s]+/pull/\d+", text)
+    urls += re.findall(r"https://gitlab[^\s]*/-/merge_requests/\d+", text)
+    urls = list(set(urls))
+
+    enrichment = []
+    for url in urls:
+        info = get_pr_info(url)
+        if info:
+            enrichment.append(f"\n--- PR/MR: {url} ---\n{info}")
+
+    return "".join(enrichment)
+
+
+def enrich_issue_with_prs(issue):
+    # Collect text from description and comments to find PR links
+    text_to_search = issue.fields.description or ""
+    if hasattr(issue.fields, "comment") and issue.fields.comment:
+        for comment in issue.fields.comment.comments:
+            text_to_search += "\n" + comment.body
+    
+    issue.pr_info = enrich_with_prs(text_to_search)
 
 
 class JiraQueryError(Exception):

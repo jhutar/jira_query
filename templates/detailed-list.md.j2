@@ -13,5 +13,10 @@
 {% endfor %}
 {% endif %}
 
+{% if i.pr_info %}
+**Linked Pull Requests & Merge Requests**
+{{ i.pr_info }}
+{% endif %}
+
 ---
 {%- endfor %}
