@@ -4,7 +4,8 @@
 import os
 import sys
 
-from jira_query import JiraClient, load_server_config, TemplateRenderer, enrich_issue_with_prs
+from jira_query import JiraClient, load_server_config, TemplateRenderer
+from pr_utils import enrich_issue_with_prs
 
 
 # Configure queries from the shell script

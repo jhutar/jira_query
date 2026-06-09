@@ -11,8 +11,6 @@ import jinja2
 from jira import JIRA
 from jira.resources import Issue
 import json
-import re
-import subprocess
 import yaml
 
 # Configuration
@@ -25,78 +23,6 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
-
-
-def get_pr_info(url):
-    cmd = []
-    try:
-        if "github.com" in url:
-            # Pattern: https://github.com/owner/repo/pull/id
-            match = re.search(r"github\.com/([^/]+/[^/]+)/pull/(\d+)", url)
-            if match:
-                repo, pr_id = match.groups()
-                cmd = [
-                    "gh",
-                    "pr",
-                    "view",
-                    pr_id,
-                    "--repo",
-                    repo,
-                    "--json",
-                    "title,body",
-                    "--jq",
-                    '."Title: \\(.title)\\n\\(.body)"',
-                ]
-                result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-                return result.stdout.strip()
-        elif "gitlab" in url:
-            # Pattern: https://host/path/to/repo/-/merge_requests/id
-            match = re.search(r"https://([^/]+)/(.+)/-/merge_requests/(\d+)", url)
-            if match:
-                host, repo, mr_id = match.groups()
-                # Setting GL_HOST to gitlab.cee.redhat.com handles instances for this specific context
-                env = os.environ.copy()
-                env["GL_HOST"] = host
-                cmd = ["glab", "mr", "view", mr_id, "-R", repo, "-F", "json"]
-                result = subprocess.run(
-                    cmd, capture_output=True, text=True, check=True, env=env
-                )
-                data = json.loads(result.stdout)
-                return f"Title: {data.get('title')}\n{data.get('description')}"
-    except subprocess.CalledProcessError as e:
-        stderr = e.stderr.strip() if e.stderr else "No stderr"
-        return f"(Failed to fetch PR info: Command {cmd} failed with exit status {e.returncode}.\nStderr: {stderr})"
-    except Exception as e:
-        return f"(Failed to fetch PR info: {e})"
-    return ""
-
-
-def enrich_with_prs(text):
-    if not text:
-        return []
-    # Find PR links
-    # We stop at delimiters like |, ], ), or whitespace to handle Jira markdown links
-    urls = re.findall(r"https://github.com/[^/\s|\]\)]+/[^/\s|\]\)]+/pull/\d+", text)
-    urls += re.findall(r"https://gitlab[^\s|\]\)]*/-/merge_requests/\d+", text)
-    urls = list(set(urls))
-
-    enrichment = []
-    for url in urls:
-        info = get_pr_info(url)
-        if info:
-            enrichment.append({"url": url, "info": info})
-
-    return enrichment
-
-
-def enrich_issue_with_prs(issue):
-    # Collect text from description and comments to find PR links
-    text_to_search = issue.fields.description or ""
-    if hasattr(issue.fields, "comment") and issue.fields.comment:
-        for comment in issue.fields.comment.comments:
-            text_to_search += "\n" + comment.body
-    
-    issue.prs = enrich_with_prs(text_to_search)
 
 
 class JiraQueryError(Exception):
