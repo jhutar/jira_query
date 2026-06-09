@@ -65,60 +65,60 @@ PROJECTS = {
             "project in (KONFLUX, KFLUXINFRA, KFLUXBUGS) AND component = Performance AND created >= -7d AND assignee is not EMPTY AND status not in (Closed, Done)",
         ),
     ],
-    ###"Pipelines": [
-    ###    (
-    ###        "Finished issues",
-    ###        "project = SRVKP AND component = Performance AND status CHANGED TO (Closed, Done) AFTER -7d",
-    ###    ),
-    ###    (
-    ###        "In review issues",
-    ###        "project = SRVKP AND component = Performance AND status in (Review, 'Code Review') AND status CHANGED TO (Review, 'Code Review') AFTER -7d",
-    ###    ),
-    ###    (
-    ###        "In progress issues",
-    ###        f"project = SRVKP AND component = Performance AND type not in (Feature, Outcome) AND status = 'In Progress' AND (status CHANGED TO 'In Progress' AFTER -7d OR issuekey IN commented('-7d', 'now', {format_team(TEAMS['PIPELINES'])}))",
-    ###    ),
-    ###    (
-    ###        "New issues",
-    ###        "project = SRVKP AND component = Performance AND created >= -7d AND assignee is not EMPTY AND status not in (Closed, Done)",
-    ###    ),
-    ###],
-    ###"ConsoleDot": [
-    ###    (
-    ###        "Finished issues",
-    ###        "project = HCEPERF AND status CHANGED TO (Closed, Done) AFTER -7d",
-    ###    ),
-    ###    (
-    ###        "In review issues",
-    ###        "project = HCEPERF AND status in (Review, 'Release Pending') AND status CHANGED TO (Review, 'Release Pending') AFTER -7d",
-    ###    ),
-    ###    (
-    ###        "In progress issues",
-    ###        f"project = HCEPERF AND type not in (Feature, Outcome) AND status = 'In Progress' AND (status CHANGED TO 'In Progress' AFTER -7d OR issuekey IN commented('-7d', 'now', {format_team(TEAMS['HCEPERF'])}))",
-    ###    ),
-    ###    (
-    ###        "New issues",
-    ###        "project = HCEPERF AND created >= -7d AND assignee is not EMPTY AND status not in (Closed, Done)",
-    ###    ),
-    ###],
-    ###"Satellite": [
-    ###    (
-    ###        "Finished issues",
-    ###        "((project in (SAT) AND (component = Performance OR labels = Performance)) OR (project in (HCEPERF) AND component in ('RHIN - Image Builder', 'RHIN - Provisioning', 'RHIN - Pulp', 'RHIN - Repositories'))) AND status CHANGED TO (Closed, Done) AFTER -7d",
-    ###    ),
-    ###    (
-    ###        "In review issues",
-    ###        "((project in (SAT) AND (component = Performance OR labels = Performance)) OR (project in (HCEPERF) AND component in ('RHIN - Image Builder', 'RHIN - Provisioning', 'RHIN - Pulp', 'RHIN - Repositories'))) AND status = Review AND status CHANGED TO Review AFTER -7d",
-    ###    ),
-    ###    (
-    ###        "In progress issues",
-    ###        f"((project in (SAT) AND (component = Performance OR labels = Performance)) OR (project in (HCEPERF) AND component in ('RHIN - Image Builder', 'RHIN - Provisioning', 'RHIN - Pulp', 'RHIN - Repositories'))) AND type not in (Feature, Outcome) AND status = 'In Progress' AND (status CHANGED TO 'In Progress' AFTER -7d OR issuekey IN commented('-7d', 'now', {format_team(TEAMS['SAT'])}))",
-    ###    ),
-    ###    (
-    ###        "New issues",
-    ###        "((project in (SAT) AND (component = Performance OR labels = Performance)) OR (project in (HCEPERF) AND component in ('RHIN - Image Builder', 'RHIN - Provisioning', 'RHIN - Pulp', 'RHIN - Repositories'))) AND created >= -7d AND assignee is not EMPTY AND status not in (Closed, Done)",
-    ###    ),
-    ###],
+    "Pipelines": [
+        (
+            "Finished issues",
+            "project = SRVKP AND component = Performance AND status CHANGED TO (Closed, Done) AFTER -7d",
+        ),
+        (
+            "In review issues",
+            "project = SRVKP AND component = Performance AND status in (Review, 'Code Review') AND status CHANGED TO (Review, 'Code Review') AFTER -7d",
+        ),
+        (
+            "In progress issues",
+            f"project = SRVKP AND component = Performance AND type not in (Feature, Outcome) AND status = 'In Progress' AND (status CHANGED TO 'In Progress' AFTER -7d OR issuekey IN commented('-7d', 'now', {format_team(TEAMS['PIPELINES'])}))",
+        ),
+        (
+            "New issues",
+            "project = SRVKP AND component = Performance AND created >= -7d AND assignee is not EMPTY AND status not in (Closed, Done)",
+        ),
+    ],
+    "ConsoleDot": [
+        (
+            "Finished issues",
+            "project = HCEPERF AND status CHANGED TO (Closed, Done) AFTER -7d",
+        ),
+        (
+            "In review issues",
+            "project = HCEPERF AND status in (Review, 'Release Pending') AND status CHANGED TO (Review, 'Release Pending') AFTER -7d",
+        ),
+        (
+            "In progress issues",
+            f"project = HCEPERF AND type not in (Feature, Outcome) AND status = 'In Progress' AND (status CHANGED TO 'In Progress' AFTER -7d OR issuekey IN commented('-7d', 'now', {format_team(TEAMS['HCEPERF'])}))",
+        ),
+        (
+            "New issues",
+            "project = HCEPERF AND created >= -7d AND assignee is not EMPTY AND status not in (Closed, Done)",
+        ),
+    ],
+    "Satellite": [
+        (
+            "Finished issues",
+            "((project in (SAT) AND (component = Performance OR labels = Performance)) OR (project in (HCEPERF) AND component in ('RHIN - Image Builder', 'RHIN - Provisioning', 'RHIN - Pulp', 'RHIN - Repositories'))) AND status CHANGED TO (Closed, Done) AFTER -7d",
+        ),
+        (
+            "In review issues",
+            "((project in (SAT) AND (component = Performance OR labels = Performance)) OR (project in (HCEPERF) AND component in ('RHIN - Image Builder', 'RHIN - Provisioning', 'RHIN - Pulp', 'RHIN - Repositories'))) AND status = Review AND status CHANGED TO Review AFTER -7d",
+        ),
+        (
+            "In progress issues",
+            f"((project in (SAT) AND (component = Performance OR labels = Performance)) OR (project in (HCEPERF) AND component in ('RHIN - Image Builder', 'RHIN - Provisioning', 'RHIN - Pulp', 'RHIN - Repositories'))) AND type not in (Feature, Outcome) AND status = 'In Progress' AND (status CHANGED TO 'In Progress' AFTER -7d OR issuekey IN commented('-7d', 'now', {format_team(TEAMS['SAT'])}))",
+        ),
+        (
+            "New issues",
+            "((project in (SAT) AND (component = Performance OR labels = Performance)) OR (project in (HCEPERF) AND component in ('RHIN - Image Builder', 'RHIN - Provisioning', 'RHIN - Pulp', 'RHIN - Repositories'))) AND created >= -7d AND assignee is not EMPTY AND status not in (Closed, Done)",
+        ),
+    ],
 }
 
 
