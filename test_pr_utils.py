@@ -37,6 +37,13 @@ def test_enrich_with_prs_patterns(mock_get_pr_info):
         # GitLab with deep subgroups
         ("https://gitlab.cee.redhat.com/releng/sub/group/repo/-/merge_requests/123", 
          ["https://gitlab.cee.redhat.com/releng/sub/group/repo/-/merge_requests/123"]),
+        
+        # User reported patterns (Jira links with brackets and formatting)
+        ("PR [konflux-ci/build-definitions#3560|https://github.com/konflux-ci/build-definitions/pull/3560] has been closed without merging.",
+         ["https://github.com/konflux-ci/build-definitions/pull/3560"]),
+        
+        ("requested a new tenant with [+https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006+|https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006]",
+         ["https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006"]),
     ]
 
     for text, expected_urls in test_cases:
