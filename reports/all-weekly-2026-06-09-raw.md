@@ -205,18 +205,18 @@ All tests pass.
 ## Example Scenarios
 
 **Before (could skip incorrectly):**
-` ` `
+\`\`\`
 # 5MB pod log with "config file not found" on line 1000
 if "not found" in content and "error from server" in content:
     return False  # 🚨 Skips 5MB log!
-` ` `
+\`\`\`
 
 **After (protected by size check):**
-` ` `python
+\`\`\`python
 if content_size >= 2048:  # 5MB > 2KB
     return True  # ✅ Immediately marked meaningful
 # Pattern check never runs!
-` ` `
+\`\`\`
 
 ## Files Changed
 
@@ -395,22 +395,6 @@ As agreed with [~accountid:5a78c7f73297605c78217f31] , since the “Release” s
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006
-```
-Title: Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
-#### What:
-
-Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
-
-Signed-off-by: Roberto Alfieri <ralfieri@redhat.com>
-
-#### Why:
-learning about konflux
-
-#### Tickets:
-https://redhat.atlassian.net/browse/KONFLUX-13726
-```
-
 #### PR/MR: https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18005
 ```
 Title: Fix staging add-namespace.sh for macOS compatibility
@@ -450,6 +434,22 @@ For more detailed information about running a PipelineRun, please refer to Pipel
 To customize the proposed PipelineRuns after merge, please refer to [Build Pipeline customization](https://konflux-ci.dev/docs/building/customizing-the-build/)
 
 Please follow the block sequence indentation style introduced by the proprosed PipelineRuns YAMLs, or keep using consistent indentation level through your customized PipelineRuns. When different levels are mixed, it will be changed to the proposed style.
+```
+
+#### PR/MR: https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006
+```
+Title: Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
+#### What:
+
+Add tenant ralfieri-tenant to staging cluster stone-stg-rh01
+
+Signed-off-by: Roberto Alfieri <ralfieri@redhat.com>
+
+#### Why:
+learning about konflux
+
+#### Tickets:
+https://redhat.atlassian.net/browse/KONFLUX-13726
 ```
 
 
@@ -980,16 +980,6 @@ CLOSING this as PR: [https://github.com/konflux-ci/build-definitions/pull/3566|h
 
 **Linked Pull Requests & Merge Requests**
 
-#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
-```
-Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
-The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
-
-The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
-
-Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
-```
-
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3566
 ```
 Title: fix(modelcar-oci-ta): add missing computeResources to all steps
@@ -1030,6 +1020,16 @@ All steps comply with the project compute resource policy:
 Signed-off-by: Subrata Modak <smodak@redhat.com>
 
 Made with [Cursor](https://cursor.com)
+```
+
+#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
+```
+Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
+The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
+
+The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
+
+Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 ```
 
 
@@ -1114,6 +1114,16 @@ Assisted-by: CursorAgent@Cursor.com
 
 **Linked Pull Requests & Merge Requests**
 
+#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
+```
+Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
+The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
+
+The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
+
+Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+```
+
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3577
 ```
 Title: feat(update-infra-deployments): add computeResources to all steps
@@ -1156,16 +1166,6 @@ Assisted-by: CursorAgent@Cursor.com
 Made with [Cursor](https://cursor.com)
 
 [KONFLUX-13065]: https://redhat.atlassian.net/browse/KONFLUX-13065?atlOrigin=eyJpIjoiNWRkNTljNzYxNjVmNDY3MDlhMDU5Y2ZhYzA5YTRkZjUiLCJwIjoiZ2l0aHViLWNvbS1KU1cifQ
-```
-
-#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
-```
-Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
-The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
-
-The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
-
-Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 ```
 
 
@@ -1404,6 +1404,16 @@ Assisted-by: CursorAgent@Cursor.com
 
 **Linked Pull Requests & Merge Requests**
 
+#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
+```
+Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
+The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
+
+The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
+
+Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+```
+
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3571
 ```
 Title: fix(run-script-oci-ta): right-size computeResources per fleet data
@@ -1468,16 +1478,6 @@ Signed-off-by: Subrata Modak <smodak@redhat.com>
 Assisted-by: CursorAgent@Cursor.com
 
 Made with [Cursor](https://cursor.com)
-```
-
-#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
-```
-Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
-The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
-
-The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
-
-Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 ```
 
 
@@ -1576,6 +1576,16 @@ Assisted-by: CursorAgent@Cursor.com
 
 **Linked Pull Requests & Merge Requests**
 
+#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
+```
+Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
+The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
+
+The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
+
+Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
+```
+
 #### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3570
 ```
 Title: feat(run-opm-command-oci-ta): add computeResources to all steps
@@ -1633,16 +1643,6 @@ All steps comply with the project compute resource policy:
 
 Signed-off-by: Subrata Modak <smodak@redhat.com>
 Assisted-by: CursorAgent@Cursor.com
-```
-
-#### PR/MR: https://github.com/konflux-ci/build-definitions/pull/3405
-```
-Title: feat(ta): set 4Gi memory request/limit for use-trusted-artifact step
-The create-trusted-artifact step already sets a 3Gi limit via the generator code. Apply similar resource limits to the use-trusted-artifact step to ensure consistent memory allocation.
-
-The -min variant patches remove the explicit computeResources so those tasks inherit the smaller stepTemplate defaults instead.
-
-Related: https://github.com/konflux-ci/konflux-sast-tasks/pull/103
 ```
 
 
@@ -2285,6 +2285,15 @@ Cc: [~accountid:5c6d765aca97144c4716967d]
 
 **Linked Pull Requests & Merge Requests**
 
+#### PR/MR: https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/128
+```
+Title: Add 1 git-crypt collaborator
+New collaborators:
+
+    4C8E95E940EC90038CA973D59A9CB0F812505DE5
+        Subrata Modak <smodak@redhat.com>
+```
+
 #### PR/MR: https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/129
 ```
 Title: feat(HCEPERF-1473): Rotate OOM crash detector SA tokens for all 10 clusters
@@ -2313,15 +2322,6 @@ New 1-year tokens generated via `oc create token --duration=8760h` for SA `perf-
 - Incident: INC4624779
 
 Assisted-by: CursorAgent
-```
-
-#### PR/MR: https://gitlab.cee.redhat.com/ccit/jenkins-csb-customers/perf-casc-master/-/merge_requests/128
-```
-Title: Add 1 git-crypt collaborator
-New collaborators:
-
-    4C8E95E940EC90038CA973D59A9CB0F812505DE5
-        Subrata Modak <smodak@redhat.com>
 ```
 
 
@@ -3066,7 +3066,25 @@ Commits:
 
 **Linked Pull Requests & Merge Requests**
 
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/d6914714b881
+```
+Commit Message:
+.commit.message
+```
+
 #### PR/MR: https://github.com/redhat-performance/satperf/commit/e908d6032310
+```
+Commit Message:
+.commit.message
+```
+
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/e3d2f36b3de0
+```
+Commit Message:
+.commit.message
+```
+
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/53cd27f56484
 ```
 Commit Message:
 .commit.message
@@ -3079,24 +3097,6 @@ Commit Message:
 ```
 
 #### PR/MR: https://github.com/redhat-performance/satperf/commit/7c0b92e13454
-```
-Commit Message:
-.commit.message
-```
-
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/e3d2f36b3de0
-```
-Commit Message:
-.commit.message
-```
-
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/d6914714b881
-```
-Commit Message:
-.commit.message
-```
-
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/53cd27f56484
 ```
 Commit Message:
 .commit.message
@@ -3923,13 +3923,13 @@ Commit Message:
 .commit.message
 ```
 
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/72b736cf80a1
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/25a5b7fd483f
 ```
 Commit Message:
 .commit.message
 ```
 
-#### PR/MR: https://github.com/redhat-performance/satperf/commit/25a5b7fd483f
+#### PR/MR: https://github.com/redhat-performance/satperf/commit/72b736cf80a1
 ```
 Commit Message:
 .commit.message
