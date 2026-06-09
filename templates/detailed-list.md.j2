@@ -1,5 +1,5 @@
 {%- for i in issues %}
-### [{{ i.fields.status }}{% if i.fields.status|string == "Closed" %}/{{ i.fields.resolution }}{% endif %}] [{{ i.key }}]({{ i.permalink() }}) - {{ i.fields.assignee.displayName }} - {{ i.fields.summary }}
+### [{{ i.fields.status }}{% if i.fields.status|string == "Closed" %}/{{ i.fields.resolution }}{% endif %}] [{{ i.fields.issuetype.name }}] [{{ i.key }}]({{ i.permalink() }}){% if i.fields.customfield_10028 %} - {{ i.fields.customfield_10028 | int }}sp{% endif %} - {{ i.fields.assignee.displayName }} - {{ i.fields.summary }}
 
 {% if i.fields.description %}
 **Description:**
