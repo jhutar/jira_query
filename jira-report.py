@@ -72,6 +72,7 @@ def _create_jira_client(url, username, token):
 
 class Doer:
     """Do all the work with Jira to generate the report."""
+
     def __init__(self, args):
         self._logger = logging.getLogger("jira_report.Doer")
 
@@ -110,29 +111,39 @@ class Doer:
             # In Jira Cloud, we must use accountId instead of name
             assignee = None
             if issue.fields.assignee:
-                assignee = getattr(issue.fields.assignee, "accountId", getattr(issue.fields.assignee, "name", None))
-            
+                assignee = getattr(
+                    issue.fields.assignee,
+                    "accountId",
+                    getattr(issue.fields.assignee, "name", None),
+                )
+
             # If for some reason the assignee is not in our list, skip
             if assignee not in assignees:
                 continue
 
             resolution_date_str = issue.fields.resolutiondate
             if not resolution_date_str:
-                self._logger.warning(f"Issue {issue.key} is returned as resolved but has no resolutiondate.")
+                self._logger.warning(
+                    f"Issue {issue.key} is returned as resolved but has no resolutiondate."
+                )
                 continue
 
             # Extract just the date part (first 10 characters: YYYY-MM-DD)
-            res_date = datetime.datetime.strptime(resolution_date_str[:10], "%Y-%m-%d").date()
+            res_date = datetime.datetime.strptime(
+                resolution_date_str[:10], "%Y-%m-%d"
+            ).date()
 
             # Retrieve story points using the custom field ID
             sp_value = getattr(issue.fields, "customfield_10028", 0)
             if sp_value is None:
                 sp_value = 0
-            
+
             try:
                 sp_value = float(sp_value)
             except ValueError:
-                self._logger.warning(f"Could not parse story points for {issue.key}: {sp_value}")
+                self._logger.warning(
+                    f"Could not parse story points for {issue.key}: {sp_value}"
+                )
                 sp_value = 0
 
             self._logger.debug(
@@ -141,7 +152,9 @@ class Doer:
             )
 
             # Add to the day's sum
-            points_by_assignee_date[assignee][res_date] = points_by_assignee_date[assignee].get(res_date, 0) + sp_value
+            points_by_assignee_date[assignee][res_date] = (
+                points_by_assignee_date[assignee].get(res_date, 0) + sp_value
+            )
 
         # Generate the CSV output
         output_path = self._args.output
@@ -149,14 +162,14 @@ class Doer:
 
         with open(output_path, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
-            
+
             # Header
             header = ["Date"] + assignees
             writer.writerow(header)
-            
+
             current_date = start_date
             cumulative_points = {a: 0.0 for a in assignees}
-            
+
             # Iterate through every day in the time range
             while current_date <= end_date:
                 row = [current_date.strftime("%Y-%m-%d")]
@@ -203,13 +216,13 @@ def main():
     parser.add_argument(
         "--start",
         required=True,
-        type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d').date(),
+        type=lambda d: datetime.datetime.strptime(d, "%Y-%m-%d").date(),
         help="Start date for the report in YYYY-MM-DD format",
     )
     parser.add_argument(
         "--end",
         required=True,
-        type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d').date(),
+        type=lambda d: datetime.datetime.strptime(d, "%Y-%m-%d").date(),
         help="End date for the report in YYYY-MM-DD format",
     )
     parser.add_argument(

@@ -106,12 +106,14 @@ def _load_config(config_path) -> Dict[str, Any]:
     assert "token" in config_data["server"]["auth"]["basic_auth"]
     return config_data
 
+
 def _create_jira_client(url, username, token):
     options = {"server": url}
     return jira.JIRA(
         options=options,
         basic_auth=(username, token),
     )
+
 
 def _editor():
     """
@@ -136,15 +138,16 @@ def _pretty(heading, data=None):
         print(f"=== {heading} ===")
     else:
         print(f"=== No heading ===")
-        data = heading   # no heading provided, use it as data
+        data = heading  # no heading provided, use it as data
     print(json.dumps(data, indent=4, default=lambda o: "<" + str(o) + ">"))
 
 
-class Cache():
+class Cache:
     """Object representing file with some cached data.
 
     Allows to get and set cached data and tracks version of that data by
     last modification date of a file."""
+
     def __init__(self, filename):
         self._filename = Path(filename).expanduser()
         self._version = None
@@ -180,7 +183,9 @@ class Cache():
             pass
         else:
             if last_modified > self._version:
-                raise Exception(f"Cache file {self._filename} was modified after we loaded it, so saving mine data might overwrite changes")
+                raise Exception(
+                    f"Cache file {self._filename} was modified after we loaded it, so saving mine data might overwrite changes"
+                )
 
         with open(self._filename, "w", encoding="utf-8") as fd:
             json.dump(data, fd)
@@ -195,15 +200,18 @@ class Cache():
         return self.version() < datetime.datetime.now() - duration
 
 
-class Doer():
+class Doer:
     """Do all the work with Jira as per setting in args."""
+
     def __init__(self, args):
         self._logger = logging.getLogger("jira_cli.Doer")
 
         self._args = args
         self._config = _load_config(self._args.config)
         auth = self._config["server"]["auth"]["basic_auth"]
-        self._jira = _create_jira_client(self._config["server"]["url"], auth["username"], auth["token"])
+        self._jira = _create_jira_client(
+            self._config["server"]["url"], auth["username"], auth["token"]
+        )
 
         # Cache objects
         Path("~/.jira-cli/").expanduser().mkdir(exist_ok=True)
@@ -236,21 +244,51 @@ class Doer():
         self._logger.debug("Populating sprint data cache")
         sprints = []
 
-        if "boards_list" not in self._config or self._config["boards_list"] is None or len(self._config["boards_list"]) == 0:
-            self._logger.warning("(Re)populating sprints cache, but it will take ages as we are going through all boards you have access to. If you add `boards_list:` into your config with just a few boards, it will be far faster.")
+        if (
+            "boards_list" not in self._config
+            or self._config["boards_list"] is None
+            or len(self._config["boards_list"]) == 0
+        ):
+            self._logger.warning(
+                "(Re)populating sprints cache, but it will take ages as we are going through all boards you have access to. If you add `boards_list:` into your config with just a few boards, it will be far faster."
+            )
             for board in self._jira.boards(type="scrum", maxResults=False):
-                self._logger.debug(f"Looking for sprints in board {board.id}/{board.name}")
+                self._logger.debug(
+                    f"Looking for sprints in board {board.id}/{board.name}"
+                )
                 for sprint in self._jira.sprints(board_id=board.id, maxResults=False):
                     self._logger.debug(f"Found sprint {sprint.id}/{sprint.name}")
-                    sprints.append({"board_id": board.id, "id": sprint.id, "name": sprint.name, "state": sprint.state})
+                    sprints.append(
+                        {
+                            "board_id": board.id,
+                            "id": sprint.id,
+                            "name": sprint.name,
+                            "state": sprint.state,
+                        }
+                    )
         else:
-            self._logger.debug(f"Loading sprints from only {len(self._config['boards_list'])} boards specified in config")
+            self._logger.debug(
+                f"Loading sprints from only {len(self._config['boards_list'])} boards specified in config"
+            )
             for board_name in self._config["boards_list"]:
-                for board in self._jira.boards(name=board_name, type="scrum", maxResults=False):
-                    self._logger.debug(f"Looking for sprints in board {board.id}/{board.name}")
-                    for sprint in self._jira.sprints(board_id=board.id, maxResults=False):
+                for board in self._jira.boards(
+                    name=board_name, type="scrum", maxResults=False
+                ):
+                    self._logger.debug(
+                        f"Looking for sprints in board {board.id}/{board.name}"
+                    )
+                    for sprint in self._jira.sprints(
+                        board_id=board.id, maxResults=False
+                    ):
                         self._logger.debug(f"Found sprint {sprint.id}/{sprint.name}")
-                        sprints.append({"board_id": board.id, "id": sprint.id, "name": sprint.name, "state": sprint.state})
+                        sprints.append(
+                            {
+                                "board_id": board.id,
+                                "id": sprint.id,
+                                "name": sprint.name,
+                                "state": sprint.state,
+                            }
+                        )
 
         self._cache_sprints.set(sprints)
         return sprints
@@ -264,11 +302,13 @@ class Doer():
         else:
             transitions = self._jira.transitions(issue)
             status_transitions = {t["name"]: t["id"] for t in transitions}
-            assert (
-                self._args.status in status_transitions
-            ), f"Status {self._args.status} not found in available statuses ({', '.join(status_transitions)})"
+            assert self._args.status in status_transitions, (
+                f"Status {self._args.status} not found in available statuses ({', '.join(status_transitions)})"
+            )
             self._jira.transition_issue(issue, status_transitions[self._args.status])
-            print(f"Transitioned to {self._args.status} status (transition {status_transitions[self._args.status]})")
+            print(
+                f"Transitioned to {self._args.status} status (transition {status_transitions[self._args.status]})"
+            )
 
     def _update_fields(self, issue):
         custom = {}
@@ -277,13 +317,19 @@ class Doer():
             custom[self._config["custom_fields"]["epic"]] = self._args.epic
 
         if self._args.story_points is not None:
-            custom[self._config["custom_fields"]["story_points"]] = self._args.story_points
+            custom[self._config["custom_fields"]["story_points"]] = (
+                self._args.story_points
+            )
 
         if self._args.target_start is not None:
-            custom[self._config["custom_fields"]["target_start"]] = self._args.target_start.strftime("%Y-%m-%d")
+            custom[self._config["custom_fields"]["target_start"]] = (
+                self._args.target_start.strftime("%Y-%m-%d")
+            )
 
         if self._args.target_end is not None:
-            custom[self._config["custom_fields"]["target_end"]] = self._args.target_end.strftime("%Y-%m-%d")
+            custom[self._config["custom_fields"]["target_end"]] = (
+                self._args.target_end.strftime("%Y-%m-%d")
+            )
 
         if self._args.sprint is not None:
             sprints = self._list_sprints()
@@ -293,18 +339,30 @@ class Doer():
         elif self._args.sprint_regexp is not None and self._args.sprint_regexp != "":
             sprints = self._list_sprints()
             pattern = re.compile(self._args.sprint_regexp)
-            sprints = [i for i in sprints if i["state"] == "active" and pattern.fullmatch(i["name"])]
+            sprints = [
+                i
+                for i in sprints
+                if i["state"] == "active" and pattern.fullmatch(i["name"])
+            ]
             assert len(sprints) == 1
             custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
         elif self._args.sprint_current:
             sprints = self._list_sprints()
-            pattern = re.compile(self._config["sprint_regexps"][issue.fields.project.key])
-            sprints = [i for i in sprints if i["state"] == "active" and pattern.fullmatch(i["name"])]
+            pattern = re.compile(
+                self._config["sprint_regexps"][issue.fields.project.key]
+            )
+            sprints = [
+                i
+                for i in sprints
+                if i["state"] == "active" and pattern.fullmatch(i["name"])
+            ]
             assert len(sprints) == 1
             custom[self._config["custom_fields"]["sprint"]] = sprints[0]["id"]
 
         if self._args.labels is not None:
-            custom["labels"] = issue.fields.labels + [i for i in self._args.labels if i != ""]
+            custom["labels"] = issue.fields.labels + [
+                i for i in self._args.labels if i != ""
+            ]
 
         if custom != {}:
             if self._args.dry_run:
@@ -314,7 +372,9 @@ class Doer():
                 custom_out = {}
                 for k, v in custom.items():
                     try:
-                        k_readable = list(self._config['custom_fields'].keys())[list(self._config['custom_fields'].values()).index(k)]
+                        k_readable = list(self._config["custom_fields"].keys())[
+                            list(self._config["custom_fields"].values()).index(k)
+                        ]
                         k_readable = f"{k_readable} ({k})"
                     except KeyError:
                         k_readable = k
@@ -339,9 +399,13 @@ class Doer():
                     file_path = output_dir / f"issue-{issue.key}.json"
                     with open(file_path, "w", encoding="utf-8") as fd:
                         json.dump(issue_data, fd, indent=4, sort_keys=False)
-                    self._logger.info(f"Saved details for issue {issue.key} to {file_path}")
+                    self._logger.info(
+                        f"Saved details for issue {issue.key} to {file_path}"
+                    )
                 except Exception as e:
-                    self._logger.error(f"Could not save details for issue {issue.key}: {e}")
+                    self._logger.error(
+                        f"Could not save details for issue {issue.key}: {e}"
+                    )
 
     def do_create(self):
         # Apply issue template if specified
@@ -358,9 +422,9 @@ class Doer():
         elif self._args.description.startswith("@"):
             self._args.description = open(self._args.description[1:], "r").read()
         else:
-            self._args.description = self._args.description \
-                .replace(r"\n", "\n") \
-                .replace(r"\t", "\t")
+            self._args.description = self._args.description.replace(
+                r"\n", "\n"
+            ).replace(r"\t", "\t")
 
         # Some basic checks
         assert self._args.type is not None
@@ -382,7 +446,9 @@ class Doer():
 
         # Set components if it was set
         if self._args.components is not None:
-            issue["components"] = [{"name": i} for i in self._args.components if i != ""]
+            issue["components"] = [
+                {"name": i} for i in self._args.components if i != ""
+            ]
 
         # If creating epic, we need to define epic name
         if self._args.type == "Epic":
@@ -401,27 +467,32 @@ class Doer():
                 includeActive=True,
                 includeInactive=False,
             )
-            
+
             # If we found multiple, try to find an exact match to be helpful
             if len(assignee_users) > 1:
                 exact_matches = [
-                    u for u in assignee_users 
-                    if u.displayName == self._args.assignee or 
-                       getattr(u, "emailAddress", None) == self._args.assignee or
-                       getattr(u, "accountId", None) == self._args.assignee or
-                       getattr(u, "name", None) == self._args.assignee
+                    u
+                    for u in assignee_users
+                    if u.displayName == self._args.assignee
+                    or getattr(u, "emailAddress", None) == self._args.assignee
+                    or getattr(u, "accountId", None) == self._args.assignee
+                    or getattr(u, "name", None) == self._args.assignee
                 ]
                 if len(exact_matches) == 1:
                     assignee_users = exact_matches
 
-            assert len(assignee_users) == 1, f"Expected exactly one user for '{self._args.assignee}', but found {len(assignee_users)}. Please use a more specific name, email, or accountId. Found: {[f'{u.displayName} ({getattr(u, 'accountId', 'no-id')})' for u in assignee_users]}"
+            assert len(assignee_users) == 1, (
+                f"Expected exactly one user for '{self._args.assignee}', but found {len(assignee_users)}. Please use a more specific name, email, or accountId. Found: {[f'{u.displayName} ({getattr(u, 'accountId', 'no-id')})' for u in assignee_users]}"
+            )
             assignee = assignee_users[0]
             self._logger.debug(f"Found user {assignee}")
             if self._args.dry_run:
                 _pretty("Would assign the issue to:", assignee)
             else:
                 # In Jira Cloud, we must use accountId instead of name
-                assignee_id = getattr(assignee, "accountId", getattr(assignee, "name", None))
+                assignee_id = getattr(
+                    assignee, "accountId", getattr(assignee, "name", None)
+                )
                 self._jira.assign_issue(issue, assignee_id)
                 print(f"Assigned to {assignee.displayName} ({assignee_id})")
 
@@ -604,12 +675,12 @@ def main():
     )
     parser_create.add_argument(
         "--target-start",
-        type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d'),
+        type=lambda d: datetime.datetime.strptime(d, "%Y-%m-%d"),
         help="Change target start date (provide date in YYYY-MM-DD format)",
     )
     parser_create.add_argument(
         "--target-end",
-        type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d'),
+        type=lambda d: datetime.datetime.strptime(d, "%Y-%m-%d"),
         help="Change target end date (provide date in YYYY-MM-DD format)",
     )
     parser_create.add_argument(
@@ -665,12 +736,12 @@ def main():
     )
     parser_update.add_argument(
         "--target-start",
-        type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d'),
+        type=lambda d: datetime.datetime.strptime(d, "%Y-%m-%d"),
         help="Change target start date (provide date in YYYY-MM-DD format)",
     )
     parser_update.add_argument(
         "--target-end",
-        type=lambda d: datetime.datetime.strptime(d, '%Y-%m-%d'),
+        type=lambda d: datetime.datetime.strptime(d, "%Y-%m-%d"),
         help="Change target end date (provide date in YYYY-MM-DD format)",
     )
     parser_update.add_argument(

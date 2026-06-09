@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 
+
 def get_pr_info(url):
     cmd = []
     try:
@@ -28,9 +29,11 @@ def get_pr_info(url):
                 ]
                 result = subprocess.run(cmd, capture_output=True, text=True, check=True)
                 return result.stdout.strip()
-            
+
             # GitHub Commit Pattern: https://github.com/owner/repo/commit/sha
-            commit_match = re.search(r"github\.com/([^/]+/[^/]+)/commit/([0-9a-f]{7,40})", url)
+            commit_match = re.search(
+                r"github\.com/([^/]+/[^/]+)/commit/([0-9a-f]{7,40})", url
+            )
             if commit_match:
                 repo, sha = commit_match.groups()
                 cmd = [
@@ -56,16 +59,22 @@ def get_pr_info(url):
                 )
                 data = json.loads(result.stdout)
                 return f"Title: {data.get('title')}\n{data.get('description')}"
-            
+
             # GitLab Commit Pattern: https://host/path/to/repo/-/commit/sha
-            commit_match = re.search(r"https://([^/]+)/(.+)/-/commit/([0-9a-f]{7,40})", url)
+            commit_match = re.search(
+                r"https://([^/]+)/(.+)/-/commit/([0-9a-f]{7,40})", url
+            )
             if commit_match:
                 host, repo, sha = commit_match.groups()
                 # GitLab API requires URL-encoded project path
                 encoded_repo = repo.replace("/", "%2F")
                 env = os.environ.copy()
                 env["GL_HOST"] = host
-                cmd = ["glab", "api", f"projects/{encoded_repo}/repository/commits/{sha}"]
+                cmd = [
+                    "glab",
+                    "api",
+                    f"projects/{encoded_repo}/repository/commits/{sha}",
+                ]
                 result = subprocess.run(
                     cmd, capture_output=True, text=True, check=True, env=env
                 )
@@ -91,11 +100,11 @@ def enrich_with_prs(text):
         r"https://gitlab[^\s|\]\)]*/-/merge_requests/\d+",
         r"https://gitlab[^\s|\]\)]*/-/commit/[0-9a-f]{7,40}",
     ]
-    
+
     urls = []
     for p in patterns:
         urls += re.findall(p, text)
-    
+
     urls = list(set(urls))
 
     enrichment = []
@@ -110,16 +119,16 @@ def enrich_with_prs(text):
 def enrich_issue_with_prs(issue):
     # Collect text only from explicitly requested fields to find PR links
     text_to_search = []
-    
+
     # 1. Description
     if hasattr(issue.fields, "description") and issue.fields.description:
         text_to_search.append(issue.fields.description)
-        
+
     # 2. Comments
     if hasattr(issue.fields, "comment") and issue.fields.comment:
         for comment in issue.fields.comment.comments:
             text_to_search.append(comment.body)
-            
+
     # 3. "Git Pull Request" field (customfield_10875 in this workspace)
     if hasattr(issue.fields, "customfield_10875") and issue.fields.customfield_10875:
         val = issue.fields.customfield_10875

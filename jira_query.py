@@ -36,7 +36,12 @@ class JiraQueryError(Exception):
 class JiraClient:
     """A client to interact with Jira."""
 
-    def __init__(self, server_url: str, username: Optional[str] = None, token: Optional[str] = None):
+    def __init__(
+        self,
+        server_url: str,
+        username: Optional[str] = None,
+        token: Optional[str] = None,
+    ):
         """
         Initializes the Jira client.
 
@@ -57,7 +62,9 @@ class JiraClient:
                 f"Failed to connect to Jira server {server_url}: {e}"
             ) from e
 
-    def search_issues(self, jql_query: str, max_results: Optional[int] = None) -> List[Issue]:
+    def search_issues(
+        self, jql_query: str, max_results: Optional[int] = None
+    ) -> List[Issue]:
         """
         Searches for issues using a JQL query.
 
@@ -74,11 +81,11 @@ class JiraClient:
         """
         logger.debug(f"Executing JQL query: {jql_query}")
         try:
-            issues = self.jira.search_issues(jql_query, maxResults=max_results if max_results is not None else False)
+            issues = self.jira.search_issues(
+                jql_query, maxResults=max_results if max_results is not None else False
+            )
         except Exception as e:
-            raise JiraQueryError(
-                f"Error executing JQL query '{jql_query}': {e}"
-            ) from e
+            raise JiraQueryError(f"Error executing JQL query '{jql_query}': {e}") from e
         logger.info(f"Found {len(issues)} issues for query: {jql_query}")
         return issues
 
@@ -216,7 +223,9 @@ def main():
         jira_token = server_conf["auth"]["basic_auth"]["token"]
 
         # 2. Initialize Jira client
-        jira_client = JiraClient(server_url=jira_url, username=jira_user, token=jira_token)
+        jira_client = JiraClient(
+            server_url=jira_url, username=jira_user, token=jira_token
+        )
 
         # 3. Fetch issues
         issues = jira_client.search_issues(args.jql_query)
@@ -228,7 +237,9 @@ def main():
         # 5. Output results
         if args.output:
             output_path = Path(args.output)
-            output_path.parent.mkdir(parents=True, exist_ok=True) # Ensure directory exists
+            output_path.parent.mkdir(
+                parents=True, exist_ok=True
+            )  # Ensure directory exists
             with open(output_path, "w", encoding="utf-8") as fd:
                 fd.write(rendered_output)
             logger.info(f"Output successfully written to {output_path}")
