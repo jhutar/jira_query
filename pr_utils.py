@@ -61,15 +61,16 @@ def get_pr_info(url):
             commit_match = re.search(r"https://([^/]+)/(.+)/-/commit/([0-9a-f]{7,40})", url)
             if commit_match:
                 host, repo, sha = commit_match.groups()
+                # GitLab API requires URL-encoded project path
+                encoded_repo = repo.replace("/", "%2F")
                 env = os.environ.copy()
                 env["GL_HOST"] = host
-                cmd = ["glab", "commit", "view", sha, "-R", repo]
+                cmd = ["glab", "api", f"projects/{encoded_repo}/repository/commits/{sha}"]
                 result = subprocess.run(
                     cmd, capture_output=True, text=True, check=True, env=env
                 )
-                # glab commit view returns a lot of info, we just want the message part if possible
-                # or just return the whole thing for now as it's useful
-                return result.stdout.strip()
+                data = json.loads(result.stdout)
+                return f"Commit Message:\n{data.get('message', '').strip()}"
 
     except subprocess.CalledProcessError as e:
         stderr = e.stderr.strip() if e.stderr else "No stderr"
