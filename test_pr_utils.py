@@ -44,6 +44,10 @@ def test_enrich_with_prs_patterns(mock_get_pr_info):
         
         ("requested a new tenant with [+https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006+|https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006]",
          ["https://gitlab.cee.redhat.com/releng/konflux-release-data/-/merge_requests/18006"]),
+        
+        # Smart links (duplicated URL in one pattern)
+        ("PR for artifact validation improvements (addressing feedback from PR #67):\n[https://github.com/konflux-ci/perfscale/pull/68|https://github.com/konflux-ci/perfscale/pull/68|smart-link]",
+         ["https://github.com/konflux-ci/perfscale/pull/68"]),
     ]
 
     for text, expected_urls in test_cases:
