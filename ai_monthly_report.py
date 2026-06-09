@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import datetime
 import os
 import sys
 
@@ -148,6 +149,16 @@ def main():
 
     output = []
 
+    # Threshold for filtering comments (previous month)
+    # Jira dates are ISO strings, so we can use string comparison
+    today = datetime.date.today()
+    first_of_this_month = today.replace(day=1)
+    first_of_last_month = (first_of_this_month - datetime.timedelta(days=1)).replace(
+        day=1
+    )
+    start_date = first_of_last_month.strftime("%Y-%m-%d")
+    end_date = first_of_this_month.strftime("%Y-%m-%d")
+
     for project, queries in PROJECTS.items():
         output.append(f"# {project}")
         for title, jql in queries:
@@ -156,6 +167,13 @@ def main():
 
             for issue in issues:
                 enrich_issue_with_prs(issue)
+                # Filter comments to only include those from the previous month
+                if hasattr(issue.fields, "comment") and issue.fields.comment:
+                    issue.fields.comment.comments = [
+                        c
+                        for c in issue.fields.comment.comments
+                        if start_date <= c.created < end_date
+                    ]
 
             rendered = renderer.render({"issues": issues})
             output.append(rendered)

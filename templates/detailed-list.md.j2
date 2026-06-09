@@ -9,8 +9,8 @@
 {% endif %}
 
 {% if i.fields.comment and i.fields.comment.comments %}
-**Comments (Last 3):**
-{% for c in i.fields.comment.comments[-3:] %}
+**Comments:**
+{% for c in i.fields.comment.comments %}
 #### **{{ c.author.displayName }}** ({{ c.created[:10] }})
 ```
 {{ c.body | replace('```', '\`\`\`') | truncate(1500, True, '...') }}

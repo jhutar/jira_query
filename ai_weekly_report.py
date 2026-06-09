@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import datetime
 import os
 import sys
 
@@ -144,6 +145,12 @@ def main():
 
     output = []
 
+    # Threshold for filtering comments (last 7 days)
+    # Jira dates are ISO strings, so we can use string comparison
+    since_date = (datetime.datetime.now() - datetime.timedelta(days=7)).strftime(
+        "%Y-%m-%d"
+    )
+
     for project, queries in PROJECTS.items():
         output.append(f"# {project}")
         for title, jql in queries:
@@ -152,6 +159,13 @@ def main():
 
             for issue in issues:
                 enrich_issue_with_prs(issue)
+                # Filter comments to only include those from the last 7 days
+                if hasattr(issue.fields, "comment") and issue.fields.comment:
+                    issue.fields.comment.comments = [
+                        c
+                        for c in issue.fields.comment.comments
+                        if c.created >= since_date
+                    ]
 
             rendered = renderer.render({"issues": issues})
             output.append(rendered)
