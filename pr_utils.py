@@ -69,10 +69,33 @@ def enrich_with_prs(text):
 
 
 def enrich_issue_with_prs(issue):
-    # Collect text from description and comments to find PR links
-    text_to_search = issue.fields.description or ""
+    # Collect text from all possible fields to find PR links
+    text_to_search = []
+    
+    # Description
+    if hasattr(issue.fields, "description") and issue.fields.description:
+        text_to_search.append(issue.fields.description)
+        
+    # Comments
     if hasattr(issue.fields, "comment") and issue.fields.comment:
         for comment in issue.fields.comment.comments:
-            text_to_search += "\n" + comment.body
+            text_to_search.append(comment.body)
+            
+    # Iterate over all other fields (including custom fields like "Git Pull Request")
+    # We look for any string field that might contain a URL
+    for field_name in dir(issue.fields):
+        if field_name in ["description", "comment"]:
+            continue
+        if field_name.startswith("_"):
+            continue
+            
+        val = getattr(issue.fields, field_name)
+        if isinstance(val, str):
+            text_to_search.append(val)
+        elif isinstance(val, (list, tuple)):
+            for item in val:
+                if isinstance(item, str):
+                    text_to_search.append(item)
     
-    issue.prs = enrich_with_prs(text_to_search)
+    combined_text = "\n".join(text_to_search)
+    issue.prs = enrich_with_prs(combined_text)
