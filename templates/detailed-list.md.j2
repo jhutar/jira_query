@@ -4,7 +4,7 @@
 {% if i.fields.description %}
 **Description:**
 ```
-{{ i.fields.description | replace('```', '` ` `') | truncate(1500, True, '...') }}
+{{ i.fields.description | replace('```', '\`\`\`') | truncate(1500, True, '...') }}
 ```
 {% endif %}
 
@@ -13,7 +13,7 @@
 {% for c in i.fields.comment.comments[-3:] %}
 #### **{{ c.author.displayName }}** ({{ c.created[:10] }})
 ```
-{{ c.body | replace('```', '` ` `') | truncate(1500, True, '...') }}
+{{ c.body | replace('```', '\`\`\`') | truncate(1500, True, '...') }}
 ```
 {% endfor %}
 {% endif %}
@@ -23,7 +23,7 @@
 {% for pr in i.prs %}
 #### PR/MR: {{ pr.url }}
 ```
-{{ pr.info | replace('```', '` ` `') }}
+{{ pr.info | replace('```', '\`\`\`') }}
 ```
 {% endfor %}
 {% endif %}
