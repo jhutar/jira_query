@@ -15,7 +15,17 @@ import re
 import subprocess
 import yaml
 
-# ... (existing imports)
+# Configuration
+DEFAULT_CONFIG_PATH = "~/.jira_query.yaml"
+DEFAULT_TEMPLATE_PATH = "templates/default.md.j2"
+
+# Logging Setup
+logging.basicConfig(
+    level=logging.WARNING,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
+
 
 def get_pr_info(url):
     try:
