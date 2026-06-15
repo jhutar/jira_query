@@ -310,7 +310,7 @@ class Doer:
                 f"Transitioned to {self._args.status} status (transition {status_transitions[self._args.status]})"
             )
 
-    def _update_fields(self, issue):
+    def _update_fields(self, issue, resolved_sprint_id=None):
         custom = {}
 
         if self._args.epic is not None:
@@ -331,7 +331,9 @@ class Doer:
                 self._args.target_end.strftime("%Y-%m-%d")
             )
 
-        if self._args.sprint is not None:
+        if resolved_sprint_id is not None:
+            custom[self._config["custom_fields"]["sprint"]] = resolved_sprint_id
+        elif self._args.sprint is not None:
             sprints = self._list_sprints()
             sprints = [i for i in sprints if i["name"] == self._args.sprint]
             assert len(sprints) == 1
@@ -432,6 +434,189 @@ class Doer:
         assert self._args.summary is not None
         assert self._args.description is not None
 
+        # Pre-validation of Jira entities and configurations before issue creation
+        # 1. Project validation
+        try:
+            self._logger.debug(f"Pre-validating project: {self._args.project}")
+            project = self._jira.project(self._args.project)
+        except Exception as e:
+            raise AssertionError(
+                f"Project '{self._args.project}' does not exist or is inaccessible: {e}"
+            )
+
+        # 2. Issue Type validation
+        try:
+            issue_types = project.issueTypes
+        except Exception as e:
+            raise AssertionError(
+                f"Failed to retrieve issue types for project '{self._args.project}': {e}"
+            )
+        valid_type_names = [it.name for it in issue_types]
+        assert self._args.type in valid_type_names, (
+            f"Issue type '{self._args.type}' is not valid for project '{self._args.project}'. "
+            f"Available issue types: {', '.join(valid_type_names)}"
+        )
+
+        # 3. Status validation
+        if self._args.status is not None:
+            try:
+                url = f"{self._jira._options['server']}/rest/api/2/project/{self._args.project}/statuses"
+                response = self._jira._session.get(url)
+                if response.status_code != 200:
+                    raise Exception(f"HTTP {response.status_code}: {response.text}")
+                project_statuses = response.json()
+            except Exception as e:
+                raise AssertionError(
+                    f"Failed to retrieve statuses for project '{self._args.project}': {e}"
+                )
+
+            found_itype = None
+            for itype in project_statuses:
+                itype_name = (
+                    itype.name
+                    if hasattr(itype, "name")
+                    else itype.get("name")
+                    if isinstance(itype, dict)
+                    else None
+                )
+                if itype_name == self._args.type:
+                    found_itype = itype
+                    break
+
+            if found_itype is not None:
+                statuses_list = (
+                    found_itype.statuses
+                    if hasattr(found_itype, "statuses")
+                    else found_itype.get("statuses", [])
+                    if isinstance(found_itype, dict)
+                    else []
+                )
+                valid_statuses = [
+                    (
+                        status.name
+                        if hasattr(status, "name")
+                        else status.get("name")
+                        if isinstance(status, dict)
+                        else ""
+                    )
+                    for status in statuses_list
+                ]
+                assert self._args.status in valid_statuses, (
+                    f"Status '{self._args.status}' is not valid for issue type '{self._args.type}' in project '{self._args.project}'. "
+                    f"Valid statuses are: {', '.join(valid_statuses)}"
+                )
+            else:
+                self._logger.warning(
+                    f"Could not find status list for issue type '{self._args.type}' in project_statuses."
+                )
+
+        # 4. Security level validation
+        if self._args.security is not None:
+            try:
+                security_levels = self._jira.project_issue_security_level(
+                    self._args.project
+                )
+            except Exception as e:
+                self._logger.warning(
+                    f"Could not retrieve security levels for project {self._args.project}: {e}"
+                )
+                security_levels = []
+
+            if security_levels:
+                valid_security_names = [level.name for level in security_levels]
+                assert self._args.security in valid_security_names, (
+                    f"Security level '{self._args.security}' is not valid for project '{self._args.project}'. "
+                    f"Available levels: {', '.join(valid_security_names)}"
+                )
+
+        # 5. Epic validation
+        if self._args.epic is not None:
+            try:
+                self._logger.debug(f"Pre-validating epic: {self._args.epic}")
+                self._jira.issue(self._args.epic, fields="summary")
+            except Exception as e:
+                raise AssertionError(
+                    f"Epic issue '{self._args.epic}' not found or inaccessible: {e}"
+                )
+
+        # 6. Assignee validation
+        resolved_assignee = None
+        if self._args.assignee is not None:
+            try:
+                assignee_users = self._jira.search_users(
+                    query=self._args.assignee,
+                    includeActive=True,
+                    includeInactive=False,
+                )
+            except Exception as e:
+                raise AssertionError(
+                    f"Failed to search for user '{self._args.assignee}': {e}"
+                )
+
+            # If we found multiple, try to find an exact match to be helpful
+            if len(assignee_users) > 1:
+                exact_matches = [
+                    u
+                    for u in assignee_users
+                    if u.displayName == self._args.assignee
+                    or getattr(u, "emailAddress", None) == self._args.assignee
+                    or getattr(u, "accountId", None) == self._args.assignee
+                    or getattr(u, "name", None) == self._args.assignee
+                ]
+                if len(exact_matches) == 1:
+                    assignee_users = exact_matches
+
+            assert len(assignee_users) == 1, (
+                f"Expected exactly one user for '{self._args.assignee}', but found {len(assignee_users)}. "
+                f"Please use a more specific name, email, or accountId. "
+                f"Found: {[f'{u.displayName} ({getattr(u, 'accountId', 'no-id')})' for u in assignee_users]}"
+            )
+            resolved_assignee = assignee_users[0]
+            self._logger.debug(f"Pre-validated assignee: {resolved_assignee}")
+
+        # 7. Sprint validation
+        resolved_sprint_id = None
+        if (
+            self._args.sprint is not None
+            or (self._args.sprint_regexp is not None and self._args.sprint_regexp != "")
+            or self._args.sprint_current
+        ):
+            sprints = self._list_sprints()
+
+            if self._args.sprint is not None:
+                matched_sprints = [i for i in sprints if i["name"] == self._args.sprint]
+                assert len(matched_sprints) == 1, (
+                    f"Expected exactly one sprint named '{self._args.sprint}', but found {len(matched_sprints)}."
+                )
+                resolved_sprint_id = matched_sprints[0]["id"]
+            elif (
+                self._args.sprint_regexp is not None and self._args.sprint_regexp != ""
+            ):
+                pattern = re.compile(self._args.sprint_regexp)
+                matched_sprints = [
+                    i
+                    for i in sprints
+                    if i["state"] == "active" and pattern.fullmatch(i["name"])
+                ]
+                assert len(matched_sprints) == 1, (
+                    f"Expected exactly one active sprint matching regexp '{self._args.sprint_regexp}', but found {len(matched_sprints)}."
+                )
+                resolved_sprint_id = matched_sprints[0]["id"]
+            elif self._args.sprint_current:
+                assert self._args.project in self._config["sprint_regexps"], (
+                    f"Project '{self._args.project}' is not configured in 'sprint_regexps' of config file."
+                )
+                pattern = re.compile(self._config["sprint_regexps"][self._args.project])
+                matched_sprints = [
+                    i
+                    for i in sprints
+                    if i["state"] == "active" and pattern.fullmatch(i["name"])
+                ]
+                assert len(matched_sprints) == 1, (
+                    f"Expected exactly one active current sprint for project '{self._args.project}', but found {len(matched_sprints)}."
+                )
+                resolved_sprint_id = matched_sprints[0]["id"]
+
         # Create issue skeleton
         issue = {
             "issuetype": {"name": self._args.type},
@@ -452,7 +637,7 @@ class Doer:
 
         # If creating epic, we need to define epic name
         if self._args.type == "Epic":
-            issue[self._config["custom_fields"]["epic_name"]] = args.summary
+            issue[self._config["custom_fields"]["epic_name"]] = self._args.summary
 
         if self._args.dry_run:
             _pretty("Would create this issue now:", issue)
@@ -461,46 +646,24 @@ class Doer:
             print(f"Created issue {issue.permalink()}")
 
         # Load assignee details and set it to issue
-        if self._args.assignee is not None:
-            assignee_users = self._jira.search_users(
-                query=self._args.assignee,
-                includeActive=True,
-                includeInactive=False,
-            )
-
-            # If we found multiple, try to find an exact match to be helpful
-            if len(assignee_users) > 1:
-                exact_matches = [
-                    u
-                    for u in assignee_users
-                    if u.displayName == self._args.assignee
-                    or getattr(u, "emailAddress", None) == self._args.assignee
-                    or getattr(u, "accountId", None) == self._args.assignee
-                    or getattr(u, "name", None) == self._args.assignee
-                ]
-                if len(exact_matches) == 1:
-                    assignee_users = exact_matches
-
-            assert len(assignee_users) == 1, (
-                f"Expected exactly one user for '{self._args.assignee}', but found {len(assignee_users)}. Please use a more specific name, email, or accountId. Found: {[f'{u.displayName} ({getattr(u, 'accountId', 'no-id')})' for u in assignee_users]}"
-            )
-            assignee = assignee_users[0]
-            self._logger.debug(f"Found user {assignee}")
+        if resolved_assignee is not None:
             if self._args.dry_run:
-                _pretty("Would assign the issue to:", assignee)
+                _pretty("Would assign the issue to:", resolved_assignee)
             else:
                 # In Jira Cloud, we must use accountId instead of name
                 assignee_id = getattr(
-                    assignee, "accountId", getattr(assignee, "name", None)
+                    resolved_assignee,
+                    "accountId",
+                    getattr(resolved_assignee, "name", None),
                 )
                 self._jira.assign_issue(issue, assignee_id)
-                print(f"Assigned to {assignee.displayName} ({assignee_id})")
+                print(f"Assigned to {resolved_assignee.displayName} ({assignee_id})")
 
         # Transition issue to status
         self._update_status(issue)
 
         # Set custom fields and labels and possibly more
-        self._update_fields(issue)
+        self._update_fields(issue, resolved_sprint_id=resolved_sprint_id)
 
         return issue
 
@@ -657,7 +820,7 @@ def main():
     )
     parser_create.add_argument(
         "--story-points",
-        type=int,
+        type=float,
         help="How many story points to set",
     )
     parser_create.add_argument(
@@ -718,7 +881,7 @@ def main():
     )
     parser_update.add_argument(
         "--story-points",
-        type=int,
+        type=float,
         help="How many story points to set",
     )
     parser_update.add_argument(
