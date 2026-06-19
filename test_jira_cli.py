@@ -53,6 +53,7 @@ def mock_args():
     args.status = None
     args.type = "Task"
     args.epic = None
+    args.parent = None
     args.story_points = None
     args.sprint = None
     args.sprint_regexp = None
@@ -258,3 +259,168 @@ def test_do_create_uses_parent_field_for_epic(
     create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
     assert "parent" in create_call_fields
     assert create_call_fields["parent"] == {"key": "KONFLUX-100"}
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_parent_validation_failure(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    # Setup valid project and issue types
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    # Parent issue lookup fails
+    mock_jira.issue.side_effect = Exception("Issue not found")
+    mock_args.parent = "NONEXIST-999"
+
+    doer = jira_cli.Doer(mock_args)
+
+    with pytest.raises(AssertionError) as exc_info:
+        doer.do_create()
+
+    assert "Parent issue 'NONEXIST-999' not found or inaccessible" in str(
+        exc_info.value
+    )
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_uses_parent_field_v3(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """When --parent is specified under v3 config, payload contains parent: {key: ...}."""
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    # Setup valid project and issue types
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    # Parent issue lookup succeeds
+    mock_jira.issue.return_value = MagicMock()
+
+    mock_args.parent = "PARENT-123"
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-101"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.create_issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
+    assert "parent" in create_call_fields
+    assert create_call_fields["parent"] == {"key": "PARENT-123"}
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_parent_legacy_fallback_epic_link(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """When config has parent_link and issue type is Task, --parent routes to Epic Link custom field."""
+    mock_config["custom_fields"]["parent_link"] = "customfield_10018"
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    # Setup valid project and issue types
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    # Parent issue lookup succeeds
+    mock_jira.issue.return_value = MagicMock()
+
+    mock_args.parent = "EPIC-100"
+    mock_args.type = "Task"
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-101"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.create_issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
+    # Should use Epic Link custom field, not v3 parent
+    assert "parent" not in create_call_fields
+    assert create_call_fields["customfield_10001"] == "EPIC-100"
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_parent_legacy_fallback_parent_link(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """When config has parent_link and issue type is Epic, --parent routes to Parent Link custom field."""
+    mock_config["custom_fields"]["parent_link"] = "customfield_10018"
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    # Setup valid project and issue types
+    mock_itype = MagicMock()
+    mock_itype.name = "Epic"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    # Parent issue lookup succeeds
+    mock_jira.issue.return_value = MagicMock()
+
+    mock_args.parent = "FEATURE-50"
+    mock_args.type = "Epic"
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-101"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.create_issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
+    assert create_call_fields["customfield_10018"] == "FEATURE-50"
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_parent_and_epic_conflict(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_args.parent = "PARENT-1"
+    mock_args.epic = "EPIC-1"
+
+    doer = jira_cli.Doer(mock_args)
+
+    with pytest.raises(AssertionError) as exc_info:
+        doer.do_create()
+
+    assert "Cannot specify both --parent and --epic" in str(exc_info.value)

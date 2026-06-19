@@ -313,11 +313,30 @@ class Doer:
                 f"Transitioned to {self._args.status} status (transition {status_transitions[self._args.status]})"
             )
 
+    def _resolve_parent_field(self, issue_type_name):
+        """Return (field_name, value) for parent linking based on config and issue type."""
+        custom_fields = self._config.get("custom_fields", {})
+        if "parent_link" in custom_fields:
+            # Legacy fallback: route to Epic Link or Parent Link custom fields
+            if issue_type_name in ("Task", "Bug", "Story"):
+                return custom_fields["epic"], self._args.parent
+            elif issue_type_name == "Epic":
+                return custom_fields["parent_link"], self._args.parent
+        # v3 default: unified parent field
+        return "parent", {"key": self._args.parent}
+
     def _update_fields(self, issue, resolved_sprint_id=None):
         custom = {}
 
         if self._args.epic is not None:
             custom["parent"] = {"key": self._args.epic}
+
+        if self._args.parent is not None:
+            issue_type_name = getattr(self._args, "type", None)
+            if issue_type_name is None:
+                issue_type_name = issue.fields.issuetype.name
+            parent_field, parent_value = self._resolve_parent_field(issue_type_name)
+            custom[parent_field] = parent_value
 
         if self._args.story_points is not None:
             custom[self._config["custom_fields"]["story_points"]] = (
@@ -436,6 +455,9 @@ class Doer:
         assert self._args.project is not None
         assert self._args.summary is not None
         assert self._args.description is not None
+        assert not (self._args.parent is not None and self._args.epic is not None), (
+            "Cannot specify both --parent and --epic; use --parent for unified hierarchy linking"
+        )
 
         # Pre-validation of Jira entities and configurations before issue creation
         # 1. Project validation
@@ -542,7 +564,17 @@ class Doer:
                     f"Epic issue '{self._args.epic}' not found or inaccessible: {e}"
                 )
 
-        # 6. Assignee validation
+        # 6. Parent validation
+        if self._args.parent is not None:
+            try:
+                self._logger.debug(f"Pre-validating parent: {self._args.parent}")
+                self._jira.issue(self._args.parent, fields="issuetype")
+            except Exception as e:
+                raise AssertionError(
+                    f"Parent issue '{self._args.parent}' not found or inaccessible: {e}"
+                )
+
+        # 7. Assignee validation
         resolved_assignee = None
         if self._args.assignee is not None:
             try:
@@ -577,7 +609,7 @@ class Doer:
             resolved_assignee = assignee_users[0]
             self._logger.debug(f"Pre-validated assignee: {resolved_assignee}")
 
-        # 7. Sprint validation
+        # 8. Sprint validation
         resolved_sprint_id = None
         if (
             self._args.sprint is not None
@@ -631,6 +663,11 @@ class Doer:
         # Set parent link (v3 unified parent field) for epic
         if self._args.epic is not None:
             issue["parent"] = {"key": self._args.epic}
+
+        # Set parent link via --parent (v3 or legacy routing)
+        if self._args.parent is not None:
+            parent_field, parent_value = self._resolve_parent_field(self._args.type)
+            issue[parent_field] = parent_value
 
         # Set security level if it was set
         if self._args.security is not None:
@@ -693,6 +730,19 @@ class Doer:
                 self._args.comment = _editor()
             if self._args.comment.startswith("@"):
                 self._args.comment = open(self._args.description[1:], "r").read()
+
+        assert not (self._args.parent is not None and self._args.epic is not None), (
+            "Cannot specify both --parent and --epic; use --parent for unified hierarchy linking"
+        )
+
+        if self._args.parent is not None:
+            try:
+                self._logger.debug(f"Pre-validating parent: {self._args.parent}")
+                self._jira.issue(self._args.parent, fields="issuetype")
+            except Exception as e:
+                raise AssertionError(
+                    f"Parent issue '{self._args.parent}' not found or inaccessible: {e}"
+                )
 
         for issue in issues:
             self._update_status(issue)
@@ -826,6 +876,10 @@ def main():
         help="Parent epic to put this ticket under",
     )
     parser_create.add_argument(
+        "--parent",
+        help="Parent issue key to link this issue under (unifies Epic Link, Parent Link, and Sub-task parents)",
+    )
+    parser_create.add_argument(
         "--story-points",
         type=float,
         help="How many story points to set",
@@ -885,6 +939,10 @@ def main():
     parser_update.add_argument(
         "--epic",
         help="Parent epic to put this ticket under",
+    )
+    parser_update.add_argument(
+        "--parent",
+        help="Parent issue key to link this issue under (unifies Epic Link, Parent Link, and Sub-task parents)",
     )
     parser_update.add_argument(
         "--story-points",
