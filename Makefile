@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help bootstrap check check-all
+.PHONY: help bootstrap check check-all test
 
 help:
 	@echo "Available targets:"
@@ -7,6 +7,7 @@ help:
 	@echo "  bootstrap            - Install all development tools and hooks"
 	@echo "  check                - Run checks on staged changes"
 	@echo "  check-all            - Run checks on all files"
+	@echo "  test                 - Run the full pytest suite"
 
 bootstrap:
 	@echo "==> Installing Python 3.12 (via uv)..."
@@ -24,3 +25,6 @@ check:
 
 check-all:
 	pre-commit run --all-files
+
+test:
+	pytest -v
