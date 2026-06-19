@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import json
+import subprocess
+
 import pytest
 from unittest.mock import MagicMock, patch
 
@@ -715,3 +718,196 @@ def test_do_sprints_execute_dispatch(
         doer.execute()
 
     mock_do_sprints.assert_called_once()
+
+
+@patch("subprocess.run")
+def test_translate_content_to_adf(mock_run):
+    mock_run.return_value = MagicMock(
+        stdout='{"type": "doc", "content": []}\n',
+    )
+    result = jira_cli._translate_content("to-adf", "hello")
+    mock_run.assert_called_once_with(
+        ["adfmd", "to-adf"],
+        input="hello",
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert result == '{"type": "doc", "content": []}'
+
+
+@patch("subprocess.run")
+def test_translate_content_to_md(mock_run):
+    mock_run.return_value = MagicMock(stdout="# Hello\n")
+    result = jira_cli._translate_content("to-md", '{"type":"doc"}')
+    mock_run.assert_called_once_with(
+        ["adfmd", "to-md"],
+        input='{"type":"doc"}',
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert result == "# Hello"
+
+
+@patch("subprocess.run")
+def test_translate_content_failure(mock_run):
+    mock_run.side_effect = subprocess.CalledProcessError(
+        returncode=1, cmd=["adfmd", "to-adf"], stderr="parse error"
+    )
+    with pytest.raises(RuntimeError, match="Content translation failed"):
+        jira_cli._translate_content("to-adf", "bad input")
+
+
+@patch.object(jira_cli, "_translate_content")
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_converts_description_to_adf(
+    mock_create_client, mock_load_config_fn, mock_translate, mock_config, mock_args
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    mock_translate.return_value = '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Test description"}]}]}'
+
+    mock_args.dry_run = False
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-101"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.create_issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    mock_translate.assert_called_once_with("to-adf", "Test description")
+    create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
+    assert isinstance(create_call_fields["description"], dict)
+    assert create_call_fields["description"]["type"] == "doc"
+
+
+@patch.object(jira_cli, "_translate_content")
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_update_converts_comment_to_adf(
+    mock_create_client, mock_load_config_fn, mock_translate, mock_config, mock_args
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_args.subparser_name = "update"
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = "my comment"
+    mock_args.status = None
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.issue.return_value = mock_issue
+
+    mock_translate.return_value = '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"my comment"}]}]}'
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_update()
+
+    mock_translate.assert_called_once_with("to-adf", "my comment")
+    add_comment_call = mock_jira.add_comment.call_args
+    assert isinstance(add_comment_call[0][1], dict)
+    assert add_comment_call[0][1]["type"] == "doc"
+
+
+@patch.object(jira_cli, "_translate_content")
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_list_converts_adf_description_to_md(
+    mock_create_client, mock_load_config_fn, mock_translate, mock_config, mock_args
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_args.subparser_name = "list"
+    mock_args.query = "project = KONFLUX"
+    mock_args.dump = False
+
+    adf_desc = {"type": "doc", "content": []}
+    mock_issue = MagicMock()
+    mock_issue.fields.description = adf_desc
+    mock_issue.fields.comment.comments = []
+    mock_jira.search_issues.return_value = [mock_issue]
+
+    mock_translate.return_value = "# Converted"
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_list()
+
+    mock_translate.assert_called_once_with("to-md", json.dumps(adf_desc))
+    assert mock_issue.fields.description == "# Converted"
+
+
+@patch.object(jira_cli, "_translate_content")
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_list_converts_adf_comment_to_md(
+    mock_create_client, mock_load_config_fn, mock_translate, mock_config, mock_args
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_args.subparser_name = "list"
+    mock_args.query = "project = KONFLUX"
+    mock_args.dump = False
+
+    adf_body = {"type": "doc", "content": []}
+    mock_comment = MagicMock()
+    mock_comment.body = adf_body
+
+    mock_issue = MagicMock()
+    mock_issue.fields.description = "plain text"
+    mock_issue.fields.comment.comments = [mock_comment]
+    mock_jira.search_issues.return_value = [mock_issue]
+
+    mock_translate.return_value = "comment in markdown"
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_list()
+
+    mock_translate.assert_called_once_with("to-md", json.dumps(adf_body))
+    assert mock_comment.body == "comment in markdown"
+
+
+@patch.object(jira_cli, "_translate_content")
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_list_skips_string_description(
+    mock_create_client, mock_load_config_fn, mock_translate, mock_config, mock_args
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_args.subparser_name = "list"
+    mock_args.query = "project = KONFLUX"
+    mock_args.dump = False
+
+    mock_issue = MagicMock()
+    mock_issue.fields.description = "already a string"
+    mock_issue.fields.comment.comments = []
+    mock_jira.search_issues.return_value = [mock_issue]
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_list()
+
+    mock_translate.assert_not_called()
+    assert mock_issue.fields.description == "already a string"

@@ -151,6 +151,23 @@ def _pretty(heading, data=None):
     print(json.dumps(data, indent=4, default=lambda o: "<" + str(o) + ">"))
 
 
+def _translate_content(subcommand, input_str):
+    try:
+        proc = subprocess.run(
+            ["adfmd", subcommand],
+            input=input_str,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return proc.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        logging.getLogger("jira_cli").error(
+            f"adfmd {subcommand} failed (exit {e.returncode}): {e.stderr}"
+        )
+        raise RuntimeError(f"Content translation failed: {e.stderr}") from e
+
+
 class Cache:
     """Object representing file with some cached data.
 
@@ -437,6 +454,20 @@ class Doer:
         self._logger.debug(f"Searching issues: {self._args.query}")
         issues = self._jira.search_issues(self._args.query, maxResults=False)
 
+        for issue in issues:
+            if isinstance(issue.fields.description, dict):
+                issue.fields.description = _translate_content(
+                    "to-md", json.dumps(issue.fields.description)
+                )
+            if hasattr(issue.fields, "comment") and hasattr(
+                issue.fields.comment, "comments"
+            ):
+                for comment in issue.fields.comment.comments:
+                    if isinstance(comment.body, dict):
+                        comment.body = _translate_content(
+                            "to-md", json.dumps(comment.body)
+                        )
+
         renderer = TemplateRenderer(self._args.template)
         rendered_output = renderer.render({"issues": issues, "query": self._args.query})
         print(rendered_output)
@@ -684,11 +715,14 @@ class Doer:
                 resolved_sprint_id = matched_sprints[0]["id"]
 
         # Create issue skeleton
+        adf_description = json.loads(
+            _translate_content("to-adf", self._args.description)
+        )
         issue = {
             "issuetype": {"name": self._args.type},
             "project": self._args.project,
             "summary": self._args.summary,
-            "description": self._args.description,
+            "description": adf_description,
         }
 
         # Set parent link (v3 unified parent field) for epic
@@ -782,7 +816,10 @@ class Doer:
                 if self._args.dry_run:
                     _pretty("Would add this comment:", self._args.comment)
                 else:
-                    self._jira.add_comment(issue, self._args.comment)
+                    adf_comment = json.loads(
+                        _translate_content("to-adf", self._args.comment)
+                    )
+                    self._jira.add_comment(issue, adf_comment)
                     print(f"Commented on the issue {issue.id}")
 
             # Update custom fields and labels and possibly more
