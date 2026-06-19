@@ -10,6 +10,15 @@ from unittest.mock import MagicMock, patch, mock_open
 jira_cli = __import__("jira-cli")
 
 
+@patch("jira.JIRA")
+def test_create_jira_client_uses_v3(mock_jira_class):
+    jira_cli._create_jira_client("https://jira.example.com", "user", "token")
+    mock_jira_class.assert_called_once_with(
+        options={"server": "https://jira.example.com", "rest_api_version": "3"},
+        basic_auth=("user", "token"),
+    )
+
+
 @pytest.fixture
 def mock_config():
     return {
@@ -55,8 +64,8 @@ def mock_args():
     return args
 
 
-@patch("jira-cli._load_config")
-@patch("jira-cli._create_jira_client")
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
 def test_do_create_project_validation_failure(
     mock_create_client, mock_load_config_fn, mock_config, mock_args
 ):
@@ -75,8 +84,8 @@ def test_do_create_project_validation_failure(
     assert "Project 'KONFLUX' does not exist or is inaccessible" in str(exc_info.value)
 
 
-@patch("jira-cli._load_config")
-@patch("jira-cli._create_jira_client")
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
 def test_do_create_issue_type_validation_failure(
     mock_create_client, mock_load_config_fn, mock_config, mock_args
 ):
@@ -97,8 +106,8 @@ def test_do_create_issue_type_validation_failure(
     assert "Issue type 'Task' is not valid for project 'KONFLUX'" in str(exc_info.value)
 
 
-@patch("jira-cli._load_config")
-@patch("jira-cli._create_jira_client")
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
 def test_do_create_status_validation_failure(
     mock_create_client, mock_load_config_fn, mock_config, mock_args
 ):
@@ -134,8 +143,8 @@ def test_do_create_status_validation_failure(
     )
 
 
-@patch("jira-cli._load_config")
-@patch("jira-cli._create_jira_client")
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
 def test_do_create_assignee_validation_failure(
     mock_create_client, mock_load_config_fn, mock_config, mock_args
 ):
@@ -164,8 +173,8 @@ def test_do_create_assignee_validation_failure(
     )
 
 
-@patch("jira-cli._load_config")
-@patch("jira-cli._create_jira_client")
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
 def test_do_create_valid_validation_flow(
     mock_create_client, mock_load_config_fn, mock_config, mock_args
 ):
@@ -211,3 +220,41 @@ def test_do_create_valid_validation_flow(
     assert mock_jira.project_issue_security_level.called
     assert mock_jira.search_users.called
     assert not mock_jira.create_issue.called
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_uses_parent_field_for_epic(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    # Setup valid project and issue types
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    # Setup epic validation
+    mock_jira.issue.return_value = MagicMock()
+
+    # Set epic and disable dry_run to actually call create_issue
+    mock_args.epic = "KONFLUX-100"
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-101"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.create_issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    # Verify create_issue was called with parent field (v3 format)
+    create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
+    assert "parent" in create_call_fields
+    assert create_call_fields["parent"] == {"key": "KONFLUX-100"}

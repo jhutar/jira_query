@@ -108,7 +108,10 @@ def _load_config(config_path) -> Dict[str, Any]:
 
 
 def _create_jira_client(url, username, token):
-    options = {"server": url}
+    options = {
+        "server": url,
+        "rest_api_version": "3",
+    }
     return jira.JIRA(
         options=options,
         basic_auth=(username, token),
@@ -314,7 +317,7 @@ class Doer:
         custom = {}
 
         if self._args.epic is not None:
-            custom[self._config["custom_fields"]["epic"]] = self._args.epic
+            custom["parent"] = {"key": self._args.epic}
 
         if self._args.story_points is not None:
             custom[self._config["custom_fields"]["story_points"]] = (
@@ -378,7 +381,7 @@ class Doer:
                             list(self._config["custom_fields"].values()).index(k)
                         ]
                         k_readable = f"{k_readable} ({k})"
-                    except KeyError:
+                    except (KeyError, ValueError):
                         k_readable = k
                     custom_out[k_readable] = v
                 custom_txt = ", ".join([f"{k}: {v}" for k, v in custom_out.items()])
@@ -624,6 +627,10 @@ class Doer:
             "summary": self._args.summary,
             "description": self._args.description,
         }
+
+        # Set parent link (v3 unified parent field) for epic
+        if self._args.epic is not None:
+            issue["parent"] = {"key": self._args.epic}
 
         # Set security level if it was set
         if self._args.security is not None:
