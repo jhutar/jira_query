@@ -573,3 +573,145 @@ def test_update_status_without_resolution(
     doer.do_update()
 
     mock_jira.transition_issue.assert_called_once_with(mock_issue, "301")
+
+
+MOCK_SPRINTS = [
+    {"board_id": 6067, "id": 12040, "name": "Konflux Sprint 10", "state": "active"},
+    {"board_id": 6067, "id": 12041, "name": "Konflux Sprint 11", "state": "future"},
+    {"board_id": 10332, "id": 13251, "name": "Sat Sprint 84", "state": "active"},
+    {"board_id": 10332, "id": 13200, "name": "Sat Sprint 83", "state": "closed"},
+]
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_sprints_filter_by_state_active(
+    mock_create_client, mock_load_config_fn, mock_config, capsys
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_create_client.return_value = MagicMock()
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "sprints"
+    args.board_id = None
+    args.state = "active"
+    args.refresh = False
+
+    doer = jira_cli.Doer(args)
+    doer._cache_sprints = MagicMock()
+    doer._cache_sprints.obsolete.return_value = False
+    doer._cache_sprints.get.return_value = MOCK_SPRINTS
+
+    doer.do_sprints()
+
+    output = capsys.readouterr().out
+    assert "Konflux Sprint 10" in output
+    assert "Sat Sprint 84" in output
+    assert "Konflux Sprint 11" not in output
+    assert "Sat Sprint 83" not in output
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_sprints_filter_by_board_id(
+    mock_create_client, mock_load_config_fn, mock_config, capsys
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_create_client.return_value = MagicMock()
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "sprints"
+    args.board_id = 6067
+    args.state = "all"
+    args.refresh = False
+
+    doer = jira_cli.Doer(args)
+    doer._cache_sprints = MagicMock()
+    doer._cache_sprints.obsolete.return_value = False
+    doer._cache_sprints.get.return_value = MOCK_SPRINTS
+
+    doer.do_sprints()
+
+    output = capsys.readouterr().out
+    assert "Konflux Sprint 10" in output
+    assert "Konflux Sprint 11" in output
+    assert "Sat Sprint 84" not in output
+    assert "Sat Sprint 83" not in output
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_sprints_filter_by_board_id_and_state(
+    mock_create_client, mock_load_config_fn, mock_config, capsys
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_create_client.return_value = MagicMock()
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "sprints"
+    args.board_id = 10332
+    args.state = "closed"
+    args.refresh = False
+
+    doer = jira_cli.Doer(args)
+    doer._cache_sprints = MagicMock()
+    doer._cache_sprints.obsolete.return_value = False
+    doer._cache_sprints.get.return_value = MOCK_SPRINTS
+
+    doer.do_sprints()
+
+    output = capsys.readouterr().out
+    assert "Sat Sprint 83" in output
+    assert "Sat Sprint 84" not in output
+    assert "Konflux Sprint" not in output
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_sprints_refresh_deletes_cache(
+    mock_create_client, mock_load_config_fn, mock_config, tmp_path
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_create_client.return_value = MagicMock()
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "sprints"
+    args.board_id = None
+    args.state = "all"
+    args.refresh = True
+
+    doer = jira_cli.Doer(args)
+
+    cache_file = tmp_path / "sprints.json"
+    cache_file.write_text("[]")
+    doer._cache_sprints = jira_cli.Cache(str(cache_file))
+
+    with patch.object(jira_cli.Path, "expanduser", return_value=cache_file):
+        with patch.object(doer, "_list_sprints", return_value=[]):
+            doer.do_sprints()
+
+    assert not cache_file.exists()
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_sprints_execute_dispatch(
+    mock_create_client, mock_load_config_fn, mock_config
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_create_client.return_value = MagicMock()
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "sprints"
+
+    doer = jira_cli.Doer(args)
+
+    with patch.object(doer, "do_sprints") as mock_do_sprints:
+        doer.execute()
+
+    mock_do_sprints.assert_called_once()

@@ -242,6 +242,8 @@ class Doer:
             self.do_list()
         elif self._args.subparser_name == "template":
             self.do_tempate()
+        elif self._args.subparser_name == "sprints":
+            self.do_sprints()
         else:
             logging.error("What shall we do with a drunken sailor?")
 
@@ -786,6 +788,27 @@ class Doer:
             # Update custom fields and labels and possibly more
             self._update_fields(issue)
 
+    def do_sprints(self):
+        if self._args.refresh:
+            cache_path = Path("~/.jira-cli/sprints.json").expanduser()
+            if cache_path.exists():
+                cache_path.unlink()
+            self._cache_sprints = Cache("~/.jira-cli/sprints.json")
+
+        sprints = self._list_sprints()
+
+        if self._args.board_id is not None:
+            sprints = [s for s in sprints if s["board_id"] == self._args.board_id]
+
+        if self._args.state != "all":
+            sprints = [s for s in sprints if s["state"] == self._args.state]
+
+        header = f"{'Board ID':<10} {'Sprint ID':<12} {'Sprint Name':<30} {'State'}"
+        print(header)
+        print("-" * len(header))
+        for s in sprints:
+            print(f"{s['board_id']:<10} {s['id']:<12} {s['name']:<30} {s['state']}")
+
     def do_tempate(self):
         for name, data in self._config["issue_templates"].items():
             print(f"Template {name}")
@@ -1021,6 +1044,30 @@ def main():
     subparsers.add_parser(
         "template",
         help="Work with issue templates",
+    )
+
+    #
+    # Sprints
+    #
+    parser_sprints = subparsers.add_parser(
+        "sprints",
+        help="List sprints for a specific board or project",
+    )
+    parser_sprints.add_argument(
+        "--board-id",
+        help="Filter sprints by board ID",
+        type=int,
+    )
+    parser_sprints.add_argument(
+        "--state",
+        choices=["active", "future", "closed", "all"],
+        default="active",
+        help="Filter sprints by state",
+    )
+    parser_sprints.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Force refresh the cached sprint data",
     )
 
     args = parser.parse_args()
