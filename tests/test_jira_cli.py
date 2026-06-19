@@ -1318,3 +1318,35 @@ def test_do_create_global_default_security_when_no_project_defaults(
 
     create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
     assert create_call_fields["security"] == {"name": "Red Hat Employee"}
+
+
+@patch.object(jira_cli, "_translate_content")
+def test_convert_issue_adf_to_md(mock_translate):
+    """Test convert_issue_adf_to_md translates raw ADF fields in place."""
+    mock_translate.return_value = "Translated markdown text"
+
+    mock_issue = MagicMock()
+    mock_issue.raw = {
+        "fields": {
+            "description": {"type": "doc", "version": 1, "content": []},
+            "comment": {
+                "comments": [{"body": {"type": "doc", "version": 1, "content": []}}]
+            },
+        }
+    }
+
+    mock_comment = MagicMock()
+    mock_comment.body = "raw adf body"
+
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.description = "raw adf desc"
+    mock_issue.fields.comment = MagicMock()
+    mock_issue.fields.comment.comments = [mock_comment]
+
+    # Run helper
+    jira_cli.convert_issue_adf_to_md(mock_issue)
+
+    # Assertions
+    assert mock_issue.fields.description == "Translated markdown text"
+    assert mock_comment.body == "Translated markdown text"
+    assert mock_translate.call_count == 2
