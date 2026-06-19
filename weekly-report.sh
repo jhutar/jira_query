@@ -41,6 +41,7 @@ TEAM_HCEPERF="$AMAN_VISHWAKARMA, $RAJADITYA_CHAUHAN, $LARRY_RIOS, $KRISHNA_MAGAR
 TEAM_SAT="$PRAVIN_SATPUTE, $PABLO_MENDEZ_HERNANDEZ, $IMAANPREET_KAUR, $JAN_HUTAR"
 
 # Combine all for a general filter if needed
+# shellcheck disable=SC2034
 TEAM_ALL="$TEAM_KONFLUX, $TEAM_PIPELINES, $TEAM_HCEPERF, $TEAM_SAT"
 
 
@@ -48,7 +49,7 @@ TEAM_ALL="$TEAM_KONFLUX, $TEAM_PIPELINES, $TEAM_HCEPERF, $TEAM_SAT"
 # Query Engine
 # ==========================================
 
-function q() {
+q() {
     ./jira_query.py --template templates/default-list.md.j2 "$1" \
         | grep -v '^$' \
         | sed 's/^\* /    * /'

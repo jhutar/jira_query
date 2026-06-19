@@ -28,7 +28,7 @@ def setup_logging(stderr_level):
     urllib_logger = logging.getLogger("urllib3.connectionpool")
     urllib_logger.setLevel(stderr_level)
 
-    file_handler = logging.FileHandler("/tmp/jira-report.log")
+    file_handler = logging.FileHandler("/tmp/jira-report.log")  # nosec B108
     file_handler.setLevel(logging.DEBUG)
     file_formatter = logging.Formatter(
         "%(asctime)s %(name)s %(threadName)s %(levelname)s %(message)s"

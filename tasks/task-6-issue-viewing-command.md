@@ -37,7 +37,7 @@ Currently, `jira-cli.py` has no direct command to inspect the details of a singl
    Sprint:    Konflux Sprint 10
    --------------------------------------------------------------------------------
    Description:
-   This task is focused on investigating why pipeline jobs stall during high 
+   This task is focused on investigating why pipeline jobs stall during high
    concurrency. We should focus on container load bottlenecks.
    --------------------------------------------------------------------------------
    Comments:

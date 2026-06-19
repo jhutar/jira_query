@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-import sys
-import os
 import pytest
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, patch
 
 # Import the dash-containing module dynamically
 jira_cli = __import__("jira-cli")
@@ -24,7 +22,7 @@ def mock_config():
     return {
         "server": {
             "url": "https://jira.example.com",
-            "auth": {"basic_auth": {"username": "user", "token": "token"}},
+            "auth": {"basic_auth": {"username": "user", "token": "token"}},  # nosec B105
         },
         "custom_fields": {
             "epic": "customfield_10001",
@@ -213,7 +211,7 @@ def test_do_create_valid_validation_flow(
     mock_args.assignee = "test-user"
 
     doer = jira_cli.Doer(mock_args)
-    issue = doer.do_create()
+    doer.do_create()
 
     # In dry-run mode, it shouldn't call create_issue but should validate everything
     assert mock_jira.project.called

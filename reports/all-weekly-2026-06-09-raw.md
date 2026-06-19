@@ -122,7 +122,7 @@ Assisted-by: Claude
 #### **Subrata Modak** (2026-06-03)
 ```
 PR for artifact validation improvements (addressing feedback from PR #67):
-[https://github.com/konflux-ci/perfscale/pull/68|https://github.com/konflux-ci/perfscale/pull/68|smart-link] 
+[https://github.com/konflux-ci/perfscale/pull/68|https://github.com/konflux-ci/perfscale/pull/68|smart-link]
 
 *Changes*:
 - Implemented two-stage validation: size-based heuristic (≥2KB) + pattern matching
@@ -162,7 +162,7 @@ This creates noise and unhelpful tickets where users cannot find debugging infor
 
 ## Solution
 - Add `is_artifact_meaningful()` function to validate collected artifacts
-- Skip pods where `oc describe` or `oc logs` return "pod not found" errors  
+- Skip pods where `oc describe` or `oc logs` return "pod not found" errors
 - Delete artifact files for skipped pods to save disk space
 - Track and report count of skipped pods in console output
 
@@ -240,7 +240,7 @@ h1. Task
 Please mark this issue closed once you are done reviewing. Marking this issue as closed will be considered as your Ack for the feature refinement doc mentioned in the parent feature.
 
 h2. Feature Details (at the time this sub-task was created)
- 
+
 https://redhat.atlassian.net/browse/KONFLUX-12751 - AI-Assisted Code Review Pipeline
 
 h2. Feature Refinement Document
@@ -1468,7 +1468,7 @@ ENHANCED ADF FORMATTING ✅
 
 #### **Subrata Modak** (2026-06-05)
 ```
-Posted this to channel:[https://redhat-internal.slack.com/archives/CCX9DB894/p1780622348042979|https://redhat-internal.slack.com/archives/CCX9DB894/p1780622348042979|smart-link] 
+Posted this to channel:[https://redhat-internal.slack.com/archives/CCX9DB894/p1780622348042979|https://redhat-internal.slack.com/archives/CCX9DB894/p1780622348042979|smart-link]
 
 !Screenshot 2026-06-04 at 9.26.19 PM-20260605-012622.png|width=762,alt="Screenshot 2026-06-04 at 9.26.19 PM-20260605-012622.png"!
 ```
@@ -1621,7 +1621,7 @@ ENHANCED ADF FORMATTING ✅
 
 #### **Subrata Modak** (2026-06-05)
 ```
-Posted this to channel:[https://redhat-internal.slack.com/archives/CCX9DB894/p1780622348042979|https://redhat-internal.slack.com/archives/CCX9DB894/p1780622348042979|smart-link] 
+Posted this to channel:[https://redhat-internal.slack.com/archives/CCX9DB894/p1780622348042979|https://redhat-internal.slack.com/archives/CCX9DB894/p1780622348042979|smart-link]
 
 !Screenshot 2026-06-04 at 9.26.19 PM-20260605-012622.png|width=762,alt="Screenshot 2026-06-04 at 9.26.19 PM-20260605-012622.png"!
 ```
@@ -1722,9 +1722,9 @@ h2. *Acceptance Criteria (Mandatory)*
 
 #### **Automation for Jira** (2026-06-02)
 ```
-Please add '*Release Note Text*', '*Release Note Status*' and '*Release Notes Type*'. Transitioning the issue back to 'In progress'. 
+Please add '*Release Note Text*', '*Release Note Status*' and '*Release Notes Type*'. Transitioning the issue back to 'In progress'.
 
-If Release Note is not required, set *Release Note Type* to '*Release Note Not Required*' 
+If Release Note is not required, set *Release Note Type* to '*Release Note Not Required*'
 ```
 
 
@@ -1748,7 +1748,7 @@ h3. Acceptance criteria
 
 #### **Deekshith Kumar Netha Bamandla N** (2026-06-08)
 ```
-Thresholds and alerts will be handled in a separate ticket: [https://redhat.atlassian.net/browse/SRVKP-12192|https://redhat.atlassian.net/browse/SRVKP-12192|smart-link] 
+Thresholds and alerts will be handled in a separate ticket: [https://redhat.atlassian.net/browse/SRVKP-12192|https://redhat.atlassian.net/browse/SRVKP-12192|smart-link]
 ```
 
 
@@ -1781,7 +1781,7 @@ Analyze whether to keep the current single-Horreum-test approach or split into s
 
 #### **Aman Vishwakarma** (2026-06-09)
 ```
-Analyzed splitting into separate Horreum tests per config combo (8+ tests) versus keeping the current 2-test setup with JS branching. 
+Analyzed splitting into separate Horreum tests per config combo (8+ tests) versus keeping the current 2-test setup with JS branching.
 Recommendation: keep a single test per scenario category. Splitting would require over 720 duplicate label definitions and changes to the data upload pipeline, while JS branching on HA/QBT involves only 4 branches—the same pattern as the {{existing missing_pipeline_successes}} function. Separate tests become necessary only if different configs require different alert models or notifications
 ```
 
@@ -1822,7 +1822,7 @@ Analyze whether to keep the current single-Horreum-test approach or split into s
 
 #### **Aman Vishwakarma** (2026-06-09)
 ```
-Analyzed splitting into separate Horreum tests per config combo (8+ tests) versus keeping the current 2-test setup with JS branching. 
+Analyzed splitting into separate Horreum tests per config combo (8+ tests) versus keeping the current 2-test setup with JS branching.
 Recommendation: keep a single test per scenario category. Splitting would require over 720 duplicate label definitions and changes to the data upload pipeline, while JS branching on HA/QBT involves only 4 branches—the same pattern as the {{existing missing_pipeline_successes}} function. Separate tests become necessary only if different configs require different alert models or notifications
 ```
 
@@ -1922,7 +1922,7 @@ _Assisted-by: CursorAgent_
 ```
 Thank you [~accountid:5a78c7f73297605c78217f31] [~accountid:712020:742fe929-2f70-4ced-ad2f-464a9ba181a7] for all the help.
 
-Cc: [~accountid:5c6d765aca97144c4716967d] 
+Cc: [~accountid:5c6d765aca97144c4716967d]
 ```
 
 
@@ -2041,7 +2041,7 @@ We need to determine if this 2% gap is a consistent, reproducible regression or 
 
 **Description:**
 ```
-from export builder getting : 
+from export builder getting :
 
 {noformat}Failed to pull image "quay.io/cloudservices/export-service:sha256-89660e98ac70e1ed98523914e3bf0dcab62a94ec65ac6b4dfd86baeec4c09fcb": [initializing source docker://quay.io/cloudservices/export-service:sha256-89660e98ac70e1ed98523914e3bf0dcab62a94ec65ac6b4dfd86baeec4c09fcb: unable to retrieve auth token: invalid username/password: unauthorized: Could not find robot with username: cloudservices+deployer and supplied password., initializing source docker://quay.io/cloudservices/export-service:sha256-89660e98ac70e1ed98523914e3bf0dcab62a94ec65ac6b4dfd86baeec4c09fcb: reading manifest sha256-89660e98ac70e1ed98523914e3bf0dcab62a94ec65ac6b4dfd86baeec4c09fcb in quay.io/cloudservices/export-service: unauthorized: access to the requested resource is not authorized]{noformat}
 
@@ -2058,7 +2058,7 @@ from events:
 
 
 ---
-### [In Progress] [Bug] [HCEPERF-1492](https://redhat.atlassian.net/browse/HCEPERF-1492) - 2sp - Rajaditya Chauhan - HBI Export: runner.sh was not picking latest HBI DB creds 
+### [In Progress] [Bug] [HCEPERF-1492](https://redhat.atlassian.net/browse/HCEPERF-1492) - 2sp - Rajaditya Chauhan - HBI Export: runner.sh was not picking latest HBI DB creds
 
 
 **Description:**
@@ -2269,7 +2269,7 @@ runner job: [https://jenkins-csb-perf-master.dno.corp.redhat.com/job/InsightsInv
 
 **Description:**
 ```
-from export builder getting : 
+from export builder getting :
 
 {noformat}Failed to pull image "quay.io/cloudservices/export-service:sha256-89660e98ac70e1ed98523914e3bf0dcab62a94ec65ac6b4dfd86baeec4c09fcb": [initializing source docker://quay.io/cloudservices/export-service:sha256-89660e98ac70e1ed98523914e3bf0dcab62a94ec65ac6b4dfd86baeec4c09fcb: unable to retrieve auth token: invalid username/password: unauthorized: Could not find robot with username: cloudservices+deployer and supplied password., initializing source docker://quay.io/cloudservices/export-service:sha256-89660e98ac70e1ed98523914e3bf0dcab62a94ec65ac6b4dfd86baeec4c09fcb: reading manifest sha256-89660e98ac70e1ed98523914e3bf0dcab62a94ec65ac6b4dfd86baeec4c09fcb in quay.io/cloudservices/export-service: unauthorized: access to the requested resource is not authorized]{noformat}
 
@@ -2286,7 +2286,7 @@ from events:
 
 
 ---
-### [In Progress] [Bug] [HCEPERF-1492](https://redhat.atlassian.net/browse/HCEPERF-1492) - 2sp - Rajaditya Chauhan - HBI Export: runner.sh was not picking latest HBI DB creds 
+### [In Progress] [Bug] [HCEPERF-1492](https://redhat.atlassian.net/browse/HCEPERF-1492) - 2sp - Rajaditya Chauhan - HBI Export: runner.sh was not picking latest HBI DB creds
 
 
 **Description:**
@@ -2845,7 +2845,7 @@ Out of scope for this spike:
 
 #### **Imaanpreet Kaur** (2026-06-08)
 ```
-PR created - [https://github.com/theforeman/foreman-documentation/pull/4912|https://github.com/theforeman/foreman-documentation/pull/4912|smart-link] 
+PR created - [https://github.com/theforeman/foreman-documentation/pull/4912|https://github.com/theforeman/foreman-documentation/pull/4912|smart-link]
 ```
 
 
@@ -2922,7 +2922,7 @@ Research indicates that the command *pmrep(1)* should replace *pmval(1)* due to 
 
 #### **Imaanpreet Kaur** (2026-06-05)
 ```
-PR - [https://github.com/theforeman/foreman-documentation/pull/4909|https://github.com/theforeman/foreman-documentation/pull/4909|smart-link] 
+PR - [https://github.com/theforeman/foreman-documentation/pull/4909|https://github.com/theforeman/foreman-documentation/pull/4909|smart-link]
 ```
 
 
@@ -3095,7 +3095,7 @@ Red Hat Satellite Client 6 for RHEL 7 Server R...
 
 *Steps to Reproduce:*
 
-Perform the following on a patched and unpatched system. 
+Perform the following on a patched and unpatched system.
 
 # Sync a medium-sized repository in “immediate” mode
 # Sync it again, with the sync optimizations turned off, measuring the total runtime of an “immediate” sync where nothing has changed and nothing needs to downloaded
@@ -3110,7 +3110,7 @@ Perform the following on a patched and unpatched system.
 
 *Business Impact / Additional info:*
 
- 
+
 ```
 
 
@@ -3127,7 +3127,7 @@ This is related to [https://redhat.atlassian.net/browse/SAT-45821|https://redhat
 
 
 ---
-### [In Progress] [Story] [SAT-45821](https://redhat.atlassian.net/browse/SAT-45821) - 5sp - Imaanpreet Kaur - Performance / Memory optimization: Use a cache of existing Package objects from the latest repo version during sync 
+### [In Progress] [Story] [SAT-45821](https://redhat.atlassian.net/browse/SAT-45821) - 5sp - Imaanpreet Kaur - Performance / Memory optimization: Use a cache of existing Package objects from the latest repo version during sync
 
 
 **Description:**
@@ -3279,7 +3279,7 @@ Are known to cause very high memory consumption of pulp_rpm when synced - often 
 
 #### **Imaanpreet Kaur** (2026-06-08)
 ```
-PR created - [https://github.com/theforeman/foreman-documentation/pull/4912|https://github.com/theforeman/foreman-documentation/pull/4912|smart-link] 
+PR created - [https://github.com/theforeman/foreman-documentation/pull/4912|https://github.com/theforeman/foreman-documentation/pull/4912|smart-link]
 ```
 
 
@@ -3356,7 +3356,7 @@ Research indicates that the command *pmrep(1)* should replace *pmval(1)* due to 
 
 #### **Imaanpreet Kaur** (2026-06-05)
 ```
-PR - [https://github.com/theforeman/foreman-documentation/pull/4909|https://github.com/theforeman/foreman-documentation/pull/4909|smart-link] 
+PR - [https://github.com/theforeman/foreman-documentation/pull/4909|https://github.com/theforeman/foreman-documentation/pull/4909|smart-link]
 ```
 
 
@@ -3454,7 +3454,7 @@ Commit Message:
 
 *Steps to Reproduce:*
 
-Perform the following on a patched and unpatched system. 
+Perform the following on a patched and unpatched system.
 
 # Sync a medium-sized repository in “immediate” mode
 # Sync it again, with the sync optimizations turned off, measuring the total runtime of an “immediate” sync where nothing has changed and nothing needs to downloaded
@@ -3469,7 +3469,7 @@ Perform the following on a patched and unpatched system.
 
 *Business Impact / Additional info:*
 
- 
+
 ```
 
 
@@ -3486,5 +3486,3 @@ This is related to [https://redhat.atlassian.net/browse/SAT-45821|https://redhat
 
 
 ---
-
-

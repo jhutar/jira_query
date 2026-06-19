@@ -209,7 +209,7 @@ h2. Acceptance criteria
 
 * Migrate the repo to [https://github.com/konflux-ci|https://github.com/konflux-ci] as *internal* (not public) repo
 * Update documentation on other two {{loadtest}} and {{perfscale}} repos
-* Run {{agentready}} there and report follow-up tasks in [https://redhat.atlassian.net/browse/KONFLUX-14208|https://redhat.atlassian.net/browse/KONFLUX-14208] 
+* Run {{agentready}} there and report follow-up tasks in [https://redhat.atlassian.net/browse/KONFLUX-14208|https://redhat.atlassian.net/browse/KONFLUX-14208]
 * Possibly create a follow-up tasks for things we did to other two repos in [https://redhat.atlassian.net/browse/KONFLUX-13485|https://redhat.atlassian.net/browse/KONFLUX-13485]
 ```
 
@@ -1408,7 +1408,7 @@ Analyze whether to keep the current single-Horreum-test approach or split into s
 
 #### **Aman Vishwakarma** (2026-06-09)
 ```
-Analyzed splitting into separate Horreum tests per config combo (8+ tests) versus keeping the current 2-test setup with JS branching. 
+Analyzed splitting into separate Horreum tests per config combo (8+ tests) versus keeping the current 2-test setup with JS branching.
 Recommendation: keep a single test per scenario category. Splitting would require over 720 duplicate label definitions and changes to the data upload pipeline, while JS branching on HA/QBT involves only 4 branches—the same pattern as the {{existing missing_pipeline_successes}} function. Separate tests become necessary only if different configs require different alert models or notifications
 ```
 
@@ -1434,7 +1434,7 @@ Review and understand the existing Results Controller performance test suite to 
 *Acceptance Criteria:*
 
 * All existing Results Controller tests have been reviewed and understood.
-* A summary of the current test coverage, including what scenarios are tested 
+* A summary of the current test coverage, including what scenarios are tested
 ```
 
 
@@ -1443,7 +1443,7 @@ Review and understand the existing Results Controller performance test suite to 
 
 #### **Aman Vishwakarma** (2026-06-09)
 ```
-Currently exploring and getting familiar with the existing Results Controller test suite.Documenting things as I go - [https://docs.google.com/document/d/13NJiEXVMxWnmrUsTgeDzwK1_SUyUMFU31-2HiWlbG6I/edit?usp=sharing|https://docs.google.com/document/d/13NJiEXVMxWnmrUsTgeDzwK1_SUyUMFU31-2HiWlbG6I/edit?usp=sharing|smart-link] 
+Currently exploring and getting familiar with the existing Results Controller test suite.Documenting things as I go - [https://docs.google.com/document/d/13NJiEXVMxWnmrUsTgeDzwK1_SUyUMFU31-2HiWlbG6I/edit?usp=sharing|https://docs.google.com/document/d/13NJiEXVMxWnmrUsTgeDzwK1_SUyUMFU31-2HiWlbG6I/edit?usp=sharing|smart-link]
 ```
 
 #### **Aman Vishwakarma** (2026-06-16)
@@ -1535,7 +1535,7 @@ Analysis completed:
 * Computed MIN/AVG/MAX for all resource metrics (controller CPU/memory, webhook CPU/memory, workqueue depth, etcd, cluster CPU)
 * Calculated MAX/AVG ratios to determine natural variance per metric (ranges 1.3x-1.7x)
 
-Documented with Horreum Labels and data tables with suggested upper bounds can be accessed using [https://docs.google.com/document/d/1ghrSQMdD2vrKPVCm8UBEz1o8BqpX312309cIscqyutk/edit?usp=sharing|https://docs.google.com/document/d/1ghrSQMdD2vrKPVCm8UBEz1o8BqpX312309cIscqyutk/edit?usp=sharing|smart-link] 
+Documented with Horreum Labels and data tables with suggested upper bounds can be accessed using [https://docs.google.com/document/d/1ghrSQMdD2vrKPVCm8UBEz1o8BqpX312309cIscqyutk/edit?usp=sharing|https://docs.google.com/document/d/1ghrSQMdD2vrKPVCm8UBEz1o8BqpX312309cIscqyutk/edit?usp=sharing|smart-link]
 ```
 
 #### **Aman Vishwakarma** (2026-06-12)
@@ -1543,7 +1543,7 @@ Documented with Horreum Labels and data tables with suggested upper bounds can b
 Earlier, the query results I shared did not include the controller_type dimension, so deployments and statefulSets results were combined. I've now rerun all queries with controller_type separated (deployments vs statefulSets).
 
 What's in the sheet:
-[https://docs.google.com/spreadsheets/d/1BD05rHbnuuBnxg8r6tgx2tRt_spHgSFpp1Cur4_sXek/edit?usp=sharing|https://docs.google.com/spreadsheets/d/1BD05rHbnuuBnxg8r6tgx2tRt_spHgSFpp1Cur4_sXek/edit?usp=sharing|smart-link] 
+[https://docs.google.com/spreadsheets/d/1BD05rHbnuuBnxg8r6tgx2tRt_spHgSFpp1Cur4_sXek/edit?usp=sharing|https://docs.google.com/spreadsheets/d/1BD05rHbnuuBnxg8r6tgx2tRt_spHgSFpp1Cur4_sXek/edit?usp=sharing|smart-link]
 
 The updated Excel sheet covers all 8 metric categories with per-scenario breakdowns:
 
@@ -1587,7 +1587,7 @@ Configuration applied and recalculated for last 24hrs test runs to validate new 
 #### **Aman Vishwakarma** (2026-06-16)
 ```
 Even I have PR with modified changes for review
-[https://github.com/openshift-pipelines/performance/pull/104|https://github.com/openshift-pipelines/performance/pull/104|smart-link] 
+[https://github.com/openshift-pipelines/performance/pull/104|https://github.com/openshift-pipelines/performance/pull/104|smart-link]
 ```
 
 
@@ -1737,10 +1737,10 @@ End goal:
 
 #### **Rajaditya Chauhan** (2026-06-12)
 ```
-To remove saas file : 
+To remove saas file :
 
 # [https://gitlab.cee.redhat.com/service/app-interface/-/merge_requests/192183|https://gitlab.cee.redhat.com/service/app-interface/-/merge_requests/192183]
-# [https://gitlab.cee.redhat.com/service/app-interface/-/merge_requests/192260|https://gitlab.cee.redhat.com/service/app-interface/-/merge_requests/192260] 
+# [https://gitlab.cee.redhat.com/service/app-interface/-/merge_requests/192260|https://gitlab.cee.redhat.com/service/app-interface/-/merge_requests/192260]
 ```
 
 
@@ -1780,8 +1780,8 @@ Decommission cyndi namespace from perf cluster
 ```
 Documented the stability and profiling test results in a report and supporting spreadsheet. Shared both with Breno for review and feedback on the findings.
 
-report: [https://docs.google.com/document/d/1DVK1hAk_vYs5zD8kym_arHmJYD5UunBHcN7soFxJiHY/edit?usp=sharing|https://docs.google.com/document/d/1DVK1hAk_vYs5zD8kym_arHmJYD5UunBHcN7soFxJiHY/edit?usp=sharing|smart-link] 
-Results: [https://docs.google.com/spreadsheets/d/1SiulXWeGtM2cBeivRywgG7sfljQCrhBKvGgnN_UQjc0/edit?usp=sharing|https://docs.google.com/spreadsheets/d/1SiulXWeGtM2cBeivRywgG7sfljQCrhBKvGgnN_UQjc0/edit?usp=sharing|smart-link] 
+report: [https://docs.google.com/document/d/1DVK1hAk_vYs5zD8kym_arHmJYD5UunBHcN7soFxJiHY/edit?usp=sharing|https://docs.google.com/document/d/1DVK1hAk_vYs5zD8kym_arHmJYD5UunBHcN7soFxJiHY/edit?usp=sharing|smart-link]
+Results: [https://docs.google.com/spreadsheets/d/1SiulXWeGtM2cBeivRywgG7sfljQCrhBKvGgnN_UQjc0/edit?usp=sharing|https://docs.google.com/spreadsheets/d/1SiulXWeGtM2cBeivRywgG7sfljQCrhBKvGgnN_UQjc0/edit?usp=sharing|smart-link]
 ```
 
 
@@ -1897,7 +1897,7 @@ Add support to {{pass_or_fail}} OPL tool [https://github.com/redhat-performance/
 ** Decisions storage: append pass/fail decisions to a configured table ({{data}} JSON/JSONB column)
 ** Config support in {{config.py}}, examples in {{sample_config.yaml}}, docs in {{investigator/README.md}} and root {{README.md}}
 ** {{core/setup.py}} — optional {{[postgresql]}} extra for {{psycopg2-binary}} (keeps core install lightweight)
-* 
+*
 ```
 
 
@@ -1985,8 +1985,8 @@ Title: removed unused secrets
 ```
 broken into 2 tasks:
 
-# [https://redhat.atlassian.net/browse/HCEPERF-1500|https://redhat.atlassian.net/browse/HCEPERF-1500|smart-link] 
-# [https://redhat.atlassian.net/browse/HCEPERF-1503|https://redhat.atlassian.net/browse/HCEPERF-1503|smart-link] 
+# [https://redhat.atlassian.net/browse/HCEPERF-1500|https://redhat.atlassian.net/browse/HCEPERF-1500|smart-link]
+# [https://redhat.atlassian.net/browse/HCEPERF-1503|https://redhat.atlassian.net/browse/HCEPERF-1503|smart-link]
 ```
 
 
@@ -2003,7 +2003,7 @@ broken into 2 tasks:
 
 **Description:**
 ```
-From rds logs: 
+From rds logs:
 
 {noformat}------------------------------------------------------------------
 Upgrade could not be run on Tue Jun 09 04:53:47 2026
@@ -2055,7 +2055,7 @@ Alter relevant playbook (or create new one) to upload main JSON file to PostgreS
 
 **Description:**
 ```
-From rds logs: 
+From rds logs:
 
 {noformat}------------------------------------------------------------------
 Upgrade could not be run on Tue Jun 09 04:53:47 2026
@@ -2118,7 +2118,7 @@ These tokens are being used here:
 ```
 Report Portal is broken presently, its impacting all CPT jobs. Upon checking with [~accountid:70121:2d46d1a6-e85d-4221-b1de-03ce32638494] we noticed that the payload we are sending is incorrect with the new version
 
-[https://source.redhat.com/departments/products_and_global_engineering/hybrid_cloud_experience_perfscale_team/mbu_perfscale_team_wiki/using_mbu_perf_reportportal_instance#it-s-broken-how-do-i-ask-for-support-|https://source.redhat.com/departments/products_and_global_engineering/hybrid_cloud_experience_perfscale_team/mbu_perfscale_team_wiki/using_mbu_perf_reportportal_instance#it-s-broken-how-do-i-ask-for-support-|smart-link] 
+[https://source.redhat.com/departments/products_and_global_engineering/hybrid_cloud_experience_perfscale_team/mbu_perfscale_team_wiki/using_mbu_perf_reportportal_instance#it-s-broken-how-do-i-ask-for-support-|https://source.redhat.com/departments/products_and_global_engineering/hybrid_cloud_experience_perfscale_team/mbu_perfscale_team_wiki/using_mbu_perf_reportportal_instance#it-s-broken-how-do-i-ask-for-support-|smart-link]
 
 Acceptance Criteria:
 
@@ -2182,6 +2182,3 @@ Test case here would be:
 
 ---
 ## New issues
-
-
-

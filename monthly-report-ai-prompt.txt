@@ -6,7 +6,7 @@ Use this prompt with an LLM (ChatGPT, Claude, Gemini, etc.) along with the outpu
 
 **Context:** Attached is a raw monthly status report for the previous month, generated from Jira issues and linked Pull Request descriptions across several engineering teams (Konflux, Pipelines, ConsoleDot, and Satellite).
 
-**Task:** Please synthesize this data into a professional, "executive-ready" monthly summary. 
+**Task:** Please synthesize this data into a professional, "executive-ready" monthly summary.
 
 **Requirements:**
 1. **Executive Summary:** Start with a 3-sentence overview of the most significant achievements across the entire organization this month.

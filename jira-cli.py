@@ -7,7 +7,7 @@ import logging
 import os
 from pathlib import Path
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 import re
 import tempfile
 import subprocess
@@ -34,7 +34,7 @@ def setup_logging(stderr_level):
     urllib_logger = logging.getLogger("urllib3.connectionpool")
     urllib_logger.setLevel(stderr_level)
 
-    file_handler = logging.FileHandler("/tmp/jira-cli.log")
+    file_handler = logging.FileHandler("/tmp/jira-cli.log")  # nosec B108
     file_handler.setLevel(logging.DEBUG)
     file_formatter = logging.Formatter(
         "%(asctime)s %(name)s %(threadName)s %(levelname)s %(message)s"
@@ -51,6 +51,12 @@ def setup_logging(stderr_level):
     logger.addHandler(stderr_handler)
 
     return logger
+
+
+class JiraQueryError(Exception):
+    """Custom exception for Jira query errors."""
+
+    pass
 
 
 class TemplateRenderer:
@@ -140,7 +146,7 @@ def _pretty(heading, data=None):
     if data is not None:
         print(f"=== {heading} ===")
     else:
-        print(f"=== No heading ===")
+        print("=== No heading ===")
         data = heading  # no heading provided, use it as data
     print(json.dumps(data, indent=4, default=lambda o: "<" + str(o) + ">"))
 
@@ -390,7 +396,7 @@ class Doer:
 
         if custom != {}:
             if self._args.dry_run:
-                _pretty(f"Would configure these custom fields:", custom)
+                _pretty("Would configure these custom fields:", custom)
             else:
                 issue.update(fields=custom)
                 custom_out = {}
@@ -749,7 +755,7 @@ class Doer:
 
             if self._args.comment is not None:
                 if self._args.dry_run:
-                    _pretty(f"Would add this comment:", self._args.comment)
+                    _pretty("Would add this comment:", self._args.comment)
                 else:
                     self._jira.add_comment(issue, self._args.comment)
                     print(f"Commented on the issue {issue.id}")
@@ -981,7 +987,7 @@ def main():
     #
     # Templates
     #
-    parser_template = subparsers.add_parser(
+    subparsers.add_parser(
         "template",
         help="Work with issue templates",
     )

@@ -16,13 +16,13 @@ When moving a ticket to a closed or resolved state (e.g., "Closed", "Resolved", 
 
 2. **Transition Payload Mapping:**
    When transitioning an issue, if a resolution is specified, construct the transition fields dictionary and pass it to the transition method.
-   
+
    In `Doer._update_status`:
    ```python
    transition_fields = {}
    if self._args.resolution is not None:
        transition_fields["resolution"] = {"name": self._args.resolution}
-       
+
    if self._args.dry_run:
        _pretty(f"Would transition to {self._args.status} with fields:", transition_fields)
    else:
@@ -32,11 +32,11 @@ When moving a ticket to a closed or resolved state (e.g., "Closed", "Resolved", 
        assert self._args.status in status_transitions, (
            f"Status {self._args.status} not found in available statuses ({', '.join(status_transitions)})"
        )
-       
+
        # Execute transition passing fields dictionary
        if transition_fields:
            self._jira.transition_issue(
-               issue, 
+               issue,
                status_transitions[self._args.status],
                fields=transition_fields
            )

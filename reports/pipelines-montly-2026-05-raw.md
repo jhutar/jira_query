@@ -9,22 +9,22 @@
 **Comments (Last 3):**
 
 * **Deekshith Kumar Netha Bamandla N** (2026-05-29): Found a way to implement JS calculation functions for each scenario using a mix of labels.
-  
+
   {noformat}value => {
     const ha = value.__deployment_haConfig_haEnabled;
     const qbt = value.__deployment_qbtConfig_qbtEnabled;
     const ctrl = value.__deployment_haConfig_controllerType;
-  
+
     let tol = 2;
     if (ha && qbt)                         tol = 300;
     else if (ha && ctrl === "statefulSets") tol = 15;
     else if (ha)                           tol = 10;
     else if (qbt)                          tol = 25;
-  
+
     const succeeded = Number(value.__results_PipelineRuns_count_succeeded);
     return Math.max(0, (1000 - tol) - succeeded);
   }{noformat}
-  
+
   Added {{missing_pipeline_successes}} to Pipelines Horreum test with per-scenario tolerance calculation.
 
 
@@ -39,7 +39,7 @@ We got this email we need to act on:
 {noformat}From: pipelines-perfscale-team+bncbdqllcveuiorbho4tliamgqeaiaykdq@redhat.com  Fri May 15 08:37:05 2026
 horreum via pipelines-perfscale-team <pipelines-perfscale-team@redhat.com>
 To: pipelines-perfscale-team@redhat.com
-Cc: 
+Cc:
 Date: Fri, 15 May 2026 05:24:41 +0000 (UTC)
 Subject: [Horreum] Missing change detection values in test OpenShift Pipelines scalingPipelines test, dataset 235789#0
 
@@ -74,9 +74,9 @@ h3. Acceptance criteria
 **Comments (Last 3):**
 
 * **Deekshith Kumar Netha Bamandla N** (2026-05-19): The PAC pods ({{pipelines-as-code-controller}}, {{pipelines-as-code-watcher}}, {{pipelines-as-code-webhook}}) were removed from the {{openshift-pipelines}} namespace in the latest nightly build (rolled between May 12–19). Along with PAC, Triggers are also gone.
-  
+
   This is an upstream nightly change not a test infra issue, our setup scripts have not changed since April 30.
-  
+
   Since those pods no longer exist, Prometheus returns no data for their restart metrics, causing Horreum to fail the change detection calculation.
 
 * **Deekshith Kumar Netha Bamandla N** (2026-05-19): Update: PAC wasn't removed from the build the images are still in the operator bundle. The actual blocker is the {{tkn-cli-serve}} pod crashing ({{sed: can't read /etc/httpd/conf.d/ssl.conf}}), which stalls {{TektonAddon}} and blocks the entire {{TektonConfig}} reconciliation from deploying PAC. Traces to [this commit|https://github.com/openshift-pipelines/serve-tkn-cli/commit/3e38fbfd7b88724b5e5e7d48d91fee2a64a50543].
@@ -99,9 +99,9 @@ Integrate all new Chains controller CPT scenarios into the CI pipeline. Validate
 * **Automation for Jira** (2026-05-26): removed label *groomable* from the issue as Aman Vishwakarma transitioned it to In Progress
 
 * **Aman Vishwakarma** (2026-05-26): Chains signing Prow jobs integrated as periodic jobs (versions 1.20–1.22, variants: default, HA-10, QBT, HA-10-QBT)
-  
+
   {{prow-to-storage.sh}} updated to pull signing job results and upload to Horreum [(PR merged)|https://github.com/openshift-pipelines/performance/pull/102]
-  
+
   End-to-end flow validated: periodic jobs → GCS → {{prow-to-storage.sh}} → Horreum Chains test (196 datasets confirmed)
 
 
@@ -122,11 +122,11 @@ Modify and enhance the Grafana dashboard to visualize metrics and results from t
 * **Jan Hutar** (2026-05-26): Status update: Deekshith working on this, facing issues to get data from PostgreSQL.
 
 * **Deekshith Kumar Netha Bamandla N** (2026-05-29): [+Chains Signing Performance Dashboard+|http://10.0.109.83:3000/d/Chains_Signing_Performance/chains-signing-performance-dashboard]
-  
+
   [+Chains Signing Performance Comparison Dashboard+|http://10.0.109.83:3000/d/Chains_Signing_Performance_Comparison/chains-signing-performance-comparison-dashboard]
-  
-  Created Chains Signing Performance and comparison dashboard. 
-  
+
+  Created Chains Signing Performance and comparison dashboard.
+
   PR: [https://github.com/openshift-pipelines/performance/pull/103|https://github.com/openshift-pipelines/performance/pull/103]
 
 
@@ -145,9 +145,9 @@ Set up Horreum for result storage and configure alerts for the new Chains contro
 * **Automation for Jira** (2026-05-25): removed label *groomable* from the issue as Aman Vishwakarma transitioned it to In Progress
 
 * **Aman Vishwakarma** (2026-05-26): *Verified Chains Test (ID 418) — Setup on Shared Schema (ID 274)*
-  
+
   Setup is complete and data is flowing. Summary below:
-  
+
   * *Schema labels:* All 65 labels present — covers Chains controller CPU/memory/workqueue, signing metrics, and shared infrastructure.
   [https://horreum.corp.redhat.com/schema/274|https://horreum.corp.redhat.com/schema/274]
   * *Change detection:* 10 groups configured:
@@ -193,7 +193,7 @@ Develop and automate the CPT scenario for Chains controller configured with High
 * **Automation for Jira** (2026-05-10): removed label *groomable* from the issue as Aman Vishwakarma transitioned it to In Progress
 
 * **Aman Vishwakarma** (2026-05-14): The HA=10 variants were also split to resolve the Prow 8-hour timeout:
-  
+
   * {{ni-sign-tkn-bb-ha10}} → {{ni-sign-tkn-bb-ha10}} + {{ni-sign-tkn-bb-ha10-1500}}
   * {{1-20-sign-tkn-bb-ha10}} → {{1-20-sign-tkn-bb-ha10}} + {{1-20-sign-tkn-bb-ha10-1500}}
 
@@ -215,10 +215,10 @@ Develop and automate the CPT scenario for Chains controller using the QBT Profil
 * **Automation for Jira** (2026-05-10): removed label *groomable* from the issue as Aman Vishwakarma transitioned it to In Progress
 
 * **Aman Vishwakarma** (2026-05-14): As part of resolving the 8-hour Prow timeout issue affecting {{sign-tkn-bb}} periodic jobs, the QBT tuned variants were also split using the same 2-way approach:
-  
+
   * {{1-20-sign-tkn-bb-qbt}} → {{1-20-sign-tkn-bb-qbt}} + {{1-20-sign-tkn-bb-qbt-1500}}
   * {{1-21-sign-tkn-bb-qbt}} → {{1-21-sign-tkn-bb-qbt}} + {{1-21-sign-tkn-bb-qbt-1500}}
-  
+
   Job 1 runs 500/20 + 1000/20 scenarios, and Job 2 ({{-1500}} suffix) runs 1500/20 independently. Rehearsal runs were validated via {{/pj-rehearse}} on the PR.
 
 * **Jan Hutar** (2026-05-19): Aman’s results: [https://docs.google.com/document/d/1SwgUraasyxXgHtqOVQF4J7dB0CJawm-oIHRDRvjAYVs/edit?tab=t.0|https://docs.google.com/document/d/1SwgUraasyxXgHtqOVQF4J7dB0CJawm-oIHRDRvjAYVs/edit?tab=t.0]
@@ -239,8 +239,8 @@ Develop and automate the Continuous Performance Testing (CPT) scenario for Chain
 * **Jan Hutar** (2026-05-18): Lets only run scale we can handle in one run.
 
 * **Aman Vishwakarma** (2026-05-18): Dropped the 1500/20 PLR scenario from all sign-tkn-bb CI jobs across all variants (base signing, QBT, HA-10, HA-10+QBT) and all versions (nightly, 1.20, 1.21, 1.22).All jobs now run TEST_SCENARIOS: 500/20 1000/20 only.
-  
-  Additionally, renamed the HA variant job suffixes from -ha10 to -ha-10 to align with the _PROW_VARIANT_SUFFIXES convention used by prow-to-storage.sh for GCS result collection suggested by [~accountid:712020:11aa6ff6-f1d3-4f94-9880-d5a1a144ec5a] 
+
+  Additionally, renamed the HA variant job suffixes from -ha10 to -ha-10 to align with the _PROW_VARIANT_SUFFIXES convention used by prow-to-storage.sh for GCS result collection suggested by [~accountid:712020:11aa6ff6-f1d3-4f94-9880-d5a1a144ec5a]
 
 * **Jan Hutar** (2026-05-19): Aman’s results: [https://docs.google.com/document/d/1SwgUraasyxXgHtqOVQF4J7dB0CJawm-oIHRDRvjAYVs/edit?tab=t.0|https://docs.google.com/document/d/1SwgUraasyxXgHtqOVQF4J7dB0CJawm-oIHRDRvjAYVs/edit?tab=t.0]
 
@@ -259,14 +259,14 @@ Develop and automate the Continuous Performance Testing (CPT) scenario for Chain
 * **Jan Hutar** (2026-05-12): +Status report:+ Deekshith added new metrics already and now need to create new Horreum test for Chains. Once the test is created, we can merge Aman’s PR.
 
 * **Deekshith Kumar Netha Bamandla N** (2026-05-18): Completed Chains signing test Horreum integration:
-  
+
   * Added signing metrics computation in {{stats.sh}}
   * Created {{horreum_chains_fields.yaml}} with 65 fields covering Chains controller CPU/memory/workqueue, shared infrastructure metrics and signing-specific metrics for both PipelineRuns and TaskRuns.
   * Successfully pushed labels and change detection variables to Horreum (test ID 418, schema ID 274).
   * Reorganized horreum tooling into {{tools/horreum/}} with README documentation.
   * Updated {{ci-scripts/lib.sh}} to support Chains env vars for HA/QBT config capture and generate signing-aware scenario names.
-  
-  PR raised: [https://github.com/openshift-pipelines/performance/pull/101|https://github.com/openshift-pipelines/performance/pull/101|smart-link] 
+
+  PR raised: [https://github.com/openshift-pipelines/performance/pull/101|https://github.com/openshift-pipelines/performance/pull/101|smart-link]
 
 
 
@@ -283,10 +283,10 @@ Develop and automate the Continuous Performance Testing (CPT) scenario for Chain
 * **Jan Hutar** (2026-05-12): +Status report:+ Epic for Chains created, Deekshith will create another one for Results. We will start with just one basic scenario for Results.
 
 * **Deekshith Kumar Netha Bamandla N** (2026-05-18): Created Epics for Chains and Result CPT
-  
-  [https://redhat.atlassian.net/browse/SRVKP-11914|https://redhat.atlassian.net/browse/SRVKP-11914|smart-link] 
-  
-  [https://redhat.atlassian.net/browse/SRVKP-12048|https://redhat.atlassian.net/browse/SRVKP-12048|smart-link] 
+
+  [https://redhat.atlassian.net/browse/SRVKP-11914|https://redhat.atlassian.net/browse/SRVKP-11914|smart-link]
+
+  [https://redhat.atlassian.net/browse/SRVKP-12048|https://redhat.atlassian.net/browse/SRVKP-12048|smart-link]
 
 
 
@@ -306,7 +306,7 @@ h3. Acceptance criteria
 
 * **Aman Vishwakarma** (2026-04-28): I reran the test suite on *OpenShift Pipelines v1.21* and compared the results against *v1.20*.
   Here is Comparison report I have attached
-  
+
   [https://docs.google.com/document/d/1yU-w0qwPmR8LFKos4-jh3ds1G3rWoxqblm_T5KEdqzE/edit?usp=sharing|https://docs.google.com/document/d/1yU-w0qwPmR8LFKos4-jh3ds1G3rWoxqblm_T5KEdqzE/edit?usp=sharing|smart-card]
 
 * **Automation for Jira** (2026-05-05): removed label *groomable* from the issue as Aman Vishwakarma transitioned it to In Progress
@@ -385,7 +385,7 @@ h3. Acceptance criteria
 * **Automation for Jira** (2026-04-23): removed label *groomable* from the issue as Aman Vishwakarma transitioned it to In Progress
 
 * **Aman Vishwakarma** (2026-04-24): Logged into Console and CLI. Identified {{openshift-monitoring}} & {{openshift-etcd}} as a high-resource namespace and verified pod health.
-  
+
   Installed OpenShift Pipelines Operator.
   Developed and ran a Pipeline that clones the *LogAn* GitHub repository into a shared workspace.
 
@@ -403,7 +403,7 @@ h3. Acceptance criteria
 
 * **Automation for Jira** (2026-04-20): removed label *groomable* from the issue as Aman Vishwakarma transitioned it to In Progress
 
-* **Aman Vishwakarma** (2026-04-23): [https://redhat.udemy.com/course/tekton-the-quick-start|https://redhat.udemy.com/course/tekton-the-quick-start|smart-link] 
+* **Aman Vishwakarma** (2026-04-23): [https://redhat.udemy.com/course/tekton-the-quick-start|https://redhat.udemy.com/course/tekton-the-quick-start|smart-link]
   Referring this course for Exploration of Tekton concepts
 
 * **Aman Vishwakarma** (2026-05-05): Explored Tekton..All relevant documentation has been reviewed and analyzed.
@@ -417,13 +417,13 @@ h3. Acceptance criteria
 **Description:**
 h1. Story (Required)
 
-Onboarding activities for Aman for Openshift Pipelines 
+Onboarding activities for Aman for Openshift Pipelines
 
 h2. *Acceptance Criteria (Mandatory)*
 
 _Understand the product and complete all the tasks under it_
 
-h1. 
+h1.
 
 
 
@@ -433,9 +433,9 @@ h1.
 
 * **Jan Hutar** (2026-05-05): All child tacks closed. Thank you Aman!
 
-* **Automation for Jira** (2026-05-05): Please add '*Release Note Text*', '*Release Note Status*' and '*Release Notes Type*'. Transitioning the issue back to 'In progress'. 
-  
-  If Release Note is not required, set *Release Note Type* to '*Release Note Not Required*' 
+* **Automation for Jira** (2026-05-05): Please add '*Release Note Text*', '*Release Note Status*' and '*Release Notes Type*'. Transitioning the issue back to 'In progress'.
+
+  If Release Note is not required, set *Release Note Type* to '*Release Note Not Required*'
 
 
 
@@ -454,9 +454,9 @@ We have a regression [https://redhat.atlassian.net/browse/SRVKP-11016|https://re
 
 * **Jan Hutar** (2026-03-24): +Status update:+ Tried to run the scenario with cluster bot and gather more metrics. Was not able to connect with eng. rep., so need to do so this week.
 
-* **Siddardh R A** (2026-05-12): My work on gathering more metrics to aid Anitha in narrowing down the possibilities of the root cause. And all the work has been documented in this ticket : [https://redhat.atlassian.net/browse/SRVKP-11016|https://redhat.atlassian.net/browse/SRVKP-11016|smart-link] 
+* **Siddardh R A** (2026-05-12): My work on gathering more metrics to aid Anitha in narrowing down the possibilities of the root cause. And all the work has been documented in this ticket : [https://redhat.atlassian.net/browse/SRVKP-11016|https://redhat.atlassian.net/browse/SRVKP-11016|smart-link]
   Here is the comment :
-  [https://redhat.atlassian.net/browse/SRVKP-11016?focusedCommentId=16654561|https://redhat.atlassian.net/browse/SRVKP-11016?focusedCommentId=16654561|smart-link] 
+  [https://redhat.atlassian.net/browse/SRVKP-11016?focusedCommentId=16654561|https://redhat.atlassian.net/browse/SRVKP-11016?focusedCommentId=16654561|smart-link]
 
 
 
@@ -486,17 +486,17 @@ h2. *Acceptance Criteria (Mandatory)*
 
 * **Jan Hutar** (2026-04-30): [~accountid:712020:11aa6ff6-f1d3-4f94-9880-d5a1a144ec5a] I see. So in the mean time, could you please add a task to start running it on 1.22 (probably daily so we accumulate some test runs before some dashboard is ready)? To me, Comparison Dashboard looks pretty ready, just data missing 🙂 But at this point I’m outsider, so I’m pretty sure lots is missing. Do we have a Jira to track that?
 
-* **Automation for Jira** (2026-05-04): Please add '*Release Note Text*', '*Release Note Status*' and '*Release Notes Type*'. Transitioning the issue back to 'In progress'. 
-  
-  If Release Note is not required, set *Release Note Type* to '*Release Note Not Required*' 
+* **Automation for Jira** (2026-05-04): Please add '*Release Note Text*', '*Release Note Status*' and '*Release Notes Type*'. Transitioning the issue back to 'In progress'.
+
+  If Release Note is not required, set *Release Note Type* to '*Release Note Not Required*'
 
 * **Deekshith Kumar Netha Bamandla N** (2026-05-04): Added all the scenarios related to pipelines controller to CI. Updated Horreum labels related to HA, QBT and nightly. Updated the grafana dashboards.
-  
+
   [Comparison Dashboard|http://10.0.109.83:3000/d/Pipelines_Performance_Comparison/pipelines-performance-comparison-dashboard]
-  
+
   [Pipelines Performance Dashboard|http://10.0.109.83:3000/d/Pipelines_Performance/pipelines-performance-dashboard]
-  
-  
+
+
 
 
 
@@ -523,7 +523,7 @@ Acceptance criteria:
 
 **Comments (Last 3):**
 
-* **Siddardh R A** (2026-05-12): Since we provided an internal report to the engineering team. We didn't proceed to publish the article because we had multiple regressions in the chain controller, and no of failures increased in the Stateful set. The engineering team is working on identifying and addressing the root cause of this regression. And eventually, the 1.22 version got released, so we provided only the internal report 
+* **Siddardh R A** (2026-05-12): Since we provided an internal report to the engineering team. We didn't proceed to publish the article because we had multiple regressions in the chain controller, and no of failures increased in the Stateful set. The engineering team is working on identifying and addressing the root cause of this regression. And eventually, the 1.22 version got released, so we provided only the internal report
 
 
 
@@ -541,15 +541,15 @@ Error in CI : https://prow.ci.openshift.org/view/gs/test-platform-results/pr-log
 **Comments (Last 3):**
 
 * **OpenShift Jira Bot** (2025-12-12): Hi Siddardh R A,
-  
+
   This is an automated reminder that issue is currently in progress but does not have an estimate.
-  
+
   Please add an estimate as soon as possible.
-  
+
 
 * **Jan Hutar** (2026-04-21): Hello [~accountid:712020:347f3aac-04ed-4a21-ad91-fcd7b5f35e85] . Is this [https://github.com/openshift-pipelines/performance/pull/85|https://github.com/openshift-pipelines/performance/pull/85] PR is related?
 
-* **Siddardh R A** (2026-05-12): After multiple attempts , this issue has been fixed by this PR : [https://github.com/openshift-pipelines/performance/pull/95|https://github.com/openshift-pipelines/performance/pull/95|smart-link]  
+* **Siddardh R A** (2026-05-12): After multiple attempts , this issue has been fixed by this PR : [https://github.com/openshift-pipelines/performance/pull/95|https://github.com/openshift-pipelines/performance/pull/95|smart-link]
 
 
 
@@ -567,7 +567,7 @@ Error in CI : https://prow.ci.openshift.org/view/gs/test-platform-results/pr-log
 **Comments (Last 3):**
 
 * **OpenShift Jira Bot** (2025-12-01): Hi Siddardh R A,
-  
+
   This Issue is in progress but lacks a sprint assignment.
   Please take a moment to:
   1 - Add it to an open sprint after coordinating with your team.
@@ -576,7 +576,7 @@ Error in CI : https://prow.ci.openshift.org/view/gs/test-platform-results/pr-log
 * **Jan Hutar** (2026-03-10): Hello [~accountid:712020:347f3aac-04ed-4a21-ad91-fcd7b5f35e85]. This is in progress for almost 9 months now. How can we move it forward?
 
 * **Deekshith Kumar Netha Bamandla N** (2026-05-04): Adds a new Grafana comparison dashboard ({{pipelines-comparison-dashboard.jsonnet}}) for side-by-side version comparison of pipelines performance metrics (e.g., 1.19 vs 1.20). Version dropdowns are dynamic query variables.
-  
+
   Grafana Dashboard: [+Pipelines Comparison Dashboard+|http://10.0.109.83:3000/d/Pipelines_Performance_Comparison/pipelines-performance-comparison-dashboard]
 
 
@@ -637,7 +637,7 @@ h2. *Epic Goal*
 * Run the perf&scale tests for 1.22, similar to how we ran tests for previous releases, and compare with the previous version
 * Ensure tests do not show any 1.22 -> 1.21 regressions.
 * Document a process in Jira so it can be used later to automate the pipeline.
-* Validate whether the bugs raised in the previous releases have been addressed 
+* Validate whether the bugs raised in the previous releases have been addressed
 
 h2. *Acceptance Criteria (Mandatory)*
 
@@ -653,13 +653,13 @@ h2. *Done Checklist*
 
 **Comments (Last 3):**
 
-* **Siddardh R A** (2026-06-01): Here is the Data Point Sheet : [https://docs.google.com/spreadsheets/d/1-GWL8vjhcvcWfaKjjw52CD_qLb-AjzuILtpqselXYCY/edit?usp=sharing|https://docs.google.com/spreadsheets/d/1-GWL8vjhcvcWfaKjjw52CD_qLb-AjzuILtpqselXYCY/edit?usp=sharing|smart-link] 
-  Here is the Internal Report : [https://docs.google.com/document/d/1YRmoituOKBrEWE3jSO2dtc9u-QJzZVn-45oByHG9bjs/edit?usp=sharing|https://docs.google.com/document/d/1YRmoituOKBrEWE3jSO2dtc9u-QJzZVn-45oByHG9bjs/edit?usp=sharing|smart-link] 
+* **Siddardh R A** (2026-06-01): Here is the Data Point Sheet : [https://docs.google.com/spreadsheets/d/1-GWL8vjhcvcWfaKjjw52CD_qLb-AjzuILtpqselXYCY/edit?usp=sharing|https://docs.google.com/spreadsheets/d/1-GWL8vjhcvcWfaKjjw52CD_qLb-AjzuILtpqselXYCY/edit?usp=sharing|smart-link]
+  Here is the Internal Report : [https://docs.google.com/document/d/1YRmoituOKBrEWE3jSO2dtc9u-QJzZVn-45oByHG9bjs/edit?usp=sharing|https://docs.google.com/document/d/1YRmoituOKBrEWE3jSO2dtc9u-QJzZVn-45oByHG9bjs/edit?usp=sharing|smart-link]
   KB Article Draft : [https://access.redhat.com/articles/7143289|https://access.redhat.com/articles/7143289]
 
-* **Automation for Jira** (2026-06-01): Please add '*Release Note Text*', '*Release Note Status*' and '*Release Notes Type*'. Transitioning the issue back to 'In progress'. 
-  
-  If Release Note is not required, set *Release Note Type* to '*Release Note Not Required*' 
+* **Automation for Jira** (2026-06-01): Please add '*Release Note Text*', '*Release Note Status*' and '*Release Notes Type*'. Transitioning the issue back to 'In progress'.
+
+  If Release Note is not required, set *Release Note Type* to '*Release Note Not Required*'
 
 
 
@@ -696,7 +696,7 @@ h3. Acceptance criteria
 * **Automation for Jira** (2026-05-26): removed label *groomable* from the issue as Deekshith Kumar Netha Bamandla N transitioned it to In Progress
 
 * **Deekshith Kumar Netha Bamandla N** (2026-05-29): Automation strategies for pipeline monitoring and alerting were reviewed and standardized via hard-coded threshold implementations.
-  
+
   The team decided to implement hard-coded upper and lower bounds for metrics, replacing complex percentage-based alerts. Specific operational labels were retained while irrelevant components were removed. Engineering will define specific upper bounds for acceptable pipeline failures per scenario. This prevents excessive notifications and streamlines responses for testing environments.
 
 
@@ -714,7 +714,7 @@ We will be fixing this to fixed threshold.
 
 **Comments (Last 3):**
 
-* **Jan Hutar** (2026-06-02): Status report: Aman will connect with Deekshith on a plan here. 
+* **Jan Hutar** (2026-06-02): Status report: Aman will connect with Deekshith on a plan here.
 
 
 
@@ -823,7 +823,7 @@ h2. *Epic Goal*
 * Run the perf&scale tests for 1.22, similar to how we ran tests for previous releases, and compare with the previous version
 * Ensure tests do not show any 1.22 -> 1.21 regressions.
 * Document a process in Jira so it can be used later to automate the pipeline.
-* Validate whether the bugs raised in the previous releases have been addressed 
+* Validate whether the bugs raised in the previous releases have been addressed
 
 h2. *Acceptance Criteria (Mandatory)*
 
@@ -839,16 +839,14 @@ h2. *Done Checklist*
 
 **Comments (Last 3):**
 
-* **Siddardh R A** (2026-06-01): Here is the Data Point Sheet : [https://docs.google.com/spreadsheets/d/1-GWL8vjhcvcWfaKjjw52CD_qLb-AjzuILtpqselXYCY/edit?usp=sharing|https://docs.google.com/spreadsheets/d/1-GWL8vjhcvcWfaKjjw52CD_qLb-AjzuILtpqselXYCY/edit?usp=sharing|smart-link] 
-  Here is the Internal Report : [https://docs.google.com/document/d/1YRmoituOKBrEWE3jSO2dtc9u-QJzZVn-45oByHG9bjs/edit?usp=sharing|https://docs.google.com/document/d/1YRmoituOKBrEWE3jSO2dtc9u-QJzZVn-45oByHG9bjs/edit?usp=sharing|smart-link] 
+* **Siddardh R A** (2026-06-01): Here is the Data Point Sheet : [https://docs.google.com/spreadsheets/d/1-GWL8vjhcvcWfaKjjw52CD_qLb-AjzuILtpqselXYCY/edit?usp=sharing|https://docs.google.com/spreadsheets/d/1-GWL8vjhcvcWfaKjjw52CD_qLb-AjzuILtpqselXYCY/edit?usp=sharing|smart-link]
+  Here is the Internal Report : [https://docs.google.com/document/d/1YRmoituOKBrEWE3jSO2dtc9u-QJzZVn-45oByHG9bjs/edit?usp=sharing|https://docs.google.com/document/d/1YRmoituOKBrEWE3jSO2dtc9u-QJzZVn-45oByHG9bjs/edit?usp=sharing|smart-link]
   KB Article Draft : [https://access.redhat.com/articles/7143289|https://access.redhat.com/articles/7143289]
 
-* **Automation for Jira** (2026-06-01): Please add '*Release Note Text*', '*Release Note Status*' and '*Release Notes Type*'. Transitioning the issue back to 'In progress'. 
-  
-  If Release Note is not required, set *Release Note Type* to '*Release Note Not Required*' 
+* **Automation for Jira** (2026-06-01): Please add '*Release Note Text*', '*Release Note Status*' and '*Release Notes Type*'. Transitioning the issue back to 'In progress'.
+
+  If Release Note is not required, set *Release Note Type* to '*Release Note Not Required*'
 
 
 
 ---
-
-

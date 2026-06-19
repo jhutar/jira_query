@@ -9,11 +9,16 @@ import subprocess
 
 def _run_command(cmd, env=None):
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True, env=env)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, check=True, env=env
+        )
         return result.stdout.strip(), None
     except subprocess.CalledProcessError as e:
         stderr = e.stderr.strip() if e.stderr else "No stderr"
-        return None, f"Command {cmd} failed with exit status {e.returncode}.\nStderr: {stderr}"
+        return (
+            None,
+            f"Command {cmd} failed with exit status {e.returncode}.\nStderr: {stderr}",
+        )
     except Exception as e:
         return None, str(e)
 

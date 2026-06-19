@@ -1,6 +1,6 @@
 # Monthly Executive Summary Report
 
-**Date:** June 17, 2026  
+**Date:** June 17, 2026
 **Data Source:** `reports/all-weekly-2026-06-16-raw.md`
 
 ---
