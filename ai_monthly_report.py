@@ -7,10 +7,11 @@ import sys
 
 from jira_cli.cli import (
     _create_jira_client as JiraClient,
-    load_config as load_server_config,
+    load_server_config,
     TemplateRenderer,
+    convert_issue_adf_to_md,
 )
-from pr_utils import enrich_issue_with_prs
+from jira_cli.pr_utils import enrich_issue_with_prs
 
 
 # Configure queries from the shell script
@@ -170,6 +171,7 @@ def main():
             issues = jira.search_issues(jql)
 
             for issue in issues:
+                convert_issue_adf_to_md(issue)
                 enrich_issue_with_prs(issue)
                 # Filter comments to only include those from the previous month
                 if hasattr(issue.fields, "comment") and issue.fields.comment:

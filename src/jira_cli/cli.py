@@ -113,6 +113,10 @@ def load_config(config_path) -> Dict[str, Any]:
     return config_data
 
 
+def load_server_config(config_path) -> Dict[str, Any]:
+    return load_config(config_path)["server"]
+
+
 def _create_jira_client(url, username, token):
     options = {
         "server": url,
@@ -166,6 +170,35 @@ def _translate_content(subcommand, input_str):
             f"adfmd {subcommand} failed (exit {e.returncode}): {e.stderr}"
         )
         raise RuntimeError(f"Content translation failed: {e.stderr}") from e
+
+
+def convert_issue_adf_to_md(issue):
+    """Converts Jira v3 ADF description and comments to Markdown string in place."""
+    raw_fields = issue.raw.get("fields", {})
+    raw_desc = raw_fields.get("description")
+    if raw_desc and isinstance(raw_desc, dict):
+        try:
+            issue.fields.description = _translate_content("to-md", json.dumps(raw_desc))
+        except Exception as e:
+            import sys
+
+            print(f"Error converting description: {e}", file=sys.stderr)
+            issue.fields.description = ""
+    elif getattr(issue.fields, "description", None) is None:
+        issue.fields.description = ""
+
+    if hasattr(issue.fields, "comment") and issue.fields.comment:
+        raw_comments_list = raw_fields.get("comment", {}).get("comments", [])
+        for idx, comment in enumerate(issue.fields.comment.comments):
+            if idx < len(raw_comments_list):
+                raw_body = raw_comments_list[idx].get("body")
+                if raw_body and isinstance(raw_body, dict):
+                    try:
+                        comment.body = _translate_content("to-md", json.dumps(raw_body))
+                    except Exception as e:
+                        import sys
+
+                        print(f"Error converting comment: {e}", file=sys.stderr)
 
 
 class Cache:
@@ -681,7 +714,7 @@ class Doer:
             assert len(assignee_users) == 1, (
                 f"Expected exactly one user for '{self._args.assignee}', but found {len(assignee_users)}. "
                 f"Please use a more specific name, email, or accountId. "
-                f"Found: {[f'{u.displayName} ({getattr(u, 'accountId', 'no-id')})' for u in assignee_users]}"
+                f"Found: {[u.displayName + ' (' + getattr(u, 'accountId', 'no-id') + ')' for u in assignee_users]}"
             )
             resolved_assignee = assignee_users[0]
             self._logger.debug(f"Pre-validated assignee: {resolved_assignee}")
