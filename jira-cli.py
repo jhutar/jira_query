@@ -306,15 +306,34 @@ class Doer:
         if self._args.status is None:
             return
 
+        transition_fields = {}
+        if self._args.resolution is not None:
+            transition_fields["resolution"] = {"name": self._args.resolution}
+
         if self._args.dry_run:
-            _pretty(f"Would transition to {self._args.status}")
+            if transition_fields:
+                _pretty(
+                    f"Would transition to {self._args.status} with fields:",
+                    transition_fields,
+                )
+            else:
+                _pretty(f"Would transition to {self._args.status}")
         else:
             transitions = self._jira.transitions(issue)
             status_transitions = {t["name"]: t["id"] for t in transitions}
             assert self._args.status in status_transitions, (
                 f"Status {self._args.status} not found in available statuses ({', '.join(status_transitions)})"
             )
-            self._jira.transition_issue(issue, status_transitions[self._args.status])
+            if transition_fields:
+                self._jira.transition_issue(
+                    issue,
+                    status_transitions[self._args.status],
+                    fields=transition_fields,
+                )
+            else:
+                self._jira.transition_issue(
+                    issue, status_transitions[self._args.status]
+                )
             print(
                 f"Transitioned to {self._args.status} status (transition {status_transitions[self._args.status]})"
             )
@@ -876,6 +895,10 @@ def main():
         help="State of the ticket (there have to be existing transition from default to this target state)",
     )
     parser_create.add_argument(
+        "--resolution",
+        help="Resolution name to set when transitioning (e.g., 'Done', 'Not a Bug', 'Cannot Reproduce')",
+    )
+    parser_create.add_argument(
         "--type",
         choices=["Task", "Bug", "Epic", "Feature", "Sub-task"],
         default="Task",
@@ -941,6 +964,10 @@ def main():
     parser_update.add_argument(
         "--status",
         help="New state of the ticket",
+    )
+    parser_update.add_argument(
+        "--resolution",
+        help="Resolution name to set when transitioning (e.g., 'Done', 'Not a Bug', 'Cannot Reproduce')",
     )
     parser_update.add_argument(
         "--comment",

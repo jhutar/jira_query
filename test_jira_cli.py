@@ -49,6 +49,7 @@ def mock_args():
     args.components = None
     args.labels = None
     args.status = None
+    args.resolution = None
     args.type = "Task"
     args.epic = None
     args.parent = None
@@ -502,3 +503,73 @@ def test_do_create_feature_type_accepted(
 
     # dry_run is True, so create_issue should not be called, but validation passed
     assert not mock_jira.create_issue.called
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_update_status_with_resolution(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """When --resolution is passed, transition_issue receives fields with the resolution."""
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_args.subparser_name = "update"
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = None
+    mock_args.status = "Closed"
+    mock_args.resolution = "Done"
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.issue.return_value = mock_issue
+
+    mock_jira.transitions.return_value = [
+        {"name": "Closed", "id": "501"},
+    ]
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_update()
+
+    mock_jira.transition_issue.assert_called_once_with(
+        mock_issue,
+        "501",
+        fields={"resolution": {"name": "Done"}},
+    )
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_update_status_without_resolution(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """When --resolution is not passed, transition_issue is called without fields."""
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_args.subparser_name = "update"
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = None
+    mock_args.status = "In Progress"
+    mock_args.resolution = None
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.issue.return_value = mock_issue
+
+    mock_jira.transitions.return_value = [
+        {"name": "In Progress", "id": "301"},
+    ]
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_update()
+
+    mock_jira.transition_issue.assert_called_once_with(mock_issue, "301")
