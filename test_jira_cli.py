@@ -887,6 +887,209 @@ def test_do_list_converts_adf_comment_to_md(
     assert mock_comment.body == "comment in markdown"
 
 
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_view_prints_issue_details(
+    mock_create_client, mock_load_config_fn, mock_config, capsys
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "view"
+    args.issue_key = "KONFLUX-123"
+    args.dump = False
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-123"
+    mock_issue.fields.summary = "Investigate Pipeline performance issues"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "In Progress"
+    mock_issue.fields.assignee.displayName = "John Doe"
+    mock_issue.fields.assignee.emailAddress = "john.doe@redhat.com"
+    mock_issue.fields.reporter.displayName = "Jane Smith"
+    mock_issue.fields.priority.name = "Major"
+    mock_issue.fields.description = "Plain text description"
+    mock_issue.fields.comment.comments = []
+    setattr(mock_issue.fields, "customfield_10002", 5.0)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_jira.issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(args)
+    doer.do_view()
+
+    output = capsys.readouterr().out
+    assert "KONFLUX-123" in output
+    assert "In Progress" in output
+    assert "Task" in output
+    assert "Points: 5.0" in output
+    assert "Investigate Pipeline performance issues" in output
+    assert "John Doe (john.doe@redhat.com)" in output
+    assert "Jane Smith" in output
+    assert "Major" in output
+    assert "Plain text description" in output
+
+
+@patch.object(jira_cli, "_translate_content")
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_view_converts_adf_description(
+    mock_create_client, mock_load_config_fn, mock_translate, mock_config, capsys
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "view"
+    args.issue_key = "KONFLUX-456"
+    args.dump = False
+
+    adf_desc = {"type": "doc", "content": []}
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-456"
+    mock_issue.fields.summary = "Test"
+    mock_issue.fields.issuetype.name = "Bug"
+    mock_issue.fields.status.name = "Open"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = adf_desc
+    mock_issue.fields.comment.comments = []
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_jira.issue.return_value = mock_issue
+
+    mock_translate.return_value = "Converted markdown description"
+
+    doer = jira_cli.Doer(args)
+    doer.do_view()
+
+    mock_translate.assert_called_once_with("to-md", json.dumps(adf_desc))
+    output = capsys.readouterr().out
+    assert "Converted markdown description" in output
+    assert "Unassigned" in output
+
+
+@patch.object(jira_cli, "_translate_content")
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_view_converts_adf_comments(
+    mock_create_client, mock_load_config_fn, mock_translate, mock_config, capsys
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "view"
+    args.issue_key = "KONFLUX-789"
+    args.dump = False
+
+    adf_body = {"type": "doc", "content": []}
+    mock_comment = MagicMock()
+    mock_comment.author.displayName = "Alice"
+    mock_comment.created = "2026-06-18T14:20:00.000+0000"
+    mock_comment.body = adf_body
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-789"
+    mock_issue.fields.summary = "Test"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "Open"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = "desc"
+    mock_issue.fields.comment.comments = [mock_comment]
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_jira.issue.return_value = mock_issue
+
+    mock_translate.return_value = "Comment in markdown"
+
+    doer = jira_cli.Doer(args)
+    doer.do_view()
+
+    mock_translate.assert_called_once_with("to-md", json.dumps(adf_body))
+    output = capsys.readouterr().out
+    assert "Alice" in output
+    assert "Comment in markdown" in output
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_view_execute_dispatch(mock_create_client, mock_load_config_fn, mock_config):
+    mock_load_config_fn.return_value = mock_config
+    mock_create_client.return_value = MagicMock()
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "view"
+
+    doer = jira_cli.Doer(args)
+
+    with patch.object(doer, "do_view") as mock_do_view:
+        doer.execute()
+
+    mock_do_view.assert_called_once()
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_view_dump_writes_json(
+    mock_create_client, mock_load_config_fn, mock_config, tmp_path
+):
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "view"
+    args.issue_key = "KONFLUX-100"
+    args.dump = True
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-100"
+    mock_issue.fields.summary = "Test"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "Open"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = "desc"
+    mock_issue.fields.comment.comments = []
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_issue.raw = {"key": "KONFLUX-100", "fields": {}}
+    mock_jira.issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(args)
+
+    with patch.object(jira_cli.Path, "__new__", wraps=jira_cli.Path):
+        doer.do_view()
+
+    output_file = jira_cli.Path("jira_issue_details") / "issue-KONFLUX-100.json"
+    assert output_file.exists()
+    with open(output_file, "r") as f:
+        data = json.load(f)
+    assert data["key"] == "KONFLUX-100"
+    output_file.unlink()
+    try:
+        jira_cli.Path("jira_issue_details").rmdir()
+    except OSError:
+        pass
+
+
 @patch.object(jira_cli, "_translate_content")
 @patch.object(jira_cli, "_load_config")
 @patch.object(jira_cli, "_create_jira_client")
