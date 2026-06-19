@@ -8,7 +8,7 @@ Installation
     source venv/bin/activate
     python -m pip install -U pip
     python -m pip install -r requirements.txt
-    ./jira_query.py --help
+    jira-cli --help
 
 
 Configuration
@@ -24,14 +24,14 @@ Generate report
 
 Generate to stdout:
 
-    ./jira_query.py
+    jira-cli
 
 If template generates MarkDown, convert to HTML like this:
 
     sudo dnf -y install multimarkdown
-    ./jira_query.py | multimarkdown
+    jira-cli | multimarkdown
 
 And also put it into clipboard so you can paste to any office suite editor:
 
     sudo dnf -y install xclip
-    ./jira_query.py | multimarkdown | xclip -sel clip -t "text/html"
+    jira-cli | multimarkdown | xclip -sel clip -t "text/html"

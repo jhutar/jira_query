@@ -1,0 +1,21 @@
+[project]
+name = "jira-cli"
+version = "0.1.0"
+description = "CLI tool to generate team report from Jira"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "jira>=3.4.1",
+    "jinja2>=3.1.2",
+    "PyYAML>=6.0",
+]
+
+[project.scripts]
+jira-cli = "jira_cli.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jira_cli"]

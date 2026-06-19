@@ -50,7 +50,7 @@ TEAM_ALL="$TEAM_KONFLUX, $TEAM_PIPELINES, $TEAM_HCEPERF, $TEAM_SAT"
 # ==========================================
 
 q() {
-    ./jira_query.py --template templates/default-list.md.j2 "$1" \
+    jira-cli --template templates/default-list.md.j2 "$1" \
         | grep -v '^$' \
         | sed 's/^\* /    * /'
     echo

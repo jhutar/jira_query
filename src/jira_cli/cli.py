@@ -98,7 +98,7 @@ class TemplateRenderer:
             ) from e
 
 
-def _load_config(config_path) -> Dict[str, Any]:
+def load_config(config_path) -> Dict[str, Any]:
     config_path = Path(config_path).expanduser()
 
     with open(config_path, "r", encoding="utf-8") as fd:
@@ -233,7 +233,7 @@ class Doer:
         self._logger = logging.getLogger("jira_cli.Doer")
 
         self._args = args
-        self._config = _load_config(self._args.config)
+        self._config = load_config(self._args.config)
         auth = self._config["server"]["auth"]["basic_auth"]
         self._jira = _create_jira_client(
             self._config["server"]["url"], auth["username"], auth["token"]

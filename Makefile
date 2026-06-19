@@ -27,4 +27,4 @@ check-all:
 	pre-commit run --all-files
 
 test:
-	pytest -v
+	PYTHONPATH=src pytest -v

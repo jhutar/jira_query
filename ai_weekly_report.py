@@ -5,7 +5,11 @@ import datetime
 import os
 import sys
 
-from jira_query import JiraClient, load_server_config, TemplateRenderer
+from jira_cli.cli import (
+    _create_jira_client as JiraClient,
+    load_config as load_server_config,
+    TemplateRenderer,
+)
 from pr_utils import enrich_issue_with_prs
 
 

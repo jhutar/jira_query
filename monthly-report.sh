@@ -54,7 +54,7 @@ START="startOfMonth(-1)"
 END="startOfMonth()"
 
 q() {
-    ./jira_query.py --template templates/default-list.md.j2 "$1" \
+    jira-cli --template templates/default-list.md.j2 "$1" \
         | grep -v '^$' \
         | sed 's/^\* /    * /'
     echo

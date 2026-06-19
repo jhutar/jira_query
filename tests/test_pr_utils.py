@@ -3,12 +3,12 @@
 
 import pytest
 from unittest.mock import patch
-from pr_utils import enrich_with_prs
+from jira_cli.pr_utils import enrich_with_prs
 
 
 @pytest.fixture
 def mock_get_pr_info():
-    with patch("pr_utils.get_pr_info") as mock:
+    with patch("jira_cli.pr_utils.get_pr_info") as mock:
         mock.side_effect = lambda url: f"Mock info for {url}"
         yield mock
 

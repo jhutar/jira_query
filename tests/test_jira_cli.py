@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import MagicMock, patch
 
 # Import the dash-containing module dynamically
-jira_cli = __import__("jira-cli")
+import jira_cli.cli as jira_cli
 
 
 @patch("jira.JIRA")
@@ -64,15 +64,16 @@ def mock_args():
     args.target_end = None
     args.security = None
     args.dry_run = True
+    args.template = None
     return args
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_project_validation_failure(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -87,12 +88,12 @@ def test_do_create_project_validation_failure(
     assert "Project 'KONFLUX' does not exist or is inaccessible" in str(exc_info.value)
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_issue_type_validation_failure(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -109,12 +110,12 @@ def test_do_create_issue_type_validation_failure(
     assert "Issue type 'Task' is not valid for project 'KONFLUX'" in str(exc_info.value)
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_status_validation_failure(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -146,12 +147,12 @@ def test_do_create_status_validation_failure(
     )
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_assignee_validation_failure(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -176,12 +177,12 @@ def test_do_create_assignee_validation_failure(
     )
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_valid_validation_flow(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -225,12 +226,12 @@ def test_do_create_valid_validation_flow(
     assert not mock_jira.create_issue.called
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_uses_parent_field_for_epic(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -263,12 +264,12 @@ def test_do_create_uses_parent_field_for_epic(
     assert create_call_fields["parent"] == {"key": "KONFLUX-100"}
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_parent_validation_failure(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -293,13 +294,13 @@ def test_do_create_parent_validation_failure(
     )
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_uses_parent_field_v3(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """When --parent is specified under v3 config, payload contains parent: {key: ...}."""
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -330,14 +331,14 @@ def test_do_create_uses_parent_field_v3(
     assert create_call_fields["parent"] == {"key": "PARENT-123"}
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_parent_legacy_fallback_epic_link(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """When config has parent_link and issue type is Task, --parent routes to Epic Link custom field."""
     mock_config["custom_fields"]["parent_link"] = "customfield_10018"
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -370,14 +371,14 @@ def test_do_create_parent_legacy_fallback_epic_link(
     assert create_call_fields["customfield_10001"] == "EPIC-100"
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_parent_legacy_fallback_parent_link(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """When config has parent_link and issue type is Epic, --parent routes to Parent Link custom field."""
     mock_config["custom_fields"]["parent_link"] = "customfield_10018"
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -408,12 +409,12 @@ def test_do_create_parent_legacy_fallback_parent_link(
     assert create_call_fields["customfield_10018"] == "FEATURE-50"
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_parent_and_epic_conflict(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -428,13 +429,13 @@ def test_do_create_parent_and_epic_conflict(
     assert "Cannot specify both --parent and --epic" in str(exc_info.value)
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_subtask_requires_parent(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """Creating a Sub-task without --parent must raise AssertionError."""
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -452,13 +453,13 @@ def test_do_create_subtask_requires_parent(
     )
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_subtask_with_parent_passes_validation(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """Creating a Sub-task with --parent should pass the Sub-task validation."""
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -482,13 +483,13 @@ def test_do_create_subtask_with_parent_passes_validation(
     assert not mock_jira.create_issue.called
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_feature_type_accepted(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """Feature issue type should pass issue type validation when project supports it."""
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -508,13 +509,13 @@ def test_do_create_feature_type_accepted(
     assert not mock_jira.create_issue.called
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_update_status_with_resolution(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """When --resolution is passed, transition_issue receives fields with the resolution."""
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -545,13 +546,13 @@ def test_update_status_with_resolution(
     )
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_update_status_without_resolution(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """When --resolution is not passed, transition_issue is called without fields."""
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -586,12 +587,12 @@ MOCK_SPRINTS = [
 ]
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_sprints_filter_by_state_active(
-    mock_create_client, mock_load_config_fn, mock_config, capsys
+    mock_create_client, mockload_config_fn, mock_config, capsys
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_create_client.return_value = MagicMock()
 
     args = MagicMock()
@@ -615,12 +616,12 @@ def test_do_sprints_filter_by_state_active(
     assert "Sat Sprint 83" not in output
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_sprints_filter_by_board_id(
-    mock_create_client, mock_load_config_fn, mock_config, capsys
+    mock_create_client, mockload_config_fn, mock_config, capsys
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_create_client.return_value = MagicMock()
 
     args = MagicMock()
@@ -644,12 +645,12 @@ def test_do_sprints_filter_by_board_id(
     assert "Sat Sprint 83" not in output
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_sprints_filter_by_board_id_and_state(
-    mock_create_client, mock_load_config_fn, mock_config, capsys
+    mock_create_client, mockload_config_fn, mock_config, capsys
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_create_client.return_value = MagicMock()
 
     args = MagicMock()
@@ -672,12 +673,12 @@ def test_do_sprints_filter_by_board_id_and_state(
     assert "Konflux Sprint" not in output
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_sprints_refresh_deletes_cache(
-    mock_create_client, mock_load_config_fn, mock_config, tmp_path
+    mock_create_client, mockload_config_fn, mock_config, tmp_path
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_create_client.return_value = MagicMock()
 
     args = MagicMock()
@@ -700,12 +701,12 @@ def test_do_sprints_refresh_deletes_cache(
     assert not cache_file.exists()
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_sprints_execute_dispatch(
-    mock_create_client, mock_load_config_fn, mock_config
+    mock_create_client, mockload_config_fn, mock_config
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_create_client.return_value = MagicMock()
 
     args = MagicMock()
@@ -760,12 +761,12 @@ def test_translate_content_failure(mock_run):
 
 
 @patch.object(jira_cli, "_translate_content")
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_converts_description_to_adf(
-    mock_create_client, mock_load_config_fn, mock_translate, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_translate, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -794,12 +795,12 @@ def test_do_create_converts_description_to_adf(
 
 
 @patch.object(jira_cli, "_translate_content")
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_update_converts_comment_to_adf(
-    mock_create_client, mock_load_config_fn, mock_translate, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_translate, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -827,18 +828,19 @@ def test_do_update_converts_comment_to_adf(
 
 
 @patch.object(jira_cli, "_translate_content")
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_list_converts_adf_description_to_md(
-    mock_create_client, mock_load_config_fn, mock_translate, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_translate, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
     mock_args.subparser_name = "list"
     mock_args.query = "project = KONFLUX"
     mock_args.dump = False
+    mock_args.template = "templates/default.md.j2"
 
     adf_desc = {"type": "doc", "content": []}
     mock_issue = MagicMock()
@@ -856,18 +858,19 @@ def test_do_list_converts_adf_description_to_md(
 
 
 @patch.object(jira_cli, "_translate_content")
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_list_converts_adf_comment_to_md(
-    mock_create_client, mock_load_config_fn, mock_translate, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_translate, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
     mock_args.subparser_name = "list"
     mock_args.query = "project = KONFLUX"
     mock_args.dump = False
+    mock_args.template = "templates/default.md.j2"
 
     adf_body = {"type": "doc", "content": []}
     mock_comment = MagicMock()
@@ -887,12 +890,12 @@ def test_do_list_converts_adf_comment_to_md(
     assert mock_comment.body == "comment in markdown"
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_view_prints_issue_details(
-    mock_create_client, mock_load_config_fn, mock_config, capsys
+    mock_create_client, mockload_config_fn, mock_config, capsys
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -934,12 +937,12 @@ def test_do_view_prints_issue_details(
 
 
 @patch.object(jira_cli, "_translate_content")
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_view_converts_adf_description(
-    mock_create_client, mock_load_config_fn, mock_translate, mock_config, capsys
+    mock_create_client, mockload_config_fn, mock_translate, mock_config, capsys
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -977,12 +980,12 @@ def test_do_view_converts_adf_description(
 
 
 @patch.object(jira_cli, "_translate_content")
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_view_converts_adf_comments(
-    mock_create_client, mock_load_config_fn, mock_translate, mock_config, capsys
+    mock_create_client, mockload_config_fn, mock_translate, mock_config, capsys
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -1024,10 +1027,10 @@ def test_do_view_converts_adf_comments(
     assert "Comment in markdown" in output
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
-def test_do_view_execute_dispatch(mock_create_client, mock_load_config_fn, mock_config):
-    mock_load_config_fn.return_value = mock_config
+def test_do_view_execute_dispatch(mock_create_client, mockload_config_fn, mock_config):
+    mockload_config_fn.return_value = mock_config
     mock_create_client.return_value = MagicMock()
 
     args = MagicMock()
@@ -1042,12 +1045,13 @@ def test_do_view_execute_dispatch(mock_create_client, mock_load_config_fn, mock_
     mock_do_view.assert_called_once()
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_view_dump_writes_json(
-    mock_create_client, mock_load_config_fn, mock_config, tmp_path
+    mock_create_client, mockload_config_fn, mock_config, tmp_path, monkeypatch
 ):
-    mock_load_config_fn.return_value = mock_config
+    monkeypatch.chdir(tmp_path)
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -1075,8 +1079,7 @@ def test_do_view_dump_writes_json(
 
     doer = jira_cli.Doer(args)
 
-    with patch.object(jira_cli.Path, "__new__", wraps=jira_cli.Path):
-        doer.do_view()
+    doer.do_view()
 
     output_file = jira_cli.Path("jira_issue_details") / "issue-KONFLUX-100.json"
     assert output_file.exists()
@@ -1091,18 +1094,19 @@ def test_do_view_dump_writes_json(
 
 
 @patch.object(jira_cli, "_translate_content")
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_list_skips_string_description(
-    mock_create_client, mock_load_config_fn, mock_translate, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_translate, mock_config, mock_args
 ):
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
     mock_args.subparser_name = "list"
     mock_args.query = "project = KONFLUX"
     mock_args.dump = False
+    mock_args.template = "templates/default.md.j2"
 
     mock_issue = MagicMock()
     mock_issue.fields.description = "already a string"
@@ -1116,10 +1120,10 @@ def test_do_list_skips_string_description(
     assert mock_issue.fields.description == "already a string"
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_inherits_project_defaults(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """Creating a ticket without --security or --components inherits from project_defaults."""
     mock_config["project_defaults"] = {
@@ -1128,7 +1132,7 @@ def test_do_create_inherits_project_defaults(
             "components": ["Performance"],
         }
     }
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -1160,10 +1164,10 @@ def test_do_create_inherits_project_defaults(
     assert create_call_fields["components"] == [{"name": "Performance"}]
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_cli_args_override_project_defaults(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """Explicit CLI args override project_defaults values."""
     mock_config["project_defaults"] = {
@@ -1172,7 +1176,7 @@ def test_do_create_cli_args_override_project_defaults(
             "components": ["Performance"],
         }
     }
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -1204,10 +1208,10 @@ def test_do_create_cli_args_override_project_defaults(
     assert create_call_fields["components"] == [{"name": "QE"}]
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_sprint_current_from_project_defaults(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """sprint_current: true in project_defaults triggers sprint lookup."""
     mock_config["project_defaults"] = {
@@ -1215,7 +1219,7 @@ def test_do_create_sprint_current_from_project_defaults(
             "sprint_current": True,
         }
     }
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -1240,15 +1244,17 @@ def test_do_create_sprint_current_from_project_defaults(
     mock_jira.sprints.return_value = [mock_sprint]
 
     doer = jira_cli.Doer(mock_args)
+    doer._cache_sprints.obsolete = MagicMock(return_value=True)
+    doer._cache_sprints.set = MagicMock()
     doer.do_create()
 
     assert mock_jira.boards.called or mock_jira.sprints.called
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_components_empty_string_overrides_project_defaults(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """Passing --components '' overrides project default components with empty list."""
     mock_config["project_defaults"] = {
@@ -1256,7 +1262,7 @@ def test_do_create_components_empty_string_overrides_project_defaults(
             "components": ["Performance"],
         }
     }
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
@@ -1282,13 +1288,13 @@ def test_do_create_components_empty_string_overrides_project_defaults(
     assert create_call_fields["components"] == []
 
 
-@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "load_config")
 @patch.object(jira_cli, "_create_jira_client")
 def test_do_create_global_default_security_when_no_project_defaults(
-    mock_create_client, mock_load_config_fn, mock_config, mock_args
+    mock_create_client, mockload_config_fn, mock_config, mock_args
 ):
     """When no project defaults and no CLI --security, global default 'Red Hat Employee' is applied."""
-    mock_load_config_fn.return_value = mock_config
+    mockload_config_fn.return_value = mock_config
     mock_jira = MagicMock()
     mock_create_client.return_value = mock_jira
 
