@@ -1,7 +1,7 @@
 # Task 8: Automatic Project-level Defaults
 
 ## Overview
-Currently, creating or updating a ticket in different Jira projects requires manually specifying security levels (`--security`), components (`--components`), and sprint associations (`--sprint-current`). This task implements a robust project-level defaults system, allowing the CLI to load project-specific attributes automatically from the configuration file without forcing the user to supply repetitive arguments.
+Currently, creating (but NOT updating) a ticket in different Jira projects requires manually specifying security levels (`--security`), components (`--components`), and sprint associations (`--sprint-current`). This task implements a robust project-level defaults system, allowing the CLI to load project-specific attributes automatically from the configuration file without forcing the user to supply repetitive arguments.
 
 ---
 
@@ -29,12 +29,14 @@ project_defaults:
 ---
 
 ## Subtask 8.2: Argument Resolution & Cascading Precedence Logic
-In `Doer.do_create` and `Doer.do_update`, implement a priority hierarchy for setting ticket parameters. The resolution sequence (from highest to lowest priority) must be:
+In `Doer.do_create` (NOT in `Doer.do_update`), implement a priority hierarchy for setting ticket parameters. The resolution sequence (from highest to lowest priority) must be:
 
 1. **Command Line Flag:** Directly specified by the user (e.g. `--security "Public"`).
 2. **Issue Template:** Populated if the user supplied a `--template` argument.
 3. **Project Defaults:** Loaded automatically from the configuration key matching the target project key.
 4. **Global Defaults / Hardcoded Fallbacks:** Default fallback values (e.g. defaulting security to "Red Hat Employee").
+
+Every time a parameter is set based on Project Defaults or Global Defaults, message is presented to the user to let them know this happened (to avoid surprises).
 
 ### Implementation Reference Code:
 ```python
@@ -60,6 +62,12 @@ if self._args.sprint_current:
     )
     # The active sprint lookup should execute automatically
 ```
+
+---
+
+## Subtask 8.4: Every option have a way override default
+
+E.g. when project default is `components: ["Performance"]`, thi can be overwitten on command line by e.g. `--components ""` option.
 
 ---
 
