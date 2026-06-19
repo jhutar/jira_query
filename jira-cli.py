@@ -500,6 +500,19 @@ class Doer:
                 if getattr(self._args, k) is None:
                     setattr(self._args, k, v)
 
+        # Apply project-level defaults from configuration
+        if self._args.project is not None:
+            proj_defaults = self._config.get("project_defaults", {}).get(
+                self._args.project, {}
+            )
+            for attr_name, default_value in proj_defaults.items():
+                current_value = getattr(self._args, attr_name, None)
+                if current_value is None or current_value is False:
+                    setattr(self._args, attr_name, default_value)
+                    self._logger.info(
+                        f"Using project default for '{attr_name}': {default_value}"
+                    )
+
         # Treat description in its special way
         if self._args.description is None:
             self._args.description = _editor()
@@ -715,6 +728,11 @@ class Doer:
                     f"Expected exactly one active current sprint for project '{self._args.project}', but found {len(matched_sprints)}."
                 )
                 resolved_sprint_id = matched_sprints[0]["id"]
+
+        # Apply global defaults / hardcoded fallbacks
+        if self._args.security is None:
+            self._args.security = "Red Hat Employee"
+            self._logger.info("Using global default for 'security': Red Hat Employee")
 
         # Create issue skeleton
         adf_description = json.loads(
@@ -1127,7 +1145,6 @@ def main():
     )
     parser_create.add_argument(
         "--security",
-        default="Red Hat Employee",
         help="Security level of new issue (default 'Red Hat Employee')",
     )
 

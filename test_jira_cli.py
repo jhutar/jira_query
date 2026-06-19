@@ -1114,3 +1114,201 @@ def test_do_list_skips_string_description(
 
     mock_translate.assert_not_called()
     assert mock_issue.fields.description == "already a string"
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_inherits_project_defaults(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """Creating a ticket without --security or --components inherits from project_defaults."""
+    mock_config["project_defaults"] = {
+        "KONFLUX": {
+            "security": "Red Hat Employee",
+            "components": ["Performance"],
+        }
+    }
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    mock_sec_level = MagicMock()
+    mock_sec_level.name = "Red Hat Employee"
+    mock_jira.project_issue_security_level.return_value = [mock_sec_level]
+
+    mock_args.security = None
+    mock_args.components = None
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-101"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.create_issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
+    assert create_call_fields["security"] == {"name": "Red Hat Employee"}
+    assert create_call_fields["components"] == [{"name": "Performance"}]
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_cli_args_override_project_defaults(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """Explicit CLI args override project_defaults values."""
+    mock_config["project_defaults"] = {
+        "KONFLUX": {
+            "security": "Red Hat Employee",
+            "components": ["Performance"],
+        }
+    }
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    mock_sec_level = MagicMock()
+    mock_sec_level.name = "Public"
+    mock_jira.project_issue_security_level.return_value = [mock_sec_level]
+
+    mock_args.security = "Public"
+    mock_args.components = ["QE"]
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-102"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.create_issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
+    assert create_call_fields["security"] == {"name": "Public"}
+    assert create_call_fields["components"] == [{"name": "QE"}]
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_sprint_current_from_project_defaults(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """sprint_current: true in project_defaults triggers sprint lookup."""
+    mock_config["project_defaults"] = {
+        "KONFLUX": {
+            "sprint_current": True,
+        }
+    }
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    mock_args.sprint_current = False
+    mock_args.dry_run = True
+
+    mock_board = MagicMock()
+    mock_board.id = 1
+    mock_board.name = "Konflux Board"
+    mock_jira.boards.return_value = [mock_board]
+
+    mock_sprint = MagicMock()
+    mock_sprint.id = 42
+    mock_sprint.name = "Konflux Sprint 1"
+    mock_sprint.state = "active"
+    mock_jira.sprints.return_value = [mock_sprint]
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    assert mock_jira.boards.called or mock_jira.sprints.called
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_components_empty_string_overrides_project_defaults(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """Passing --components '' overrides project default components with empty list."""
+    mock_config["project_defaults"] = {
+        "KONFLUX": {
+            "components": ["Performance"],
+        }
+    }
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    mock_args.components = [""]
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-103"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.create_issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
+    assert create_call_fields["components"] == []
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_global_default_security_when_no_project_defaults(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """When no project defaults and no CLI --security, global default 'Red Hat Employee' is applied."""
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    mock_args.security = None
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-104"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.create_issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
+    assert create_call_fields["security"] == {"name": "Red Hat Employee"}
