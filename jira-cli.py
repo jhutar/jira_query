@@ -464,6 +464,10 @@ class Doer:
         assert not (self._args.parent is not None and self._args.epic is not None), (
             "Cannot specify both --parent and --epic; use --parent for unified hierarchy linking"
         )
+        if self._args.type == "Sub-task":
+            assert self._args.parent is not None, (
+                "A parent issue key (via --parent) is required when creating a Sub-task."
+            )
 
         # Pre-validation of Jira entities and configurations before issue creation
         # 1. Project validation
@@ -873,7 +877,7 @@ def main():
     )
     parser_create.add_argument(
         "--type",
-        choices=["Task", "Bug", "Epic"],
+        choices=["Task", "Bug", "Epic", "Feature", "Sub-task"],
         default="Task",
         help="Issue type",
     )

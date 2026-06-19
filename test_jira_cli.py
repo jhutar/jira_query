@@ -422,3 +422,83 @@ def test_do_create_parent_and_epic_conflict(
         doer.do_create()
 
     assert "Cannot specify both --parent and --epic" in str(exc_info.value)
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_subtask_requires_parent(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """Creating a Sub-task without --parent must raise AssertionError."""
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_args.type = "Sub-task"
+    mock_args.parent = None
+
+    doer = jira_cli.Doer(mock_args)
+
+    with pytest.raises(AssertionError) as exc_info:
+        doer.do_create()
+
+    assert (
+        "A parent issue key (via --parent) is required when creating a Sub-task."
+        in str(exc_info.value)
+    )
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_subtask_with_parent_passes_validation(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """Creating a Sub-task with --parent should pass the Sub-task validation."""
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_args.type = "Sub-task"
+    mock_args.parent = "KONFLUX-200"
+
+    # Setup valid project and issue types (including Sub-task)
+    mock_itype_subtask = MagicMock()
+    mock_itype_subtask.name = "Sub-task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype_subtask]
+    mock_jira.project.return_value = mock_project
+
+    # Parent issue lookup succeeds
+    mock_jira.issue.return_value = MagicMock()
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    # dry_run is True, so create_issue should not be called, but validation passed
+    assert not mock_jira.create_issue.called
+
+
+@patch.object(jira_cli, "_load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_feature_type_accepted(
+    mock_create_client, mock_load_config_fn, mock_config, mock_args
+):
+    """Feature issue type should pass issue type validation when project supports it."""
+    mock_load_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_args.type = "Feature"
+
+    # Setup valid project with Feature issue type
+    mock_itype_feature = MagicMock()
+    mock_itype_feature.name = "Feature"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype_feature]
+    mock_jira.project.return_value = mock_project
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    # dry_run is True, so create_issue should not be called, but validation passed
+    assert not mock_jira.create_issue.called
