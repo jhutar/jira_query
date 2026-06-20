@@ -646,23 +646,50 @@ class Doer:
                 )
 
         # 4. Security level validation
-        if self._args.security is not None:
+        security_is_default = False
+        if self._args.security is None:
+            self._args.security = "Red Hat Employee"
+            security_is_default = True
+            self._logger.info("Using global default for 'security': Red Hat Employee")
+
+        self._resolved_security_id = None
+        if self._args.security is not None and self._args.security != "":
             try:
-                security_levels = self._jira.project_issue_security_level(
-                    self._args.project
-                )
+                url = f"{self._jira._options['server']}/rest/api/2/project/{self._args.project}/securitylevel"
+                response = self._jira._session.get(url)
+                if response.status_code == 200:
+                    data = response.json()
+                    levels_list = []
+                    if isinstance(data, list):
+                        levels_list = data
+                    elif isinstance(data, dict) and "levels" in data:
+                        levels_list = data["levels"]
+
+                    security_map = {
+                        item["name"]: item["id"]
+                        for item in levels_list
+                        if isinstance(item, dict) and "name" in item and "id" in item
+                    }
+                else:
+                    security_map = {}
             except Exception as e:
                 self._logger.warning(
                     f"Could not retrieve security levels for project {self._args.project}: {e}"
                 )
-                security_levels = []
+                security_map = {}
 
-            if security_levels:
-                valid_security_names = [level.name for level in security_levels]
-                assert self._args.security in valid_security_names, (
-                    f"Security level '{self._args.security}' is not valid for project '{self._args.project}'. "
-                    f"Available levels: {', '.join(valid_security_names)}"
-                )
+            if self._args.security in security_map:
+                self._resolved_security_id = security_map[self._args.security]
+            else:
+                if security_is_default:
+                    # If it was just the global default fallback and it's not valid, clear it
+                    self._args.security = ""
+                else:
+                    # If the user explicitly provided it, raise AssertionError with zero silent fallbacks
+                    raise AssertionError(
+                        f"Security level '{self._args.security}' is not valid for project '{self._args.project}' or could not be retrieved. "
+                        f"Available levels: {', '.join(security_map.keys())}"
+                    )
 
         # 5. Epic validation
         if self._args.epic is not None:
@@ -762,11 +789,6 @@ class Doer:
                 )
                 resolved_sprint_id = matched_sprints[0]["id"]
 
-        # Apply global defaults / hardcoded fallbacks
-        if self._args.security is None:
-            self._args.security = "Red Hat Employee"
-            self._logger.info("Using global default for 'security': Red Hat Employee")
-
         # Create issue skeleton
         adf_description = json.loads(
             _translate_content("to-adf", self._args.description)
@@ -788,8 +810,8 @@ class Doer:
             issue[parent_field] = parent_value
 
         # Set security level if it was set
-        if self._args.security is not None:
-            issue["security"] = {"name": self._args.security}
+        if self._args.security is not None and self._args.security != "":
+            issue["security"] = {"id": self._resolved_security_id}
 
         # Set components if it was set
         if self._args.components is not None:
@@ -1178,7 +1200,7 @@ def main():
     )
     parser_create.add_argument(
         "--security",
-        help="Security level of new issue (default 'Red Hat Employee')",
+        help="Security level of new issue (default 'Red Hat Employee', set to \"\" to omit security)",
     )
 
     #

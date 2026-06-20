@@ -193,17 +193,17 @@ def test_do_create_valid_validation_flow(
     mock_project.issueTypes = [mock_itype]
     mock_jira.project.return_value = mock_project
 
-    # Setup status via REST endpoint mock
+    # Setup status and security levels via REST endpoint mock side_effect
     mock_jira._options = {"server": "https://jira.example.com"}
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = [{"name": "Task", "statuses": [{"name": "New"}]}]
-    mock_jira._session.get.return_value = mock_response
-
-    # Setup security levels
-    mock_sec_level = MagicMock()
-    mock_sec_level.name = "Red Hat Employee"
-    mock_jira.project_issue_security_level.return_value = [mock_sec_level]
+    def get_mock_response(url, *args, **kwargs):
+        resp = MagicMock()
+        resp.status_code = 200
+        if "statuses" in url:
+            resp.json.return_value = [{"name": "Task", "statuses": [{"name": "New"}]}]
+        elif "securitylevel" in url:
+            resp.json.return_value = [{"name": "Red Hat Employee", "id": "10000"}]
+        return resp
+    mock_jira._session.get.side_effect = get_mock_response
 
     # Setup assignee
     mock_user = MagicMock()
@@ -221,7 +221,6 @@ def test_do_create_valid_validation_flow(
     # In dry-run mode, it shouldn't call create_issue but should validate everything
     assert mock_jira.project.called
     assert mock_jira._session.get.called
-    assert mock_jira.project_issue_security_level.called
     assert mock_jira.search_users.called
     assert not mock_jira.create_issue.called
 
@@ -1142,9 +1141,11 @@ def test_do_create_inherits_project_defaults(
     mock_project.issueTypes = [mock_itype]
     mock_jira.project.return_value = mock_project
 
-    mock_sec_level = MagicMock()
-    mock_sec_level.name = "Red Hat Employee"
-    mock_jira.project_issue_security_level.return_value = [mock_sec_level]
+    mock_jira._options = {"server": "https://jira.example.com"}
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = [{"name": "Red Hat Employee", "id": "10000"}]
+    mock_jira._session.get.return_value = mock_response
 
     mock_args.security = None
     mock_args.components = None
@@ -1160,7 +1161,7 @@ def test_do_create_inherits_project_defaults(
     doer.do_create()
 
     create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
-    assert create_call_fields["security"] == {"name": "Red Hat Employee"}
+    assert create_call_fields["security"] == {"id": "10000"}
     assert create_call_fields["components"] == [{"name": "Performance"}]
 
 
@@ -1186,9 +1187,11 @@ def test_do_create_cli_args_override_project_defaults(
     mock_project.issueTypes = [mock_itype]
     mock_jira.project.return_value = mock_project
 
-    mock_sec_level = MagicMock()
-    mock_sec_level.name = "Public"
-    mock_jira.project_issue_security_level.return_value = [mock_sec_level]
+    mock_jira._options = {"server": "https://jira.example.com"}
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = [{"name": "Public", "id": "10001"}]
+    mock_jira._session.get.return_value = mock_response
 
     mock_args.security = "Public"
     mock_args.components = ["QE"]
@@ -1204,7 +1207,7 @@ def test_do_create_cli_args_override_project_defaults(
     doer.do_create()
 
     create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
-    assert create_call_fields["security"] == {"name": "Public"}
+    assert create_call_fields["security"] == {"id": "10001"}
     assert create_call_fields["components"] == [{"name": "QE"}]
 
 
@@ -1304,6 +1307,12 @@ def test_do_create_global_default_security_when_no_project_defaults(
     mock_project.issueTypes = [mock_itype]
     mock_jira.project.return_value = mock_project
 
+    mock_jira._options = {"server": "https://jira.example.com"}
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = [{"name": "Red Hat Employee", "id": "10000"}]
+    mock_jira._session.get.return_value = mock_response
+
     mock_args.security = None
     mock_args.dry_run = False
 
@@ -1317,7 +1326,7 @@ def test_do_create_global_default_security_when_no_project_defaults(
     doer.do_create()
 
     create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
-    assert create_call_fields["security"] == {"name": "Red Hat Employee"}
+    assert create_call_fields["security"] == {"id": "10000"}
 
 
 @patch.object(jira_cli, "_translate_content")
@@ -1350,3 +1359,113 @@ def test_convert_issue_adf_to_md(mock_translate):
     assert mock_issue.fields.description == "Translated markdown text"
     assert mock_comment.body == "Translated markdown text"
     assert mock_translate.call_count == 2
+
+
+@patch.object(jira_cli, "load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_security_opt_out_cli_arg(
+    mock_create_client, mockload_config_fn, mock_config, mock_args
+):
+    """When --security is explicitly set to empty string '', security is omitted from creation payload."""
+    mockload_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    mock_args.security = ""
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-105"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.create_issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
+    assert "security" not in create_call_fields
+
+
+@patch.object(jira_cli, "load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_security_opt_out_project_defaults(
+    mock_create_client, mockload_config_fn, mock_config, mock_args
+):
+    """When security is set to '' in project_defaults, security is omitted from creation payload."""
+    mock_config["project_defaults"] = {
+        "KONFLUX": {
+            "security": "",
+        }
+    }
+    mockload_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    mock_args.security = None
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-106"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.create_issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
+    assert "security" not in create_call_fields
+
+
+@patch.object(jira_cli, "load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_create_security_rest_api_validation(
+    mock_create_client, mockload_config_fn, mock_config, mock_args
+):
+    """When setting security, we fetch valid levels directly via standard GET /securitylevel REST endpoint."""
+    mockload_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_jira.project.return_value = mock_project
+
+    # Mock options and session to return 200 with JSON list of levels
+    mock_jira._options = {"server": "https://jira.example.com"}
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = [{"name": "Red Hat Employee", "id": "10000"}]
+    mock_jira._session.get.return_value = mock_response
+
+    mock_args.security = "Red Hat Employee"
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-107"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_jira.create_issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(mock_args)
+    doer.do_create()
+
+    # Verify standard user GET endpoint was called and parsed successfully
+    assert mock_jira._session.get.called
+    create_call_fields = mock_jira.create_issue.call_args[1]["fields"]
+    assert create_call_fields["security"] == {"id": "10000"}
