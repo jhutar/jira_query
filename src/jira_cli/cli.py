@@ -976,10 +976,11 @@ class Doer:
         if hasattr(issue.fields, "parent") and issue.fields.parent:
             parent_key = getattr(issue.fields.parent, "key", None)
 
-        description = getattr(issue.fields, "description", None)
-        if isinstance(description, dict):
-            description = _translate_content("to-md", json.dumps(description))
-        description = description or "No description"
+        raw_desc = issue.raw.get("fields", {}).get("description")
+        if raw_desc and isinstance(raw_desc, dict):
+            description = _translate_content("to-md", json.dumps(raw_desc))
+        else:
+            description = getattr(issue.fields, "description", None) or "No description"
 
         comments = []
         if hasattr(issue.fields, "comment") and hasattr(
@@ -1132,7 +1133,7 @@ def main():
     )
     parser_create.add_argument(
         "--description",
-        help="Description text of a new ticket, if it starts with '@' it is considered a file to load it from",
+        help="Description text of a new ticket in Markdown format, if it starts with '@' it is considered a file to load it from",
     )
     parser_create.add_argument(
         "--assignee",
@@ -1228,7 +1229,7 @@ def main():
     )
     parser_update.add_argument(
         "--comment",
-        help="New comment to add (or set to '' to edit with editor)",
+        help="New comment to add in Markdown format (or set to '' to edit with editor)",
     )
     parser_update.add_argument(
         "--epic",

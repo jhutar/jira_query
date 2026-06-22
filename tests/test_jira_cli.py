@@ -954,6 +954,7 @@ def test_do_view_converts_adf_description(
     adf_desc = {"type": "doc", "content": []}
     mock_issue = MagicMock()
     mock_issue.key = "KONFLUX-456"
+    mock_issue.raw = {"fields": {"description": adf_desc}}
     mock_issue.fields.summary = "Test"
     mock_issue.fields.issuetype.name = "Bug"
     mock_issue.fields.status.name = "Open"
@@ -976,6 +977,52 @@ def test_do_view_converts_adf_description(
     output = capsys.readouterr().out
     assert "Converted markdown description" in output
     assert "Unassigned" in output
+
+
+@patch.object(jira_cli, "_translate_content")
+@patch.object(jira_cli, "load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_view_description_not_raw_object(
+    mock_create_client, mockload_config_fn, mock_translate, mock_config, capsys
+):
+    """Ensure PropertyHolder description objects are converted via raw ADF, not repr()."""
+    mockload_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "view"
+    args.issue_key = "KONFLUX-789"
+    args.dump = False
+
+    adf_desc = {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Hello"}]}]}
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-789"
+    mock_issue.raw = {"fields": {"description": adf_desc}}
+    mock_issue.fields.summary = "Test"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "New"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = MagicMock()
+    mock_issue.fields.comment.comments = []
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_jira.issue.return_value = mock_issue
+
+    mock_translate.return_value = "Hello markdown"
+
+    doer = jira_cli.Doer(args)
+    doer.do_view()
+
+    mock_translate.assert_called_once_with("to-md", json.dumps(adf_desc))
+    output = capsys.readouterr().out
+    assert "Hello markdown" in output
+    assert "PropertyHolder" not in output
+    assert "MagicMock" not in output
 
 
 @patch.object(jira_cli, "_translate_content")
