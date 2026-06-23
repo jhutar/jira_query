@@ -89,6 +89,20 @@ def test_enrich_with_prs_patterns(mock_get_pr_info):
                 "https://gitlab.cee.redhat.com/konflux/docs/users/-/commit/e8a9f510d4554d129a10af1fc671b3af1c53d729"
             ],
         ),
+        # Basic Slack message link
+        (
+            "Discussed in https://redhat-internal.slack.com/archives/C04JGQCNX6G/p1781711732712279",
+            [
+                "https://redhat-internal.slack.com/archives/C04JGQCNX6G/p1781711732712279"
+            ],
+        ),
+        # Slack link in Jira markdown
+        (
+            "[thread|https://redhat-internal.slack.com/archives/C04JGQCNX6G/p1781711732712279]",
+            [
+                "https://redhat-internal.slack.com/archives/C04JGQCNX6G/p1781711732712279"
+            ],
+        ),
     ]
 
     for text, expected_urls in test_cases:

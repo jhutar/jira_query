@@ -80,6 +80,14 @@ def _get_gitlab_commit(host, repo, sha):
     return f"Commit Message:\n{data.get('message', '').strip()}"
 
 
+def _get_slack_message(url):
+    cmd = ["slack-cli", "read", url]
+    stdout, error = _run_command(cmd)
+    if error:
+        return f"(Failed to fetch Slack message: {error})"
+    return stdout
+
+
 def get_pr_info(url):
     if "github.com" in url:
         # GitHub PR Pattern: https://github.com/owner/repo/pull/id
@@ -96,7 +104,10 @@ def get_pr_info(url):
             repo, sha = commit_match.groups()
             return _get_github_commit(repo, sha)
 
-    elif "gitlab" in url:
+    if "slack.com/archives/" in url:
+        return _get_slack_message(url)
+
+    if "gitlab" in url:
         # GitLab MR Pattern: https://host/path/to/repo/-/merge_requests/id
         mr_match = re.search(r"https://([^/]+)/(.+)/-/merge_requests/(\d+)", url)
         if mr_match:
@@ -122,6 +133,7 @@ def enrich_with_prs(text):
         r"https://github\.com/[^\s|\]\)]+/commit/[0-9a-f]{7,40}",
         r"https://gitlab[^\s|\]\)]*/-/merge_requests/\d+",
         r"https://gitlab[^\s|\]\)]*/-/commit/[0-9a-f]{7,40}",
+        r"https://[^\s|\]\)]*slack\.com/archives/[^\s|\]\)]+",
     ]
 
     urls = []

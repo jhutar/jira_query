@@ -1292,7 +1292,7 @@ def test_do_view_with_enrichment(
     doer.do_view()
 
     output = capsys.readouterr().out
-    assert "PR/Commit Enrichment:" in output
+    assert "Enrichment:" in output
     assert "https://github.com/org/repo/pull/42" in output
     assert "Title: Fix bug" in output
     mock_enrich.assert_called_once()

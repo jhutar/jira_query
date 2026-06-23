@@ -1043,7 +1043,7 @@ class Doer:
             enrichment = enrich_with_prs("\n".join(texts))
             if enrichment:
                 print(thin_sep)
-                print("PR/Commit Enrichment:")
+                print("Enrichment:")
                 for item in enrichment:
                     print(f"\n  URL: {item['url']}")
                     for line in item["info"].splitlines():
@@ -1343,7 +1343,7 @@ def main():
     parser_view.add_argument(
         "--with-enrichment",
         action="store_true",
-        help="Fetch and display linked PR/commit details from GitHub/GitLab",
+        help="Fetch and display linked PR/commit/Slack details from GitHub/GitLab/Slack",
     )
 
     args = parser.parse_args()
