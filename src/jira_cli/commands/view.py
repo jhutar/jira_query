@@ -28,6 +28,11 @@ def add_arguments(subparsers):
         action="store_true",
         help="Fetch and display linked PR/commit/Slack details from GitHub/GitLab/Slack",
     )
+    parser.add_argument(
+        "--with-diff",
+        action="store_true",
+        help="Include diffs from PRs/commits in enrichment output (implies --with-enrichment, truncated to 200 lines)",
+    )
 
 
 def run(ctx, args):
@@ -152,11 +157,14 @@ def run(ctx, args):
             for line in c["body"].splitlines():
                 print(f"    {line}")
 
+    if args.with_diff:
+        args.with_enrichment = True
+
     if args.with_enrichment:
         texts = [description]
         for c in comments:
             texts.append(c["body"])
-        enrichment = enrich_with_prs("\n".join(texts))
+        enrichment = enrich_with_prs("\n".join(texts), with_diff=args.with_diff)
         if enrichment:
             print(thin_sep)
             print("Enrichment:")

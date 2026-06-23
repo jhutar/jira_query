@@ -9,7 +9,7 @@ from jira_cli.pr_utils import enrich_with_prs
 @pytest.fixture
 def mock_get_pr_info():
     with patch("jira_cli.pr_utils.get_pr_info") as mock:
-        mock.side_effect = lambda url: f"Mock info for {url}"
+        mock.side_effect = lambda url, with_diff=False: f"Mock info for {url}"
         yield mock
 
 
@@ -110,6 +110,15 @@ def test_enrich_with_prs_patterns(mock_get_pr_info):
         found_urls = [r["url"] for r in results]
 
         assert sorted(found_urls) == sorted(expected_urls), f"Failed for text: {text}"
+
+
+def test_enrich_with_prs_passes_with_diff(mock_get_pr_info):
+    text = "Check https://github.com/org/repo/pull/1"
+    enrich_with_prs(text, with_diff=True)
+
+    mock_get_pr_info.assert_called_once_with(
+        "https://github.com/org/repo/pull/1", with_diff=True
+    )
 
 
 if __name__ == "__main__":

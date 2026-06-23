@@ -338,3 +338,35 @@ def test_view_enrichment_includes_comments(mock_enrich, mock_ctx, mock_args, cap
     call_text = mock_enrich.call_args[0][0]
     assert "Some description" in call_text
     assert "Fixed in https://github.com/org/repo/pull/99" in call_text
+
+
+@patch("jira_cli.commands.view.enrich_with_prs")
+def test_view_with_diff_passes_flag(mock_enrich, mock_ctx, mock_args, capsys):
+    """--with-diff implies --with-enrichment and passes with_diff=True."""
+    mock_args.subparser_name = "view"
+    mock_args.issue_key = "KONFLUX-300"
+    mock_args.with_comments = False
+    mock_args.with_enrichment = False
+    mock_args.with_diff = True
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-300"
+    mock_issue.fields.summary = "Test"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "Open"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = "See https://github.com/org/repo/pull/1"
+    mock_issue.fields.comment.comments = []
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_ctx.jira.issue.return_value = mock_issue
+
+    mock_enrich.return_value = []
+
+    view.run(mock_ctx, mock_args)
+
+    mock_enrich.assert_called_once()
+    assert mock_enrich.call_args[1]["with_diff"] is True

@@ -23,7 +23,15 @@ def _run_command(cmd, env=None):
         return None, str(e)
 
 
-def _get_github_pr(repo, pr_id):
+def _truncate_diff(text, max_lines=200):
+    lines = text.splitlines()
+    if len(lines) <= max_lines:
+        return text
+    truncated = "\n".join(lines[:max_lines])
+    return f"{truncated}\n... (truncated, showing {max_lines} of {len(lines)} lines)"
+
+
+def _get_github_pr(repo, pr_id, with_diff=False):
     cmd = [
         "gh",
         "pr",
@@ -39,10 +47,18 @@ def _get_github_pr(repo, pr_id):
     stdout, error = _run_command(cmd)
     if error:
         return f"(Failed to fetch GitHub PR info: {error})"
-    return stdout
+    result = stdout
+    if with_diff:
+        diff_cmd = ["gh", "pr", "diff", pr_id, "--repo", repo]
+        diff_stdout, diff_error = _run_command(diff_cmd)
+        if diff_error:
+            result += f"\n\nDiff:\n(Failed to fetch diff: {diff_error})"
+        elif diff_stdout:
+            result += f"\n\nDiff:\n{_truncate_diff(diff_stdout)}"
+    return result
 
 
-def _get_github_commit(repo, sha):
+def _get_github_commit(repo, sha, with_diff=False):
     cmd = [
         "gh",
         "api",
@@ -53,10 +69,24 @@ def _get_github_commit(repo, sha):
     stdout, error = _run_command(cmd)
     if error:
         return f"(Failed to fetch GitHub commit info: {error})"
-    return f"Commit Message:\n{stdout}"
+    result = f"Commit Message:\n{stdout}"
+    if with_diff:
+        diff_cmd = [
+            "gh",
+            "api",
+            f"repos/{repo}/commits/{sha}",
+            "--jq",
+            '.files[] | "--- \\(.filename)\\n\\(.patch // "")"',
+        ]
+        diff_stdout, diff_error = _run_command(diff_cmd)
+        if diff_error:
+            result += f"\n\nDiff:\n(Failed to fetch diff: {diff_error})"
+        elif diff_stdout:
+            result += f"\n\nDiff:\n{_truncate_diff(diff_stdout)}"
+    return result
 
 
-def _get_gitlab_mr(host, repo, mr_id):
+def _get_gitlab_mr(host, repo, mr_id, with_diff=False):
     env = os.environ.copy()
     env["GL_HOST"] = host
     cmd = ["glab", "mr", "view", mr_id, "-R", repo, "-F", "json"]
@@ -64,11 +94,18 @@ def _get_gitlab_mr(host, repo, mr_id):
     if error:
         return f"(Failed to fetch GitLab MR info: {error})"
     data = json.loads(stdout)
-    return f"Title: {data.get('title')}\n{data.get('description')}"
+    result = f"Title: {data.get('title')}\n{data.get('description')}"
+    if with_diff:
+        diff_cmd = ["glab", "mr", "diff", mr_id, "-R", repo]
+        diff_stdout, diff_error = _run_command(diff_cmd, env=env)
+        if diff_error:
+            result += f"\n\nDiff:\n(Failed to fetch diff: {diff_error})"
+        elif diff_stdout:
+            result += f"\n\nDiff:\n{_truncate_diff(diff_stdout)}"
+    return result
 
 
-def _get_gitlab_commit(host, repo, sha):
-    # GitLab API requires URL-encoded project path
+def _get_gitlab_commit(host, repo, sha, with_diff=False):
     encoded_repo = repo.replace("/", "%2F")
     env = os.environ.copy()
     env["GL_HOST"] = host
@@ -77,7 +114,25 @@ def _get_gitlab_commit(host, repo, sha):
     if error:
         return f"(Failed to fetch GitLab commit info: {error})"
     data = json.loads(stdout)
-    return f"Commit Message:\n{data.get('message', '').strip()}"
+    result = f"Commit Message:\n{data.get('message', '').strip()}"
+    if with_diff:
+        diff_cmd = [
+            "glab",
+            "api",
+            f"projects/{encoded_repo}/repository/commits/{sha}/diff",
+        ]
+        diff_stdout, diff_error = _run_command(diff_cmd, env=env)
+        if diff_error:
+            result += f"\n\nDiff:\n(Failed to fetch diff: {diff_error})"
+        elif diff_stdout:
+            diff_data = json.loads(diff_stdout)
+            diff_lines = []
+            for entry in diff_data:
+                diff_lines.append(f"--- {entry.get('old_path', '')}")
+                diff_lines.append(f"+++ {entry.get('new_path', '')}")
+                diff_lines.append(entry.get("diff", ""))
+            result += f"\n\nDiff:\n{_truncate_diff(chr(10).join(diff_lines))}"
+    return result
 
 
 def _get_slack_message(url):
@@ -88,46 +143,40 @@ def _get_slack_message(url):
     return stdout
 
 
-def get_pr_info(url):
+def get_pr_info(url, with_diff=False):
     if "github.com" in url:
-        # GitHub PR Pattern: https://github.com/owner/repo/pull/id
         pr_match = re.search(r"github\.com/([^/]+/[^/]+)/pull/(\d+)", url)
         if pr_match:
             repo, pr_id = pr_match.groups()
-            return _get_github_pr(repo, pr_id)
+            return _get_github_pr(repo, pr_id, with_diff=with_diff)
 
-        # GitHub Commit Pattern: https://github.com/owner/repo/commit/sha
         commit_match = re.search(
             r"github\.com/([^/]+/[^/]+)/commit/([0-9a-f]{7,40})", url
         )
         if commit_match:
             repo, sha = commit_match.groups()
-            return _get_github_commit(repo, sha)
+            return _get_github_commit(repo, sha, with_diff=with_diff)
 
     if "slack.com/archives/" in url:
         return _get_slack_message(url)
 
     if "gitlab" in url:
-        # GitLab MR Pattern: https://host/path/to/repo/-/merge_requests/id
         mr_match = re.search(r"https://([^/]+)/(.+)/-/merge_requests/(\d+)", url)
         if mr_match:
             host, repo, mr_id = mr_match.groups()
-            return _get_gitlab_mr(host, repo, mr_id)
+            return _get_gitlab_mr(host, repo, mr_id, with_diff=with_diff)
 
-        # GitLab Commit Pattern: https://host/path/to/repo/-/commit/sha
         commit_match = re.search(r"https://([^/]+)/(.+)/-/commit/([0-9a-f]{7,40})", url)
         if commit_match:
             host, repo, sha = commit_match.groups()
-            return _get_gitlab_commit(host, repo, sha)
+            return _get_gitlab_commit(host, repo, sha, with_diff=with_diff)
 
     return ""
 
 
-def enrich_with_prs(text):
+def enrich_with_prs(text, with_diff=False):
     if not text:
         return []
-    # Find PR/Commit links
-    # We stop at delimiters like |, ], ), or whitespace to handle Jira markdown links
     patterns = [
         r"https://github\.com/[^\s|\]\)]+/pull/\d+",
         r"https://github\.com/[^\s|\]\)]+/commit/[0-9a-f]{7,40}",
@@ -144,7 +193,7 @@ def enrich_with_prs(text):
 
     enrichment = []
     for url in urls:
-        info = get_pr_info(url)
+        info = get_pr_info(url, with_diff=with_diff)
         if info:
             enrichment.append({"url": url, "info": info})
 
@@ -152,19 +201,15 @@ def enrich_with_prs(text):
 
 
 def enrich_issue_with_prs(issue):
-    # Collect text only from explicitly requested fields to find PR links
     text_to_search = []
 
-    # 1. Description
     if hasattr(issue.fields, "description") and issue.fields.description:
         text_to_search.append(issue.fields.description)
 
-    # 2. Comments
     if hasattr(issue.fields, "comment") and issue.fields.comment:
         for comment in issue.fields.comment.comments:
             text_to_search.append(comment.body)
 
-    # 3. "Git Pull Request" field (customfield_10875 in this workspace)
     if hasattr(issue.fields, "customfield_10875") and issue.fields.customfield_10875:
         val = issue.fields.customfield_10875
         if isinstance(val, str):
