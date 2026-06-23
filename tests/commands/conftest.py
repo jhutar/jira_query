@@ -54,6 +54,8 @@ def mock_args():
     args.assignee = None
     args.components = None
     args.labels = None
+    args.add_labels = None
+    args.remove_labels = None
     args.status = None
     args.resolution = None
     args.type = "Task"

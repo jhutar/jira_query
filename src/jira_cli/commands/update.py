@@ -70,9 +70,14 @@ def add_arguments(subparsers):
         help="Change target end date (provide date in YYYY-MM-DD format)",
     )
     parser.add_argument(
-        "--labels",
+        "--add-labels",
         action="append",
-        help='Label to add (can be specified multiple times, set to "" to ignore)',
+        help="Label to add (can be specified multiple times)",
+    )
+    parser.add_argument(
+        "--remove-labels",
+        action="append",
+        help="Label to remove (can be specified multiple times)",
     )
     parser.add_argument(
         "--link-relationship",
@@ -159,8 +164,13 @@ def _update_fields(ctx, args, issue):
     if sprint_id is not None:
         custom[ctx.config["custom_fields"]["sprint"]] = sprint_id
 
-    if args.labels is not None:
-        custom["labels"] = issue.fields.labels + [i for i in args.labels if i != ""]
+    if args.add_labels is not None or args.remove_labels is not None:
+        labels = list(issue.fields.labels)
+        if args.add_labels is not None:
+            labels += [i for i in args.add_labels if i != ""]
+        if args.remove_labels is not None:
+            labels = [lab for lab in labels if lab not in args.remove_labels]
+        custom["labels"] = labels
 
     if custom != {}:
         if args.dry_run:

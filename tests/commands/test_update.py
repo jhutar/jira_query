@@ -117,3 +117,43 @@ def test_update_link_requires_both_args(mock_ctx, mock_args):
 
     with pytest.raises(AssertionError, match="must be specified together"):
         update.run(mock_ctx, mock_args)
+
+
+def test_update_add_labels(mock_ctx, mock_args):
+    """--add-labels appends labels to existing ones."""
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = None
+    mock_args.status = None
+    mock_args.dry_run = False
+    mock_args.add_labels = ["new-label", "another"]
+
+    mock_issue = MagicMock()
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = ["existing"]
+    mock_ctx.jira.issue.return_value = mock_issue
+
+    update.run(mock_ctx, mock_args)
+
+    update_call = mock_issue.update.call_args[1]["fields"]
+    assert update_call["labels"] == ["existing", "new-label", "another"]
+
+
+def test_update_remove_labels(mock_ctx, mock_args):
+    """--remove-labels removes matching labels from existing ones."""
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = None
+    mock_args.status = None
+    mock_args.dry_run = False
+    mock_args.remove_labels = ["to-remove"]
+
+    mock_issue = MagicMock()
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = ["keep", "to-remove", "also-keep"]
+    mock_ctx.jira.issue.return_value = mock_issue
+
+    update.run(mock_ctx, mock_args)
+
+    update_call = mock_issue.update.call_args[1]["fields"]
+    assert update_call["labels"] == ["keep", "also-keep"]
