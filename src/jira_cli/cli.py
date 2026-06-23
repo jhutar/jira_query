@@ -1045,7 +1045,7 @@ class Doer:
             for c in comments:
                 print(f"- {c['author']} ({c['created']}):")
                 for line in c["body"].splitlines():
-                    print(f"  {line}")
+                    print(f"    {line}")
 
         if self._args.with_enrichment:
             texts = [description]
@@ -1056,9 +1056,9 @@ class Doer:
                 print(thin_sep)
                 print("Enrichment:")
                 for item in enrichment:
-                    print(f"\n  URL: {item['url']}")
+                    print(f"- URL: {item['url']}:")
                     for line in item["info"].splitlines():
-                        print(f"  {line}")
+                        print(f"    {line}")
 
         print(separator)
 
