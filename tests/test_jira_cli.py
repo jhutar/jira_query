@@ -195,6 +195,7 @@ def test_do_create_valid_validation_flow(
 
     # Setup status and security levels via REST endpoint mock side_effect
     mock_jira._options = {"server": "https://jira.example.com"}
+
     def get_mock_response(url, *args, **kwargs):
         resp = MagicMock()
         resp.status_code = 200
@@ -203,6 +204,7 @@ def test_do_create_valid_validation_flow(
         elif "securitylevel" in url:
             resp.json.return_value = [{"name": "Red Hat Employee", "id": "10000"}]
         return resp
+
     mock_jira._session.get.side_effect = get_mock_response
 
     # Setup assignee
@@ -903,6 +905,8 @@ def test_do_view_prints_issue_details(
     args.subparser_name = "view"
     args.issue_key = "KONFLUX-123"
     args.dump = False
+    args.with_comments = False
+    args.with_enrichment = False
 
     mock_issue = MagicMock()
     mock_issue.key = "KONFLUX-123"
@@ -950,6 +954,8 @@ def test_do_view_converts_adf_description(
     args.subparser_name = "view"
     args.issue_key = "KONFLUX-456"
     args.dump = False
+    args.with_comments = False
+    args.with_enrichment = False
 
     adf_desc = {"type": "doc", "content": []}
     mock_issue = MagicMock()
@@ -995,8 +1001,15 @@ def test_do_view_description_not_raw_object(
     args.subparser_name = "view"
     args.issue_key = "KONFLUX-789"
     args.dump = False
+    args.with_comments = False
+    args.with_enrichment = False
 
-    adf_desc = {"type": "doc", "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Hello"}]}]}
+    adf_desc = {
+        "type": "doc",
+        "content": [
+            {"type": "paragraph", "content": [{"type": "text", "text": "Hello"}]}
+        ],
+    }
     mock_issue = MagicMock()
     mock_issue.key = "KONFLUX-789"
     mock_issue.raw = {"fields": {"description": adf_desc}}
@@ -1040,6 +1053,8 @@ def test_do_view_converts_adf_comments(
     args.subparser_name = "view"
     args.issue_key = "KONFLUX-789"
     args.dump = False
+    args.with_comments = True
+    args.with_enrichment = False
 
     adf_body = {"type": "doc", "content": []}
     mock_comment = MagicMock()
@@ -1106,6 +1121,8 @@ def test_do_view_dump_writes_json(
     args.subparser_name = "view"
     args.issue_key = "KONFLUX-100"
     args.dump = True
+    args.with_comments = False
+    args.with_enrichment = False
 
     mock_issue = MagicMock()
     mock_issue.key = "KONFLUX-100"
@@ -1137,6 +1154,196 @@ def test_do_view_dump_writes_json(
         jira_cli.Path("jira_issue_details").rmdir()
     except OSError:
         pass
+
+
+@patch.object(jira_cli, "load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_view_no_comments_by_default(
+    mock_create_client, mockload_config_fn, mock_config, capsys
+):
+    mockload_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "view"
+    args.issue_key = "KONFLUX-200"
+    args.dump = False
+    args.with_comments = False
+    args.with_enrichment = False
+
+    mock_comment = MagicMock()
+    mock_comment.author.displayName = "Bob"
+    mock_comment.created = "2026-06-18T10:00:00.000+0000"
+    mock_comment.body = "This should not appear"
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-200"
+    mock_issue.fields.summary = "Test"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "Open"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = "desc"
+    mock_issue.fields.comment.comments = [mock_comment]
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_jira.issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(args)
+    doer.do_view()
+
+    output = capsys.readouterr().out
+    assert "Comments:" not in output
+    assert "Bob" not in output
+    assert "This should not appear" not in output
+
+
+@patch.object(jira_cli, "load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_view_with_comments(
+    mock_create_client, mockload_config_fn, mock_config, capsys
+):
+    mockload_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "view"
+    args.issue_key = "KONFLUX-201"
+    args.dump = False
+    args.with_comments = True
+    args.with_enrichment = False
+
+    mock_comment = MagicMock()
+    mock_comment.author.displayName = "Alice"
+    mock_comment.created = "2026-06-18T14:20:00.000+0000"
+    mock_comment.body = "Great progress on this"
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-201"
+    mock_issue.fields.summary = "Test"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "Open"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = "desc"
+    mock_issue.fields.comment.comments = [mock_comment]
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_jira.issue.return_value = mock_issue
+
+    doer = jira_cli.Doer(args)
+    doer.do_view()
+
+    output = capsys.readouterr().out
+    assert "Comments:" in output
+    assert "Alice" in output
+    assert "Great progress on this" in output
+
+
+@patch.object(jira_cli, "enrich_with_prs")
+@patch.object(jira_cli, "load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_view_with_enrichment(
+    mock_create_client, mockload_config_fn, mock_enrich, mock_config, capsys
+):
+    mockload_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "view"
+    args.issue_key = "KONFLUX-202"
+    args.dump = False
+    args.with_comments = False
+    args.with_enrichment = True
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-202"
+    mock_issue.fields.summary = "Test"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "Open"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = "See https://github.com/org/repo/pull/42"
+    mock_issue.fields.comment.comments = []
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_jira.issue.return_value = mock_issue
+
+    mock_enrich.return_value = [
+        {
+            "url": "https://github.com/org/repo/pull/42",
+            "info": "Title: Fix bug\nSome body",
+        },
+    ]
+
+    doer = jira_cli.Doer(args)
+    doer.do_view()
+
+    output = capsys.readouterr().out
+    assert "PR/Commit Enrichment:" in output
+    assert "https://github.com/org/repo/pull/42" in output
+    assert "Title: Fix bug" in output
+    mock_enrich.assert_called_once()
+
+
+@patch.object(jira_cli, "enrich_with_prs")
+@patch.object(jira_cli, "load_config")
+@patch.object(jira_cli, "_create_jira_client")
+def test_do_view_enrichment_includes_comments(
+    mock_create_client, mockload_config_fn, mock_enrich, mock_config, capsys
+):
+    mockload_config_fn.return_value = mock_config
+    mock_jira = MagicMock()
+    mock_create_client.return_value = mock_jira
+
+    args = MagicMock()
+    args.config = "~/.jira_query.yaml"
+    args.subparser_name = "view"
+    args.issue_key = "KONFLUX-203"
+    args.dump = False
+    args.with_comments = True
+    args.with_enrichment = True
+
+    mock_comment = MagicMock()
+    mock_comment.author.displayName = "Dev"
+    mock_comment.created = "2026-06-18T10:00:00.000+0000"
+    mock_comment.body = "Fixed in https://github.com/org/repo/pull/99"
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-203"
+    mock_issue.fields.summary = "Test"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "Open"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = "Some description"
+    mock_issue.fields.comment.comments = [mock_comment]
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_jira.issue.return_value = mock_issue
+
+    mock_enrich.return_value = []
+
+    doer = jira_cli.Doer(args)
+    doer.do_view()
+
+    call_text = mock_enrich.call_args[0][0]
+    assert "Some description" in call_text
+    assert "Fixed in https://github.com/org/repo/pull/99" in call_text
 
 
 @patch.object(jira_cli, "_translate_content")

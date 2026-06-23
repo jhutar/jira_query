@@ -16,6 +16,8 @@ import jira
 import json
 import yaml
 
+from jira_cli.pr_utils import enrich_with_prs
+
 # Configuration
 DEFAULT_CONFIG_PATH = "~/.jira_query.yaml"
 DEFAULT_TEMPLATE_PATH = "templates/default.md.j2"
@@ -983,21 +985,24 @@ class Doer:
             description = getattr(issue.fields, "description", None) or "No description"
 
         comments = []
-        if hasattr(issue.fields, "comment") and hasattr(
-            issue.fields.comment, "comments"
-        ):
-            for comment in issue.fields.comment.comments:
-                author = getattr(comment, "author", None)
-                author_name = (
-                    getattr(author, "displayName", "Unknown") if author else "Unknown"
-                )
-                created = getattr(comment, "created", "")
-                body = comment.body
-                if isinstance(body, dict):
-                    body = _translate_content("to-md", json.dumps(body))
-                comments.append(
-                    {"author": author_name, "created": created, "body": body or ""}
-                )
+        if self._args.with_comments:
+            if hasattr(issue.fields, "comment") and hasattr(
+                issue.fields.comment, "comments"
+            ):
+                for comment in issue.fields.comment.comments:
+                    author = getattr(comment, "author", None)
+                    author_name = (
+                        getattr(author, "displayName", "Unknown")
+                        if author
+                        else "Unknown"
+                    )
+                    created = getattr(comment, "created", "")
+                    body = comment.body
+                    if isinstance(body, dict):
+                        body = _translate_content("to-md", json.dumps(body))
+                    comments.append(
+                        {"author": author_name, "created": created, "body": body or ""}
+                    )
 
         separator = "=" * 80
         thin_sep = "-" * 80
@@ -1030,6 +1035,19 @@ class Doer:
                 print(f"- {c['author']} ({c['created']}):")
                 for line in c["body"].splitlines():
                     print(f"  {line}")
+
+        if self._args.with_enrichment:
+            texts = [description]
+            for c in comments:
+                texts.append(c["body"])
+            enrichment = enrich_with_prs("\n".join(texts))
+            if enrichment:
+                print(thin_sep)
+                print("PR/Commit Enrichment:")
+                for item in enrichment:
+                    print(f"\n  URL: {item['url']}")
+                    for line in item["info"].splitlines():
+                        print(f"  {line}")
 
         print(separator)
 
@@ -1316,6 +1334,16 @@ def main():
         "issue_key",
         help="The Jira issue key to view (e.g., 'KONFLUX-123')",
         type=str,
+    )
+    parser_view.add_argument(
+        "--with-comments",
+        action="store_true",
+        help="Include issue comments in the output",
+    )
+    parser_view.add_argument(
+        "--with-enrichment",
+        action="store_true",
+        help="Fetch and display linked PR/commit details from GitHub/GitLab",
     )
 
     args = parser.parse_args()
