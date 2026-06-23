@@ -7,8 +7,6 @@ import os
 import re
 from pathlib import Path
 
-from jira_cli.context import JiraQueryError
-
 
 class Cache:
     """File-based JSON cache with mtime-based version tracking."""

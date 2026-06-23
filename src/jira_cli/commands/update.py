@@ -2,7 +2,6 @@
 # -*- coding: UTF-8 -*-
 
 import json
-import re
 
 from jira_cli.cli import _editor, _pretty, _translate_content
 from jira_cli.parent_resolver import resolve_parent_field
@@ -74,6 +73,14 @@ def add_arguments(subparsers):
         "--labels",
         action="append",
         help='Label to add (can be specified multiple times, set to "" to ignore)',
+    )
+    parser.add_argument(
+        "--link-relationship",
+        help="Link relationship type (e.g. 'is blocked by', 'blocks', 'relates to')",
+    )
+    parser.add_argument(
+        "--link-target",
+        help="Issue key to link to (requires --link-relationship)",
     )
 
 
@@ -153,9 +160,7 @@ def _update_fields(ctx, args, issue):
         custom[ctx.config["custom_fields"]["sprint"]] = sprint_id
 
     if args.labels is not None:
-        custom["labels"] = issue.fields.labels + [
-            i for i in args.labels if i != ""
-        ]
+        custom["labels"] = issue.fields.labels + [i for i in args.labels if i != ""]
 
     if custom != {}:
         if args.dry_run:
@@ -198,6 +203,9 @@ def run(ctx, args):
     assert not (args.parent is not None and args.epic is not None), (
         "Cannot specify both --parent and --epic; use --parent for unified hierarchy linking"
     )
+    assert (args.link_relationship is None) == (args.link_target is None), (
+        "--link-relationship and --link-target must be specified together"
+    )
 
     if args.parent is not None:
         try:
@@ -215,10 +223,19 @@ def run(ctx, args):
             if args.dry_run:
                 _pretty("Would add this comment:", args.comment)
             else:
-                adf_comment = json.loads(
-                    _translate_content("to-adf", args.comment)
-                )
+                adf_comment = json.loads(_translate_content("to-adf", args.comment))
                 ctx.jira.add_comment(issue, adf_comment)
                 print(f"Commented on the issue {issue.id}")
 
         _update_fields(ctx, args, issue)
+
+        if args.link_relationship is not None:
+            if args.dry_run:
+                _pretty(
+                    f"Would link issue '{args.link_relationship}' to {args.link_target}"
+                )
+            else:
+                ctx.jira.create_issue_link(
+                    args.link_relationship, issue.key, args.link_target
+                )
+                print(f"Linked '{args.link_relationship}' to {args.link_target}")

@@ -4,7 +4,7 @@
 import logging
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from jira_cli.sprint_resolver import SprintResolver
 
@@ -46,7 +46,9 @@ def test_resolve_by_regexp(resolver):
 
 
 def test_resolve_by_regexp_no_match(resolver):
-    with pytest.raises(AssertionError, match="Expected exactly one active sprint matching"):
+    with pytest.raises(
+        AssertionError, match="Expected exactly one active sprint matching"
+    ):
         resolver.resolve(sprint_regexp=r"Nonexistent \d+")
 
 

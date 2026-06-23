@@ -68,4 +68,6 @@ def mock_args():
     args.security = None
     args.dry_run = True
     args.dump = False
+    args.link_relationship = None
+    args.link_target = None
     return args

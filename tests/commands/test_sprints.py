@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-from pathlib import Path
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from jira_cli.commands import sprints
-from jira_cli.sprint_resolver import Cache, SprintResolver
+from jira_cli.sprint_resolver import SprintResolver
 
 
 MOCK_SPRINTS = [

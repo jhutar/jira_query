@@ -32,9 +32,7 @@ def run(ctx, args):
         ):
             for comment in issue.fields.comment.comments:
                 if isinstance(comment.body, dict):
-                    comment.body = _translate_content(
-                        "to-md", json.dumps(comment.body)
-                    )
+                    comment.body = _translate_content("to-md", json.dumps(comment.body))
 
     renderer = TemplateRenderer(args.template)
     rendered_output = renderer.render({"issues": issues, "query": args.query})
@@ -49,10 +47,6 @@ def run(ctx, args):
                 file_path = output_dir / f"issue-{issue.key}.json"
                 with open(file_path, "w", encoding="utf-8") as fd:
                     json.dump(issue_data, fd, indent=4, sort_keys=False)
-                ctx.logger.info(
-                    f"Saved details for issue {issue.key} to {file_path}"
-                )
+                ctx.logger.info(f"Saved details for issue {issue.key} to {file_path}")
             except Exception as e:
-                ctx.logger.error(
-                    f"Could not save details for issue {issue.key}: {e}"
-                )
+                ctx.logger.error(f"Could not save details for issue {issue.key}: {e}")

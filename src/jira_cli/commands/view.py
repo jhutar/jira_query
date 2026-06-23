@@ -102,9 +102,7 @@ def run(ctx, args):
             for idx, comment in enumerate(issue.fields.comment.comments):
                 author = getattr(comment, "author", None)
                 author_name = (
-                    getattr(author, "displayName", "Unknown")
-                    if author
-                    else "Unknown"
+                    getattr(author, "displayName", "Unknown") if author else "Unknown"
                 )
                 created = getattr(comment, "created", "")
                 raw_body = (

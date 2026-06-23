@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-import json
 
 from unittest.mock import MagicMock, patch
 
@@ -569,3 +568,59 @@ def test_create_security_rest_api_validation(mock_ctx, mock_args):
     assert mock_ctx.jira._session.get.called
     create_call_fields = mock_ctx.jira.create_issue.call_args[1]["fields"]
     assert create_call_fields["security"] == {"id": "10000"}
+
+
+def test_create_with_link(mock_ctx, mock_args):
+    """When --link-relationship and --link-target are set, create_issue_link is called."""
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_ctx.jira.project.return_value = mock_project
+
+    mock_ctx.jira.issue.return_value = MagicMock()
+
+    mock_args.link_relationship = "is blocked by"
+    mock_args.link_target = "KONFLUX-999"
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-200"
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-200"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_ctx.jira.create_issue.return_value = mock_issue
+
+    create.run(mock_ctx, mock_args)
+
+    mock_ctx.jira.create_issue_link.assert_called_once_with(
+        "is blocked by", "KONFLUX-200", "KONFLUX-999"
+    )
+
+
+def test_create_link_requires_both_args(mock_ctx, mock_args):
+    """Specifying only --link-relationship without --link-target raises AssertionError."""
+    mock_args.link_relationship = "blocks"
+    mock_args.link_target = None
+
+    with pytest.raises(AssertionError, match="must be specified together"):
+        create.run(mock_ctx, mock_args)
+
+
+def test_create_link_target_validation_failure(mock_ctx, mock_args):
+    """When --link-target issue doesn't exist, raise AssertionError."""
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_ctx.jira.project.return_value = mock_project
+
+    mock_ctx.jira.issue.side_effect = Exception("Issue not found")
+
+    mock_args.link_relationship = "relates to"
+    mock_args.link_target = "NONEXIST-1"
+
+    with pytest.raises(
+        AssertionError, match="Link target issue 'NONEXIST-1' not found"
+    ):
+        create.run(mock_ctx, mock_args)

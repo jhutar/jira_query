@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+import pytest
 from unittest.mock import MagicMock, patch
 
 from jira_cli.commands import update
@@ -80,3 +81,39 @@ def test_update_converts_comment_to_adf(mock_translate, mock_ctx, mock_args):
     add_comment_call = mock_ctx.jira.add_comment.call_args
     assert isinstance(add_comment_call[0][1], dict)
     assert add_comment_call[0][1]["type"] == "doc"
+
+
+def test_update_with_link(mock_ctx, mock_args):
+    """When --link-relationship and --link-target are set, create_issue_link is called."""
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = None
+    mock_args.status = None
+    mock_args.dry_run = False
+    mock_args.link_relationship = "blocks"
+    mock_args.link_target = "KONFLUX-100"
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-42"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_ctx.jira.issue.return_value = mock_issue
+
+    update.run(mock_ctx, mock_args)
+
+    mock_ctx.jira.create_issue_link.assert_called_once_with(
+        "blocks", "KONFLUX-42", "KONFLUX-100"
+    )
+
+
+def test_update_link_requires_both_args(mock_ctx, mock_args):
+    """Specifying only --link-target without --link-relationship raises AssertionError."""
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = None
+    mock_args.status = None
+    mock_args.link_relationship = None
+    mock_args.link_target = "KONFLUX-100"
+
+    with pytest.raises(AssertionError, match="must be specified together"):
+        update.run(mock_ctx, mock_args)

@@ -97,7 +97,15 @@ def add_arguments(subparsers):
     )
     parser.add_argument(
         "--security",
-        help='Security level of new issue (default \'Red Hat Employee\', set to "" to omit security)',
+        help="Security level of new issue (default 'Red Hat Employee', set to \"\" to omit security)",
+    )
+    parser.add_argument(
+        "--link-relationship",
+        help="Link relationship type (e.g. 'is blocked by', 'blocks', 'relates to')",
+    )
+    parser.add_argument(
+        "--link-target",
+        help="Issue key to link to (requires --link-relationship)",
     )
 
 
@@ -130,9 +138,7 @@ def _update_fields(ctx, args, issue, resolved_sprint_id=None):
         custom[ctx.config["custom_fields"]["sprint"]] = resolved_sprint_id
 
     if args.labels is not None:
-        custom["labels"] = issue.fields.labels + [
-            i for i in args.labels if i != ""
-        ]
+        custom["labels"] = issue.fields.labels + [i for i in args.labels if i != ""]
 
     if custom != {}:
         if args.dry_run:
@@ -164,9 +170,7 @@ def run(ctx, args):
 
     # Apply project-level defaults from configuration
     if args.project is not None:
-        proj_defaults = ctx.config.get("project_defaults", {}).get(
-            args.project, {}
-        )
+        proj_defaults = ctx.config.get("project_defaults", {}).get(args.project, {})
         for attr_name, default_value in proj_defaults.items():
             current_value = getattr(args, attr_name, None)
             if current_value is None or current_value is False:
@@ -195,6 +199,9 @@ def run(ctx, args):
         assert args.parent is not None, (
             "A parent issue key (via --parent) is required when creating a Sub-task."
         )
+    assert (args.link_relationship is None) == (args.link_target is None), (
+        "--link-relationship and --link-target must be specified together"
+    )
 
     # Pre-validation of Jira entities and configurations before issue creation
     # 1. Project validation
@@ -336,7 +343,17 @@ def run(ctx, args):
                 f"Parent issue '{args.parent}' not found or inaccessible: {e}"
             )
 
-    # 7. Assignee validation
+    # 7. Link target validation
+    if args.link_target is not None:
+        try:
+            ctx.logger.debug(f"Pre-validating link target: {args.link_target}")
+            ctx.jira.issue(args.link_target, fields="summary")
+        except Exception as e:
+            raise AssertionError(
+                f"Link target issue '{args.link_target}' not found or inaccessible: {e}"
+            )
+
+    # 8. Assignee validation
     resolved_assignee = None
     if args.assignee is not None:
         try:
@@ -346,9 +363,7 @@ def run(ctx, args):
                 includeInactive=False,
             )
         except Exception as e:
-            raise AssertionError(
-                f"Failed to search for user '{args.assignee}': {e}"
-            )
+            raise AssertionError(f"Failed to search for user '{args.assignee}': {e}")
 
         if len(assignee_users) > 1:
             exact_matches = [
@@ -370,7 +385,7 @@ def run(ctx, args):
         resolved_assignee = assignee_users[0]
         ctx.logger.debug(f"Pre-validated assignee: {resolved_assignee}")
 
-    # 8. Sprint validation
+    # 9. Sprint validation
     resolved_sprint_id = None
     if (
         args.sprint is not None
@@ -386,9 +401,7 @@ def run(ctx, args):
         )
 
     # Create issue skeleton
-    adf_description = json.loads(
-        _translate_content("to-adf", args.description)
-    )
+    adf_description = json.loads(_translate_content("to-adf", args.description))
     issue = {
         "issuetype": {"name": args.type},
         "project": args.project,
@@ -413,9 +426,7 @@ def run(ctx, args):
 
     # Set components if it was set
     if args.components is not None:
-        issue["components"] = [
-            {"name": i} for i in args.components if i != ""
-        ]
+        issue["components"] = [{"name": i} for i in args.components if i != ""]
 
     # If creating epic, we need to define epic name
     if args.type == "Epic":
@@ -445,5 +456,17 @@ def run(ctx, args):
 
     # Set custom fields and labels and possibly more
     _update_fields(ctx, args, issue, resolved_sprint_id=resolved_sprint_id)
+
+    # Link to another issue
+    if args.link_relationship is not None:
+        if args.dry_run:
+            _pretty(
+                f"Would link issue '{args.link_relationship}' to {args.link_target}"
+            )
+        else:
+            ctx.jira.create_issue_link(
+                args.link_relationship, issue.key, args.link_target
+            )
+            print(f"Linked '{args.link_relationship}' to {args.link_target}")
 
     return issue
