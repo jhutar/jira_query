@@ -90,6 +90,14 @@ def run(ctx, args):
     if hasattr(issue.fields, "parent") and issue.fields.parent:
         parent_key = getattr(issue.fields.parent, "key", None)
 
+    links = []
+    if hasattr(issue.fields, "issuelinks") and issue.fields.issuelinks:
+        for link in issue.fields.issuelinks:
+            if hasattr(link, "outwardIssue"):
+                links.append(f"{link.type.outward} {link.outwardIssue.key}")
+            elif hasattr(link, "inwardIssue"):
+                links.append(f"{link.type.inward} {link.inwardIssue.key}")
+
     raw_desc = issue.raw.get("fields", {}).get("description")
     if raw_desc and isinstance(raw_desc, dict):
         description = _translate_content("to-md", json.dumps(raw_desc))
@@ -144,6 +152,8 @@ def run(ctx, args):
         print(f"Sprint:    {sprint_name}")
     if parent_key:
         print(f"Parent:    {parent_key}")
+    if links:
+        print(f"Links:     {', '.join(links)}")
 
     print(thin_sep)
     print("Description:")

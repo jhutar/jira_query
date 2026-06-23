@@ -370,3 +370,68 @@ def test_view_with_diff_passes_flag(mock_enrich, mock_ctx, mock_args, capsys):
 
     mock_enrich.assert_called_once()
     assert mock_enrich.call_args[1]["with_diff"] is True
+
+
+def test_view_shows_links(mock_ctx, mock_args, capsys):
+    mock_args.issue_key = "KONFLUX-500"
+    mock_args.with_comments = False
+    mock_args.with_enrichment = False
+
+    outward_link = MagicMock()
+    outward_link.type.outward = "blocks"
+    outward_link.outwardIssue.key = "KONFLUX-501"
+
+    inward_link = MagicMock()
+    inward_link.type.inward = "is blocked by"
+    inward_link.inwardIssue.key = "KONFLUX-502"
+    del inward_link.outwardIssue
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-500"
+    mock_issue.fields.summary = "Test"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "Open"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = "desc"
+    mock_issue.fields.comment.comments = []
+    mock_issue.fields.issuelinks = [outward_link, inward_link]
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_ctx.jira.issue.return_value = mock_issue
+
+    view.run(mock_ctx, mock_args)
+
+    output = capsys.readouterr().out
+    assert "Links:" in output
+    assert "blocks KONFLUX-501" in output
+    assert "is blocked by KONFLUX-502" in output
+
+
+def test_view_no_links(mock_ctx, mock_args, capsys):
+    mock_args.issue_key = "KONFLUX-600"
+    mock_args.with_comments = False
+    mock_args.with_enrichment = False
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-600"
+    mock_issue.fields.summary = "Test"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "Open"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = "desc"
+    mock_issue.fields.comment.comments = []
+    mock_issue.fields.issuelinks = []
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_ctx.jira.issue.return_value = mock_issue
+
+    view.run(mock_ctx, mock_args)
+
+    output = capsys.readouterr().out
+    assert "Links:" not in output
