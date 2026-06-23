@@ -986,10 +986,13 @@ class Doer:
 
         comments = []
         if self._args.with_comments:
+            raw_comments_list = (
+                issue.raw.get("fields", {}).get("comment", {}).get("comments", [])
+            )
             if hasattr(issue.fields, "comment") and hasattr(
                 issue.fields.comment, "comments"
             ):
-                for comment in issue.fields.comment.comments:
+                for idx, comment in enumerate(issue.fields.comment.comments):
                     author = getattr(comment, "author", None)
                     author_name = (
                         getattr(author, "displayName", "Unknown")
@@ -997,9 +1000,17 @@ class Doer:
                         else "Unknown"
                     )
                     created = getattr(comment, "created", "")
-                    body = comment.body
-                    if isinstance(body, dict):
-                        body = _translate_content("to-md", json.dumps(body))
+                    raw_body = (
+                        raw_comments_list[idx].get("body")
+                        if idx < len(raw_comments_list)
+                        else None
+                    )
+                    if raw_body and isinstance(raw_body, dict):
+                        body = _translate_content("to-md", json.dumps(raw_body))
+                    elif isinstance(comment.body, str):
+                        body = comment.body
+                    else:
+                        body = str(comment.body)
                     comments.append(
                         {"author": author_name, "created": created, "body": body or ""}
                     )

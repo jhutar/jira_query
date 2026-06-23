@@ -1064,6 +1064,7 @@ def test_do_view_converts_adf_comments(
 
     mock_issue = MagicMock()
     mock_issue.key = "KONFLUX-789"
+    mock_issue.raw = {"fields": {"comment": {"comments": [{"body": adf_body}]}}}
     mock_issue.fields.summary = "Test"
     mock_issue.fields.issuetype.name = "Task"
     mock_issue.fields.status.name = "Open"
