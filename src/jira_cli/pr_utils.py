@@ -198,26 +198,3 @@ def enrich_with_prs(text, with_diff=False):
             enrichment.append({"url": url, "info": info})
 
     return enrichment
-
-
-def enrich_issue_with_prs(issue):
-    text_to_search = []
-
-    if hasattr(issue.fields, "description") and issue.fields.description:
-        text_to_search.append(issue.fields.description)
-
-    if hasattr(issue.fields, "comment") and issue.fields.comment:
-        for comment in issue.fields.comment.comments:
-            text_to_search.append(comment.body)
-
-    if hasattr(issue.fields, "customfield_10875") and issue.fields.customfield_10875:
-        val = issue.fields.customfield_10875
-        if isinstance(val, str):
-            text_to_search.append(val)
-        elif isinstance(val, (list, tuple)):
-            for item in val:
-                if isinstance(item, str):
-                    text_to_search.append(item)
-
-    combined_text = "\n".join(text_to_search)
-    issue.prs = enrich_with_prs(combined_text)

@@ -4,9 +4,14 @@
 import datetime
 import json
 
-from jira_cli.cli import _editor, _pretty, _translate_content
-from jira_cli.commands.update import update_status
-from jira_cli.parent_resolver import resolve_parent_field
+from jira_cli.cli import (
+    _editor,
+    _pretty,
+    _translate_content,
+    resolve_parent_field,
+    update_fields,
+    update_status,
+)
 from jira_cli.sprint_resolver import SprintResolver
 
 
@@ -107,56 +112,6 @@ def add_arguments(subparsers):
         "--link-target",
         help="Issue key to link to (requires --link-relationship)",
     )
-
-
-def _update_fields(ctx, args, issue, resolved_sprint_id=None):
-    custom = {}
-
-    if args.epic is not None:
-        custom["parent"] = {"key": args.epic}
-
-    if args.parent is not None:
-        parent_field, parent_value = resolve_parent_field(
-            ctx.config, args.type, args.parent
-        )
-        custom[parent_field] = parent_value
-
-    if args.story_points is not None:
-        custom[ctx.config["custom_fields"]["story_points"]] = args.story_points
-
-    if args.target_start is not None:
-        custom[ctx.config["custom_fields"]["target_start"]] = (
-            args.target_start.strftime("%Y-%m-%d")
-        )
-
-    if args.target_end is not None:
-        custom[ctx.config["custom_fields"]["target_end"]] = args.target_end.strftime(
-            "%Y-%m-%d"
-        )
-
-    if resolved_sprint_id is not None:
-        custom[ctx.config["custom_fields"]["sprint"]] = resolved_sprint_id
-
-    if args.labels is not None:
-        custom["labels"] = issue.fields.labels + [i for i in args.labels if i != ""]
-
-    if custom != {}:
-        if args.dry_run:
-            _pretty("Would configure these custom fields:", custom)
-        else:
-            issue.update(fields=custom)
-            custom_out = {}
-            for k, v in custom.items():
-                try:
-                    k_readable = list(ctx.config["custom_fields"].keys())[
-                        list(ctx.config["custom_fields"].values()).index(k)
-                    ]
-                    k_readable = f"{k_readable} ({k})"
-                except (KeyError, ValueError):
-                    k_readable = k
-                custom_out[k_readable] = v
-            custom_txt = ", ".join([f"{k}: {v}" for k, v in custom_out.items()])
-            print(f"Configured custom fields: {custom_txt}")
 
 
 def run(ctx, args):
@@ -455,7 +410,7 @@ def run(ctx, args):
     update_status(ctx, args, issue)
 
     # Set custom fields and labels and possibly more
-    _update_fields(ctx, args, issue, resolved_sprint_id=resolved_sprint_id)
+    update_fields(ctx, args, issue, resolved_sprint_id=resolved_sprint_id)
 
     # Link to another issue
     if args.link_relationship is not None:

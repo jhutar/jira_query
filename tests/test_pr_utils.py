@@ -3,7 +3,15 @@
 
 import pytest
 from unittest.mock import patch
-from jira_cli.pr_utils import enrich_with_prs
+from jira_cli.pr_utils import (
+    _get_github_commit,
+    _get_github_pr,
+    _get_gitlab_commit,
+    _get_gitlab_mr,
+    _get_slack_message,
+    _truncate_diff,
+    enrich_with_prs,
+)
 
 
 @pytest.fixture
@@ -119,6 +127,81 @@ def test_enrich_with_prs_passes_with_diff(mock_get_pr_info):
     mock_get_pr_info.assert_called_once_with(
         "https://github.com/org/repo/pull/1", with_diff=True
     )
+
+
+def test_truncate_diff_under_limit():
+    text = "\n".join(f"line {i}" for i in range(50))
+    assert _truncate_diff(text) == text
+
+
+def test_truncate_diff_over_limit():
+    text = "\n".join(f"line {i}" for i in range(300))
+    result = _truncate_diff(text)
+    assert result.count("\n") == 200
+    assert "truncated, showing 200 of 300 lines" in result
+
+
+@patch("jira_cli.pr_utils._run_command")
+def test_get_github_pr_success(mock_run):
+    mock_run.return_value = ("Title: Fix bug\nBody text", None)
+    result = _get_github_pr("org/repo", "42")
+    assert "Title: Fix bug" in result
+    cmd = mock_run.call_args[0][0]
+    assert "gh" in cmd
+    assert "--repo" in cmd
+    assert "org/repo" in cmd
+
+
+@patch("jira_cli.pr_utils._run_command")
+def test_get_github_pr_with_diff(mock_run):
+    mock_run.side_effect = [
+        ("Title: Fix bug", None),
+        ("diff --git a/f.py b/f.py\n+added", None),
+    ]
+    result = _get_github_pr("org/repo", "42", with_diff=True)
+    assert "Diff:" in result
+    assert "+added" in result
+    assert mock_run.call_count == 2
+
+
+@patch("jira_cli.pr_utils._run_command")
+def test_get_github_pr_failure(mock_run):
+    mock_run.return_value = (None, "not found")
+    result = _get_github_pr("org/repo", "999")
+    assert "Failed to fetch GitHub PR info" in result
+
+
+@patch("jira_cli.pr_utils._run_command")
+def test_get_github_commit_success(mock_run):
+    mock_run.return_value = ("Fix the thing", None)
+    result = _get_github_commit("org/repo", "abc123")
+    assert "Commit Message:" in result
+    assert "Fix the thing" in result
+
+
+@patch("jira_cli.pr_utils._run_command")
+def test_get_gitlab_mr_success(mock_run):
+    mock_run.return_value = ('{"title": "Add feature", "description": "Details"}', None)
+    result = _get_gitlab_mr("gitlab.example.com", "org/repo", "10")
+    assert "Title: Add feature" in result
+    assert "Details" in result
+    env = mock_run.call_args[1]["env"]
+    assert env["GL_HOST"] == "gitlab.example.com"
+
+
+@patch("jira_cli.pr_utils._run_command")
+def test_get_gitlab_commit_success(mock_run):
+    mock_run.return_value = ('{"message": "Fix stuff\\n"}', None)
+    result = _get_gitlab_commit("gitlab.example.com", "org/repo", "def456")
+    assert "Commit Message:" in result
+    assert "Fix stuff" in result
+
+
+@patch("jira_cli.pr_utils._run_command")
+def test_get_slack_message_success(mock_run):
+    mock_run.return_value = ("Slack message content", None)
+    result = _get_slack_message("https://slack.com/archives/C123/p456")
+    assert result == "Slack message content"
 
 
 if __name__ == "__main__":

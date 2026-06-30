@@ -145,6 +145,137 @@ def convert_issue_adf_to_md(issue):
                         print(f"Error converting comment: {e}", file=sys.stderr)
 
 
+def resolve_parent_field(config, issue_type_name, parent_key):
+    """Return (field_name, value) for parent linking based on config and issue type."""
+    custom_fields = config.get("custom_fields", {})
+    if "parent_link" in custom_fields:
+        if issue_type_name in ("Task", "Bug", "Story"):
+            return custom_fields["epic"], parent_key
+        elif issue_type_name == "Epic":
+            return custom_fields["parent_link"], parent_key
+    return "parent", {"key": parent_key}
+
+
+def update_status(ctx, args, issue):
+    if args.status is None:
+        return
+
+    transition_fields = {}
+    if args.resolution is not None:
+        transition_fields["resolution"] = {"name": args.resolution}
+
+    if args.dry_run:
+        if transition_fields:
+            _pretty(
+                f"Would transition to {args.status} with fields:",
+                transition_fields,
+            )
+        else:
+            _pretty(f"Would transition to {args.status}")
+    else:
+        transitions = ctx.jira.transitions(issue)
+        status_transitions = {t["name"]: t["id"] for t in transitions}
+        assert args.status in status_transitions, (
+            f"Status {args.status} not found in available statuses ({', '.join(status_transitions)})"
+        )
+        if transition_fields:
+            ctx.jira.transition_issue(
+                issue,
+                status_transitions[args.status],
+                fields=transition_fields,
+            )
+        else:
+            ctx.jira.transition_issue(issue, status_transitions[args.status])
+        print(
+            f"Transitioned to {args.status} status (transition {status_transitions[args.status]})"
+        )
+
+
+def update_fields(ctx, args, issue, resolved_sprint_id=None):
+    from jira_cli.sprint_resolver import SprintResolver
+
+    custom = {}
+
+    if args.epic is not None:
+        custom["parent"] = {"key": args.epic}
+
+    if args.parent is not None:
+        issue_type_name = getattr(args, "type", None)
+        if issue_type_name is None:
+            issue_type_name = issue.fields.issuetype.name
+        parent_field, parent_value = resolve_parent_field(
+            ctx.config, issue_type_name, args.parent
+        )
+        custom[parent_field] = parent_value
+
+    if args.story_points is not None:
+        custom[ctx.config["custom_fields"]["story_points"]] = args.story_points
+
+    if args.target_start is not None:
+        custom[ctx.config["custom_fields"]["target_start"]] = (
+            args.target_start.strftime("%Y-%m-%d")
+        )
+
+    if args.target_end is not None:
+        custom[ctx.config["custom_fields"]["target_end"]] = args.target_end.strftime(
+            "%Y-%m-%d"
+        )
+
+    if resolved_sprint_id is not None:
+        custom[ctx.config["custom_fields"]["sprint"]] = resolved_sprint_id
+    elif (
+        getattr(args, "sprint", None) is not None
+        or (
+            getattr(args, "sprint_regexp", None) is not None
+            and args.sprint_regexp != ""
+        )
+        or getattr(args, "sprint_current", False)
+    ):
+        project_key = None
+        if hasattr(issue, "fields") and hasattr(issue.fields, "project"):
+            project_key = issue.fields.project.key
+        sprint_id = SprintResolver(ctx.config, ctx.jira, ctx.logger).resolve(
+            sprint=args.sprint,
+            sprint_regexp=getattr(args, "sprint_regexp", None),
+            sprint_current=getattr(args, "sprint_current", False),
+            project=project_key,
+        )
+        if sprint_id is not None:
+            custom[ctx.config["custom_fields"]["sprint"]] = sprint_id
+
+    if getattr(args, "labels", None) is not None:
+        custom["labels"] = issue.fields.labels + [i for i in args.labels if i != ""]
+
+    if (
+        getattr(args, "add_labels", None) is not None
+        or getattr(args, "remove_labels", None) is not None
+    ):
+        labels = list(issue.fields.labels)
+        if getattr(args, "add_labels", None) is not None:
+            labels += [i for i in args.add_labels if i != ""]
+        if getattr(args, "remove_labels", None) is not None:
+            labels = [lab for lab in labels if lab not in args.remove_labels]
+        custom["labels"] = labels
+
+    if custom != {}:
+        if args.dry_run:
+            _pretty("Would configure these custom fields:", custom)
+        else:
+            issue.update(fields=custom)
+            custom_out = {}
+            for k, v in custom.items():
+                try:
+                    k_readable = list(ctx.config["custom_fields"].keys())[
+                        list(ctx.config["custom_fields"].values()).index(k)
+                    ]
+                    k_readable = f"{k_readable} ({k})"
+                except (KeyError, ValueError):
+                    k_readable = k
+                custom_out[k_readable] = v
+            custom_txt = ", ".join([f"{k}: {v}" for k, v in custom_out.items()])
+            print(f"Configured custom fields: {custom_txt}")
+
+
 def main():
     from jira_cli.commands import create, list, sprints, template, update, view
 

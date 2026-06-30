@@ -3,9 +3,13 @@
 
 import json
 
-from jira_cli.cli import _editor, _pretty, _translate_content
-from jira_cli.parent_resolver import resolve_parent_field
-from jira_cli.sprint_resolver import SprintResolver
+from jira_cli.cli import (
+    _editor,
+    _pretty,
+    _translate_content,
+    update_fields,
+    update_status,
+)
 
 
 def add_arguments(subparsers):
@@ -89,108 +93,6 @@ def add_arguments(subparsers):
     )
 
 
-def update_status(ctx, args, issue):
-    if args.status is None:
-        return
-
-    transition_fields = {}
-    if args.resolution is not None:
-        transition_fields["resolution"] = {"name": args.resolution}
-
-    if args.dry_run:
-        if transition_fields:
-            _pretty(
-                f"Would transition to {args.status} with fields:",
-                transition_fields,
-            )
-        else:
-            _pretty(f"Would transition to {args.status}")
-    else:
-        transitions = ctx.jira.transitions(issue)
-        status_transitions = {t["name"]: t["id"] for t in transitions}
-        assert args.status in status_transitions, (
-            f"Status {args.status} not found in available statuses ({', '.join(status_transitions)})"
-        )
-        if transition_fields:
-            ctx.jira.transition_issue(
-                issue,
-                status_transitions[args.status],
-                fields=transition_fields,
-            )
-        else:
-            ctx.jira.transition_issue(issue, status_transitions[args.status])
-        print(
-            f"Transitioned to {args.status} status (transition {status_transitions[args.status]})"
-        )
-
-
-def _update_fields(ctx, args, issue):
-    custom = {}
-    resolver = SprintResolver(ctx.config, ctx.jira, ctx.logger)
-
-    if args.epic is not None:
-        custom["parent"] = {"key": args.epic}
-
-    if args.parent is not None:
-        issue_type_name = getattr(args, "type", None)
-        if issue_type_name is None:
-            issue_type_name = issue.fields.issuetype.name
-        parent_field, parent_value = resolve_parent_field(
-            ctx.config, issue_type_name, args.parent
-        )
-        custom[parent_field] = parent_value
-
-    if args.story_points is not None:
-        custom[ctx.config["custom_fields"]["story_points"]] = args.story_points
-
-    if args.target_start is not None:
-        custom[ctx.config["custom_fields"]["target_start"]] = (
-            args.target_start.strftime("%Y-%m-%d")
-        )
-
-    if args.target_end is not None:
-        custom[ctx.config["custom_fields"]["target_end"]] = args.target_end.strftime(
-            "%Y-%m-%d"
-        )
-
-    sprint_id = resolver.resolve(
-        sprint=args.sprint,
-        sprint_regexp=args.sprint_regexp,
-        sprint_current=args.sprint_current,
-        project=getattr(issue.fields, "project", None)
-        and issue.fields.project.key
-        or None,
-    )
-    if sprint_id is not None:
-        custom[ctx.config["custom_fields"]["sprint"]] = sprint_id
-
-    if args.add_labels is not None or args.remove_labels is not None:
-        labels = list(issue.fields.labels)
-        if args.add_labels is not None:
-            labels += [i for i in args.add_labels if i != ""]
-        if args.remove_labels is not None:
-            labels = [lab for lab in labels if lab not in args.remove_labels]
-        custom["labels"] = labels
-
-    if custom != {}:
-        if args.dry_run:
-            _pretty("Would configure these custom fields:", custom)
-        else:
-            issue.update(fields=custom)
-            custom_out = {}
-            for k, v in custom.items():
-                try:
-                    k_readable = list(ctx.config["custom_fields"].keys())[
-                        list(ctx.config["custom_fields"].values()).index(k)
-                    ]
-                    k_readable = f"{k_readable} ({k})"
-                except (KeyError, ValueError):
-                    k_readable = k
-                custom_out[k_readable] = v
-            custom_txt = ", ".join([f"{k}: {v}" for k, v in custom_out.items()])
-            print(f"Configured custom fields: {custom_txt}")
-
-
 def run(ctx, args):
     if args.issue is not None:
         issues = []
@@ -237,7 +139,7 @@ def run(ctx, args):
                 ctx.jira.add_comment(issue, adf_comment)
                 print(f"Commented on the issue {issue.id}")
 
-        _update_fields(ctx, args, issue)
+        update_fields(ctx, args, issue)
 
         if args.link_relationship is not None:
             if args.dry_run:
