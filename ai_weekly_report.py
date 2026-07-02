@@ -5,11 +5,16 @@ import datetime
 import os
 import sys
 
+# Add 'src' directory to the Python path
+sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), "src"))
+
 from jira_cli.cli import (
-    _create_jira_client as JiraClient,
-    load_server_config,
     TemplateRenderer,
     convert_issue_adf_to_md,
+)
+from jira_cli.context import (
+    _create_jira_client as JiraClient,
+    load_server_config,
 )
 from jira_cli.pr_utils import enrich_issue_with_prs
 

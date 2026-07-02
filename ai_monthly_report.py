@@ -5,11 +5,16 @@ import datetime
 import os
 import sys
 
+# Add 'src' directory to the Python path
+sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), "src"))
+
 from jira_cli.cli import (
-    _create_jira_client as JiraClient,
-    load_server_config,
     TemplateRenderer,
     convert_issue_adf_to_md,
+)
+from jira_cli.context import (
+    _create_jira_client as JiraClient,
+    load_server_config,
 )
 from jira_cli.pr_utils import enrich_issue_with_prs
 
@@ -53,46 +58,46 @@ def format_team(team_list):
 
 
 # For monthly report, we want the previous month
-START = "startOfMonth(-1)"
+START = "startOfMonth(-6)"
 END = "startOfMonth()"
 
 PROJECTS = {
-    ###"Konflux": [
+    "Konflux": [
+        (
+            "Finished issues",
+            f"project in (KONFLUX, KFLUXINFRA, KFLUXBUGS) AND component = Performance AND status CHANGED TO (Closed, Done) DURING ({START}, {END})",
+        ),
+        ###(
+        ###    "In review issues",
+        ###    f"project in (KONFLUX, KFLUXINFRA, KFLUXBUGS) AND component = Performance AND status in (Review, 'Code Review') AND status CHANGED TO (Review, 'Code Review') DURING ({START}, {END})",
+        ###),
+        ###(
+        ###    "In progress issues",
+        ###    f"project in (KONFLUX, KFLUXINFRA, KFLUXBUGS) AND component = Performance AND type not in (Feature, Outcome) AND status = 'In Progress' AND (status CHANGED TO 'In Progress' DURING ({START}, {END}) OR issuekey IN commented('{START}', '{END}', {format_team(TEAMS['KONFLUX'])}))",
+        ###),
+        ###(
+        ###    "New issues",
+        ###    f"project in (KONFLUX, KFLUXINFRA, KFLUXBUGS) AND component = Performance AND created >= {START} AND created < {END} AND assignee is not EMPTY AND status not in (Closed, Done)",
+        ###),
+    ],
+    ###"Pipelines": [
     ###    (
     ###        "Finished issues",
-    ###        f"project in (KONFLUX, KFLUXINFRA, KFLUXBUGS) AND component = Performance AND status CHANGED TO (Closed, Done) DURING ({START}, {END})",
+    ###        f"project = SRVKP AND component = Performance AND status CHANGED TO (Closed, Done) DURING ({START}, {END})",
     ###    ),
     ###    (
     ###        "In review issues",
-    ###        f"project in (KONFLUX, KFLUXINFRA, KFLUXBUGS) AND component = Performance AND status in (Review, 'Code Review') AND status CHANGED TO (Review, 'Code Review') DURING ({START}, {END})",
+    ###        f"project = SRVKP AND component = Performance AND status in (Review, 'Code Review') AND status CHANGED TO (Review, 'Code Review') DURING ({START}, {END})",
     ###    ),
     ###    (
     ###        "In progress issues",
-    ###        f"project in (KONFLUX, KFLUXINFRA, KFLUXBUGS) AND component = Performance AND type not in (Feature, Outcome) AND status = 'In Progress' AND (status CHANGED TO 'In Progress' DURING ({START}, {END}) OR issuekey IN commented('{START}', '{END}', {format_team(TEAMS['KONFLUX'])}))",
+    ###        f"project = SRVKP AND component = Performance AND type not in (Feature, Outcome) AND status = 'In Progress' AND (status CHANGED TO 'In Progress' DURING ({START}, {END}) OR issuekey IN commented('{START}', '{END}', {format_team(TEAMS['PIPELINES'])}))",
     ###    ),
     ###    (
     ###        "New issues",
-    ###        f"project in (KONFLUX, KFLUXINFRA, KFLUXBUGS) AND component = Performance AND created >= {START} AND created < {END} AND assignee is not EMPTY AND status not in (Closed, Done)",
+    ###        f"project = SRVKP AND component = Performance AND created >= {START} AND created < {END} AND assignee is not EMPTY AND status not in (Closed, Done)",
     ###    ),
     ###],
-    "Pipelines": [
-        (
-            "Finished issues",
-            f"project = SRVKP AND component = Performance AND status CHANGED TO (Closed, Done) DURING ({START}, {END})",
-        ),
-        (
-            "In review issues",
-            f"project = SRVKP AND component = Performance AND status in (Review, 'Code Review') AND status CHANGED TO (Review, 'Code Review') DURING ({START}, {END})",
-        ),
-        (
-            "In progress issues",
-            f"project = SRVKP AND component = Performance AND type not in (Feature, Outcome) AND status = 'In Progress' AND (status CHANGED TO 'In Progress' DURING ({START}, {END}) OR issuekey IN commented('{START}', '{END}', {format_team(TEAMS['PIPELINES'])}))",
-        ),
-        (
-            "New issues",
-            f"project = SRVKP AND component = Performance AND created >= {START} AND created < {END} AND assignee is not EMPTY AND status not in (Closed, Done)",
-        ),
-    ],
     ###"ConsoleDot": [
     ###    (
     ###        "Finished issues",

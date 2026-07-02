@@ -11,6 +11,7 @@ from jira_cli.pr_utils import (
     _get_slack_message,
     _truncate_diff,
     enrich_with_prs,
+    enrich_issue_with_prs,
 )
 
 
@@ -202,6 +203,35 @@ def test_get_slack_message_success(mock_run):
     mock_run.return_value = ("Slack message content", None)
     result = _get_slack_message("https://slack.com/archives/C123/p456")
     assert result == "Slack message content"
+
+
+def test_enrich_issue_with_prs(mock_get_pr_info):
+    class MockComment:
+        def __init__(self, body):
+            self.body = body
+
+    class MockComments:
+        def __init__(self, comments):
+            self.comments = comments
+
+    class MockFields:
+        def __init__(self):
+            self.description = "Fix: https://github.com/org/repo/pull/123"
+            self.comment = MockComments([MockComment("Also check: https://github.com/org/repo/pull/456")])
+            self.customfield_10875 = "https://gitlab.com/org/repo/-/merge_requests/789"
+
+    class MockIssue:
+        def __init__(self):
+            self.fields = MockFields()
+
+    issue = MockIssue()
+    enrich_issue_with_prs(issue)
+
+    assert hasattr(issue, "prs")
+    urls = [item["url"] for item in issue.prs]
+    assert "https://github.com/org/repo/pull/123" in urls
+    assert "https://github.com/org/repo/pull/456" in urls
+    assert "https://gitlab.com/org/repo/-/merge_requests/789" in urls
 
 
 if __name__ == "__main__":
