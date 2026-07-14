@@ -112,6 +112,23 @@ def test_enrich_with_prs_patterns(mock_get_pr_info):
                 "https://redhat-internal.slack.com/archives/C04JGQCNX6G/p1781711732712279"
             ],
         ),
+        # Trailing comma after Slack URL
+        (
+            "https://redhat-internal.slack.com/archives/C02CTEB3MMF/p1781072128218249, and more",
+            [
+                "https://redhat-internal.slack.com/archives/C02CTEB3MMF/p1781072128218249"
+            ],
+        ),
+        # Trailing > after Slack URL (ADF artifact)
+        (
+            "https://redhat.enterprise.slack.com/archives/C0AUHMVNBAS>",
+            ["https://redhat.enterprise.slack.com/archives/C0AUHMVNBAS"],
+        ),
+        # Trailing period after GitHub PR
+        (
+            "Fixed in https://github.com/org/repo/pull/42.",
+            ["https://github.com/org/repo/pull/42"],
+        ),
     ]
 
     for text, expected_urls in test_cases:

@@ -201,7 +201,8 @@ def enrich_with_prs(text, with_diff=False):
 
     urls = []
     for p in patterns:
-        urls += re.findall(p, text)
+        for match in re.findall(p, text):
+            urls.append(match.rstrip(".,;:>"))
 
     urls = list(set(urls))
 
