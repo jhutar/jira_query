@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import argparse
+import logging
 import os
 import sys
 
@@ -95,6 +96,12 @@ def main():
             file=sys.stderr,
         )
         sys.exit(1)
+
+    logging.basicConfig(
+        level=logging.WARNING,
+        format="%(levelname)s %(message)s",
+        stream=sys.stderr,
+    )
 
     server_conf = load_server_config("~/.jira_query.yaml")
     jira = JiraClient(

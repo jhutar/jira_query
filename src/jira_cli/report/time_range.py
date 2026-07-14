@@ -57,9 +57,7 @@ def parse_explicit_dates(start_str, end_str):
     start_date = datetime.datetime.strptime(start_str, "%Y-%m-%d").date()
     end_date = datetime.datetime.strptime(end_str, "%Y-%m-%d").date()
     if start_date > end_date:
-        raise ValueError(
-            f"Start date {start_str} is after end date {end_str}"
-        )
+        raise ValueError(f"Start date {start_str} is after end date {end_str}")
     return start_date, end_date
 
 

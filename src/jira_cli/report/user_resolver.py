@@ -51,9 +51,7 @@ class UserResolver:
             sys.exit(1)
 
     def _save_users(self):
-        USERS_PATH.write_text(
-            json.dumps(self._users, indent=2), encoding="utf-8"
-        )
+        USERS_PATH.write_text(json.dumps(self._users, indent=2), encoding="utf-8")
 
     def get_account_id(self, email):
         if email in self._users:
@@ -64,18 +62,13 @@ class UserResolver:
         )
 
         if len(users) > 1:
-            exact = [
-                u
-                for u in users
-                if getattr(u, "emailAddress", None) == email
-            ]
+            exact = [u for u in users if getattr(u, "emailAddress", None) == email]
             if len(exact) == 1:
                 users = exact
 
         if len(users) != 1:
             found = [
-                f"{u.displayName} ({getattr(u, 'accountId', 'no-id')})"
-                for u in users
+                f"{u.displayName} ({getattr(u, 'accountId', 'no-id')})" for u in users
             ]
             raise ValueError(
                 f"Expected exactly one user for '{email}', found {len(users)}: {found}"

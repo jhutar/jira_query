@@ -2,9 +2,12 @@
 # -*- coding: UTF-8 -*-
 
 import json
+import logging
 import os
 import re
 import subprocess
+
+logger = logging.getLogger("jira_cli")
 
 
 def _run_command(cmd, env=None):
@@ -15,11 +18,13 @@ def _run_command(cmd, env=None):
         return result.stdout.strip(), None
     except subprocess.CalledProcessError as e:
         stderr = e.stderr.strip() if e.stderr else "No stderr"
-        return (
-            None,
-            f"Command {cmd} failed with exit status {e.returncode}.\nStderr: {stderr}",
+        error_msg = (
+            f"Command {cmd} failed with exit status {e.returncode}.\nStderr: {stderr}"
         )
+        logger.error(error_msg)
+        return None, error_msg
     except Exception as e:
+        logger.error("Command %s raised exception: %s", cmd, e)
         return None, str(e)
 
 
@@ -32,6 +37,7 @@ def _truncate_diff(text, max_lines=200):
 
 
 def _get_github_pr(repo, pr_id, with_diff=False):
+    url = f"https://github.com/{repo}/pull/{pr_id}"
     cmd = [
         "gh",
         "pr",
@@ -46,6 +52,7 @@ def _get_github_pr(repo, pr_id, with_diff=False):
     ]
     stdout, error = _run_command(cmd)
     if error:
+        logger.error("Failed to fetch GitHub PR %s: %s", url, error)
         return f"(Failed to fetch GitHub PR info: {error})"
     result = stdout
     if with_diff:
@@ -59,6 +66,7 @@ def _get_github_pr(repo, pr_id, with_diff=False):
 
 
 def _get_github_commit(repo, sha, with_diff=False):
+    url = f"https://github.com/{repo}/commit/{sha}"
     cmd = [
         "gh",
         "api",
@@ -68,6 +76,7 @@ def _get_github_commit(repo, sha, with_diff=False):
     ]
     stdout, error = _run_command(cmd)
     if error:
+        logger.error("Failed to fetch GitHub commit %s: %s", url, error)
         return f"(Failed to fetch GitHub commit info: {error})"
     result = f"Commit Message:\n{stdout}"
     if with_diff:
@@ -87,11 +96,13 @@ def _get_github_commit(repo, sha, with_diff=False):
 
 
 def _get_gitlab_mr(host, repo, mr_id, with_diff=False):
+    url = f"https://{host}/{repo}/-/merge_requests/{mr_id}"
     env = os.environ.copy()
     env["GL_HOST"] = host
     cmd = ["glab", "mr", "view", mr_id, "-R", repo, "-F", "json"]
     stdout, error = _run_command(cmd, env=env)
     if error:
+        logger.error("Failed to fetch GitLab MR %s: %s", url, error)
         return f"(Failed to fetch GitLab MR info: {error})"
     data = json.loads(stdout)
     result = f"Title: {data.get('title')}\n{data.get('description')}"
@@ -106,12 +117,14 @@ def _get_gitlab_mr(host, repo, mr_id, with_diff=False):
 
 
 def _get_gitlab_commit(host, repo, sha, with_diff=False):
+    url = f"https://{host}/{repo}/-/commit/{sha}"
     encoded_repo = repo.replace("/", "%2F")
     env = os.environ.copy()
     env["GL_HOST"] = host
     cmd = ["glab", "api", f"projects/{encoded_repo}/repository/commits/{sha}"]
     stdout, error = _run_command(cmd, env=env)
     if error:
+        logger.error("Failed to fetch GitLab commit %s: %s", url, error)
         return f"(Failed to fetch GitLab commit info: {error})"
     data = json.loads(stdout)
     result = f"Commit Message:\n{data.get('message', '').strip()}"
@@ -139,6 +152,7 @@ def _get_slack_message(url):
     cmd = ["slack-cli", "read", url]
     stdout, error = _run_command(cmd)
     if error:
+        logger.error("Failed to fetch Slack message %s: %s", url, error)
         return f"(Failed to fetch Slack message: {error})"
     return stdout
 

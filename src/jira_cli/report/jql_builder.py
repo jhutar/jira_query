@@ -8,8 +8,7 @@ def _format_team_ids(team_ids):
 
 def build_completed_jql(base_jql, start, end, **kwargs):
     return (
-        f'{base_jql} AND status CHANGED TO (Closed, Done)'
-        f' DURING ("{start}", "{end}")'
+        f'{base_jql} AND status CHANGED TO (Closed, Done) DURING ("{start}", "{end}")'
     )
 
 

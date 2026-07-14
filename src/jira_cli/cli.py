@@ -122,13 +122,18 @@ def _translate_content(subcommand, input_str):
 
 def convert_issue_adf_to_md(issue):
     """Converts Jira v3 ADF description and comments to Markdown string in place."""
+    logger = logging.getLogger("jira_cli")
+    issue_key = getattr(issue, "key", "unknown")
+    issue_url = issue.permalink() if hasattr(issue, "permalink") else issue_key
     raw_fields = issue.raw.get("fields", {})
     raw_desc = raw_fields.get("description")
     if raw_desc and isinstance(raw_desc, dict):
         try:
             issue.fields.description = _translate_content("to-md", json.dumps(raw_desc))
         except Exception as e:
-            print(f"Error converting description: {e}", file=sys.stderr)
+            logger.error(
+                "Failed to convert description for %s (%s): %s", issue_key, issue_url, e
+            )
             issue.fields.description = ""
     elif getattr(issue.fields, "description", None) is None:
         issue.fields.description = ""
@@ -142,7 +147,13 @@ def convert_issue_adf_to_md(issue):
                     try:
                         comment.body = _translate_content("to-md", json.dumps(raw_body))
                     except Exception as e:
-                        print(f"Error converting comment: {e}", file=sys.stderr)
+                        logger.error(
+                            "Failed to convert comment #%d for %s (%s): %s",
+                            idx,
+                            issue_key,
+                            issue_url,
+                            e,
+                        )
                         comment.body = ""
 
 

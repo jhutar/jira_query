@@ -2,7 +2,11 @@ import datetime
 
 import pytest
 
-from jira_cli.report.time_range import format_jql_date, parse_explicit_dates, parse_range
+from jira_cli.report.time_range import (
+    format_jql_date,
+    parse_explicit_dates,
+    parse_range,
+)
 
 JULY_14 = datetime.date(2026, 7, 14)
 

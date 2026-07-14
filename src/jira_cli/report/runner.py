@@ -9,8 +9,15 @@ from jira_cli.report.time_range import format_jql_date
 
 class ReportRunner:
     def __init__(
-        self, jira, user_resolver, renderer, start_date, end_date,
-        projects, categories, assignee_emails,
+        self,
+        jira,
+        user_resolver,
+        renderer,
+        start_date,
+        end_date,
+        projects,
+        categories,
+        assignee_emails,
     ):
         self._jira = jira
         self._resolver = user_resolver
@@ -80,9 +87,7 @@ class ReportRunner:
         builder = CATEGORY_BUILDERS["stale"]
         jql = builder(base_jql=config["base_jql"])
         issues = list(
-            self._jira.search_issues(
-                jql, expand="changelog", maxResults=False
-            )
+            self._jira.search_issues(jql, expand="changelog", maxResults=False)
         )
         return [i for i in issues if self._is_stale(i, team_ids)]
 
@@ -125,9 +130,9 @@ class ReportRunner:
         for issue in issues:
             if not issue.fields.assignee:
                 continue
-            assignee_id = getattr(
-                issue.fields.assignee, "accountId", None
-            ) or getattr(issue.fields.assignee, "name", None)
+            assignee_id = getattr(issue.fields.assignee, "accountId", None) or getattr(
+                issue.fields.assignee, "name", None
+            )
             if assignee_id in self._assignee_ids:
                 filtered.append(issue)
         return filtered

@@ -72,9 +72,7 @@ class TestGetAccountId:
         users_path.write_text("{}", encoding="utf-8")
         teams_path.write_text('{"T": ["b@test.com"]}', encoding="utf-8")
         jira = MagicMock()
-        jira.search_users.return_value = [
-            _make_user("Bob", "b@test.com", "id-b")
-        ]
+        jira.search_users.return_value = [_make_user("Bob", "b@test.com", "id-b")]
         resolver = UserResolver(jira)
         assert resolver.get_account_id("b@test.com") == "id-b"
         jira.search_users.assert_called_once()
