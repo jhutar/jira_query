@@ -143,6 +143,7 @@ def convert_issue_adf_to_md(issue):
                         comment.body = _translate_content("to-md", json.dumps(raw_body))
                     except Exception as e:
                         print(f"Error converting comment: {e}", file=sys.stderr)
+                        comment.body = ""
 
 
 def resolve_parent_field(config, issue_type_name, parent_key):

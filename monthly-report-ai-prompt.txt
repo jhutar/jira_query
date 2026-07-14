@@ -1,6 +1,6 @@
 # AI Monthly Report Summary Prompt
 
-Use this prompt with an LLM (ChatGPT, Claude, Gemini, etc.) along with the output of `./ai_monthly_report.py` to generate a polished executive summary.
+Use this prompt with an LLM (ChatGPT, Claude, Gemini, etc.) along with the output of `./report-data.py --range 1m` to generate a polished executive summary.
 
 ---
 
@@ -16,4 +16,4 @@ Use this prompt with an LLM (ChatGPT, Claude, Gemini, etc.) along with the outpu
 5. **Tone:** Professional, concise, and focused on value delivered. Avoid technical jargon where a simpler explanation of the benefit exists.
 
 **Input Data:**
-[PASTE THE OUTPUT OF ./ai_monthly_report.py HERE]
+[PASTE THE OUTPUT OF ./report-data.py --range 1m HERE]

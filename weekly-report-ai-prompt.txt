@@ -1,6 +1,6 @@
 # AI Weekly Report Summary Prompt
 
-Use this prompt with an LLM (ChatGPT, Claude, Gemini, etc.) along with the output of `./ai_weekly_report.py` to generate a polished weekly status update.
+Use this prompt with an LLM (ChatGPT, Claude, Gemini, etc.) along with the output of `./report-data.py --range 1w` to generate a polished weekly status update.
 
 ---
 
@@ -16,4 +16,4 @@ Use this prompt with an LLM (ChatGPT, Claude, Gemini, etc.) along with the outpu
 5. **Tone:** Professional, direct, and focused on progress. Avoid technical jargon where a simpler explanation of the benefit exists.
 
 **Input Data:**
-[PASTE THE OUTPUT OF ./ai_weekly_report.py HERE]
+[PASTE THE OUTPUT OF ./report-data.py --range 1w HERE]

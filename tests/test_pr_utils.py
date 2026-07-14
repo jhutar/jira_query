@@ -217,7 +217,9 @@ def test_enrich_issue_with_prs(mock_get_pr_info):
     class MockFields:
         def __init__(self):
             self.description = "Fix: https://github.com/org/repo/pull/123"
-            self.comment = MockComments([MockComment("Also check: https://github.com/org/repo/pull/456")])
+            self.comment = MockComments(
+                [MockComment("Also check: https://github.com/org/repo/pull/456")]
+            )
             self.customfield_10875 = "https://gitlab.com/org/repo/-/merge_requests/789"
 
     class MockIssue:
