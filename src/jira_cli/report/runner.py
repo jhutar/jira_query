@@ -1,3 +1,4 @@
+import logging
 import sys
 
 from jira_cli.cli import convert_issue_adf_to_md
@@ -5,6 +6,8 @@ from jira_cli.pr_utils import enrich_issue_with_prs
 from jira_cli.report.jql_builder import CATEGORY_BUILDERS
 from jira_cli.report.project_configs import CATEGORY_TITLES, PROJECT_CONFIGS
 from jira_cli.report.time_range import format_jql_date
+
+logger = logging.getLogger("jira_cli")
 
 
 class ReportRunner:
@@ -55,10 +58,15 @@ class ReportRunner:
                 title = CATEGORY_TITLES[category]
                 output.append(f"## {title}")
 
-                if category == "stale":
-                    issues = self._query_stale(config, team_ids)
-                else:
-                    issues = self._query_category(config, category, team_ids)
+                try:
+                    if category == "stale":
+                        issues = self._query_stale(config, team_ids)
+                    else:
+                        issues = self._query_category(config, category, team_ids)
+                except Exception as e:
+                    logger.error("Query failed for %s/%s: %s", project_name, title, e)
+                    output.append("*(query failed, see stderr)*\n")
+                    continue
 
                 self._post_process(issues)
 
