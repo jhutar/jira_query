@@ -1,19 +1,21 @@
 # AI Weekly Report Summary Prompt
 
-Use this prompt with an LLM (ChatGPT, Claude, Gemini, etc.) along with the output of `./report-data.py --range 1w` to generate a polished weekly status update.
+Execute this prompt in AI agent alongside with `./report-data.py --range 1w` output to generate a polished weekly status update.
+
+Generate independent status update for each of the teams: Konflux, Pipelines, ConsoleDot, and Satellite.
 
 ---
 
-**Context:** Attached is a raw weekly status report for the past 7 days, generated from Jira issues and linked Pull Request descriptions across several engineering teams (Konflux, Pipelines, ConsoleDot, and Satellite).
+**Context:** Attached is a raw data for the past 7 days, generated from Jira issues and linked Pull Request descriptions and Slack threads.
 
-**Task:** Please synthesize this data into a professional, concise weekly summary.
+**Task:** Please synthesize this data into a professional, concise, high level weekly summary. Do not assume things when something is unclear. Use Feature > Epic > Task/Story/Bug > Sub-task and story points (see "sp" in output) and Priority/Severity (neither currently not provided in the report) as indication of how big the task was.
 
 **Requirements:**
-1. **Weekly Overview:** Start with a 2-3 sentence overview of the most significant progress made across all teams this week.
-2. **Team Highlights:** For each team (Konflux, Pipelines, ConsoleDot, and Satellite), provide 2-3 bullet points summarizing their key activities. Focus on *outcomes* and *impact* (what was finished, what moved into review) rather than just listing ticket IDs. Use the PR descriptions to provide technical context where helpful.
-3. **Weekly Momentum:** Briefly highlight the transition of issues from "In Progress" or "New" to "In Review" or "Finished". Identify any blockers if they are apparent from the descriptions.
+1. **Weekly Overview:** Start with a 2-3 sentence overview of the most significant progress made across all teams this week. This is a honest bragging section, but do not made up things.
+2. **Team Highlights:** Provide 2-3 bullet points summarizing team key activities. Focus on *outcomes* and *impact* (what was finished, what moved into review) rather than just listing ticket IDs, but include short links to the tickets. Use additional data to provide technical context where helpful.
+3. **Weekly Momentum:** Briefly highlight the transition of issues from "New" or "In Progress" to "In Review" or "Finished". Identify any blockers if they are apparent from the descriptions.
 4. **Looking Ahead:** If the data suggests upcoming milestones or themes for the next week, mention them briefly.
-5. **Tone:** Professional, direct, and focused on progress. Avoid technical jargon where a simpler explanation of the benefit exists.
+5. **Tone:** Professional, direct, and focused on progress. Minimum filer words, pleasantries and hedging language.
 
 **Input Data:**
 [PASTE THE OUTPUT OF ./report-data.py --range 1w HERE]
