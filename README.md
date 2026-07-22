@@ -1,14 +1,32 @@
 CLI tool to generate team report from Jira
 ==========================================
 
-Installation
-------------
+Installation and Running
+------------------------
 
-    python -m venv venv
-    source venv/bin/activate
-    python -m pip install -U pip
-    python -m pip install -r requirements.txt
-    jira-cli --help
+This repository uses [uv](https://github.com/astral-sh/uv) to manage and run the application.
+
+### Ephemeral Run (No Cloning Required)
+
+You can run the CLI tool directly from GitHub without cloning the repository or manually setting up an environment:
+
+    uvx --from git+https://github.com/jhutar/jira_query.git jira-cli --help
+
+### Running in Development (After Cloning)
+
+If you have cloned the repository, you can run the tool in its development environment using:
+
+    uv run jira-cli --help
+
+### System-wide Installation
+
+To install `jira-cli` system-wide into an isolated environment:
+
+    uv tool install git+https://github.com/jhutar/jira_query.git
+
+Or if you have cloned the repository locally:
+
+    uv tool install .
 
 
 Configuration
