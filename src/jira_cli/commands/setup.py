@@ -20,6 +20,21 @@ def run(ctx, args):
     print(f"The configuration will be written to: {config_path}")
     print()
 
+    # Check for adfmd tool availability
+    import shutil
+
+    if not shutil.which("adfmd"):
+        print("!" * 80)
+        print(" WARNING: 'adfmd' tool was not found in your PATH!")
+        print(
+            " jira-cli needs 'adfmd' to convert Jira descriptions/comments from/to Markdown."
+        )
+        print(" Please install the latest version from:")
+        print("   https://github.com/jhutar/adfmd/releases")
+        print(" and place it somewhere in your PATH.")
+        print("!" * 80)
+        print()
+
     # 1) Wizard prompts
     url = input("What is your Jira instance? [https://redhat.atlassian.net/]: ").strip()
     if not url:
@@ -28,47 +43,41 @@ def run(ctx, args):
     username = input("What is your username? ").strip()
     token = input("What is your Jira token? ").strip()
 
-    print("\nUsing default settings for 'boards_list', 'project_defaults', 'custom_fields', and 'sprint_regexps'.")
+    print(
+        "\nUsing default settings for 'boards_list', 'project_defaults', 'custom_fields', and 'sprint_regexps'."
+    )
 
     # 2) Construct config dictionary
     config_data = {
         "server": {
             "url": url,
-            "auth": {
-                "basic_auth": {
-                    "token": token,
-                    "username": username
-                }
-            }
+            "auth": {"basic_auth": {"token": token, "username": username}},
         },
         "boards_list": [
             "Konflux/RHTAP Perf&Scale board",
             "Pipelines Perf&Scale board",
             "Perf&Scale Infra tasks",
             "HCE Perf sprint board",
-            "Satellite Perf&Scale scrum board"
+            "Satellite Perf&Scale scrum board",
         ],
         "issue_templates": {},
         "project_defaults": {
             "KONFLUX": {
                 "type": "Task",
                 "security": "Red Hat Employee",
-                "components": ["Performance"]
+                "components": ["Performance"],
             },
             "SAT": {
                 "type": "Task",
                 "security": "Red Hat Employee",
-                "components": ["Performance"]
+                "components": ["Performance"],
             },
             "SRVKP": {
                 "type": "Task",
                 "security": "Red Hat Employee",
-                "components": ["Performance"]
+                "components": ["Performance"],
             },
-            "HCEPERF": {
-                "type": "Task",
-                "security": "Red Hat Employee"
-            }
+            "HCEPERF": {"type": "Task", "security": "Red Hat Employee"},
         },
         "custom_fields": {
             "epic": "customfield_10014",
@@ -76,14 +85,14 @@ def run(ctx, args):
             "story_points": "customfield_10028",
             "sprint": "customfield_10020",
             "target_start": "customfield_10015",
-            "target_end": "customfield_10701"
+            "target_end": "customfield_10701",
         },
         "sprint_regexps": {
             "KONFLUX": "Konflux perf&scale sprint [0-9]+",
             "HCEPERF": "HCE Sprint [0-9]+",
             "SRVKP": "Pipelines perf&scale sprint [0-9]+",
-            "SAT": "Satellite Perf&Scale Sprint [0-9]+"
-        }
+            "SAT": "Satellite Perf&Scale Sprint [0-9]+",
+        },
     }
 
     # 3) Ensure parent directory exists

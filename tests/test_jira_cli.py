@@ -113,10 +113,14 @@ def test_load_config_missing_raises_setup_hint(tmp_path):
     assert "jira-cli setup" in str(exc_info.value)
 
 
+@patch("shutil.which")
 @patch("builtins.input")
-def test_setup_wizard_writes_config(mock_input, tmp_path):
+def test_setup_wizard_writes_config(mock_input, mock_which, tmp_path, capsys):
     from jira_cli.commands.setup import run as setup_run
     import yaml
+
+    # Mock shutil.which to return None to trigger warning
+    mock_which.return_value = None
 
     # Mock inputs: instance URL, username, token
     mock_input.side_effect = [
@@ -152,3 +156,7 @@ def test_setup_wizard_writes_config(mock_input, tmp_path):
     assert data["project_defaults"]["KONFLUX"]["type"] == "Task"
     assert data["custom_fields"]["epic"] == "customfield_10014"
     assert data["sprint_regexps"]["KONFLUX"] == "Konflux perf&scale sprint [0-9]+"
+
+    captured = capsys.readouterr()
+    assert "WARNING: 'adfmd' tool was not found in your PATH!" in captured.out
+    assert "https://github.com/jhutar/adfmd/releases" in captured.out
