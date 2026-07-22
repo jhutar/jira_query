@@ -7,6 +7,8 @@ from jira_cli.cli import (
     _editor,
     _pretty,
     _translate_content,
+    assign_issue,
+    resolve_assignee,
     update_fields,
     update_status,
 )
@@ -24,6 +26,10 @@ def add_arguments(subparsers):
     parser.add_argument(
         "--query",
         help="Jira Query Language (JQL) query to list issues to update (or use --issue)",
+    )
+    parser.add_argument(
+        "--assignee",
+        help="Reassign the ticket to this user (name, email, or accountId)",
     )
     parser.add_argument(
         "--status",
@@ -128,6 +134,11 @@ def run(ctx, args):
                 f"Parent issue '{args.parent}' not found or inaccessible: {e}"
             )
 
+    resolved_assignee = None
+    if args.assignee is not None:
+        resolved_assignee = resolve_assignee(ctx, args.assignee)
+        ctx.logger.debug(f"Pre-validated assignee: {resolved_assignee}")
+
     for issue in issues:
         update_status(ctx, args, issue)
 
@@ -140,6 +151,9 @@ def run(ctx, args):
                 print(f"Commented on the issue {issue.id}")
 
         update_fields(ctx, args, issue)
+
+        if resolved_assignee is not None:
+            assign_issue(ctx, args, issue, resolved_assignee)
 
         if args.link_relationship is not None:
             if args.dry_run:

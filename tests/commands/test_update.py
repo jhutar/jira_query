@@ -139,6 +139,49 @@ def test_update_add_labels(mock_ctx, mock_args):
     assert update_call["labels"] == ["existing", "new-label", "another"]
 
 
+def test_update_assignee_validation_failure(mock_ctx, mock_args):
+    """When --assignee matches no users, an AssertionError is raised."""
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = None
+    mock_args.status = None
+    mock_args.dry_run = False
+
+    mock_ctx.jira.search_users.return_value = []
+    mock_args.assignee = "nonexistent-user"
+
+    with pytest.raises(AssertionError) as exc_info:
+        update.run(mock_ctx, mock_args)
+
+    assert "Expected exactly one user for 'nonexistent-user', but found 0" in str(
+        exc_info.value
+    )
+
+
+def test_update_assignee_success(mock_ctx, mock_args):
+    """When --assignee resolves to exactly one user, assign_issue is called."""
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = None
+    mock_args.status = None
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_ctx.jira.issue.return_value = mock_issue
+
+    mock_user = MagicMock()
+    mock_user.displayName = "Test User"
+    mock_user.accountId = "user-id-123"
+    mock_ctx.jira.search_users.return_value = [mock_user]
+    mock_args.assignee = "test-user"
+
+    update.run(mock_ctx, mock_args)
+
+    mock_ctx.jira.assign_issue.assert_called_once_with(mock_issue, "user-id-123")
+
+
 def test_update_remove_labels(mock_ctx, mock_args):
     """--remove-labels removes matching labels from existing ones."""
     mock_args.issue = "KONFLUX-42"

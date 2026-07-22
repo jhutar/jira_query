@@ -8,6 +8,8 @@ from jira_cli.cli import (
     _editor,
     _pretty,
     _translate_content,
+    assign_issue,
+    resolve_assignee,
     resolve_parent_field,
     update_fields,
     update_status,
@@ -311,33 +313,7 @@ def run(ctx, args):
     # 8. Assignee validation
     resolved_assignee = None
     if args.assignee is not None:
-        try:
-            assignee_users = ctx.jira.search_users(
-                query=args.assignee,
-                includeActive=True,
-                includeInactive=False,
-            )
-        except Exception as e:
-            raise AssertionError(f"Failed to search for user '{args.assignee}': {e}")
-
-        if len(assignee_users) > 1:
-            exact_matches = [
-                u
-                for u in assignee_users
-                if u.displayName == args.assignee
-                or getattr(u, "emailAddress", None) == args.assignee
-                or getattr(u, "accountId", None) == args.assignee
-                or getattr(u, "name", None) == args.assignee
-            ]
-            if len(exact_matches) == 1:
-                assignee_users = exact_matches
-
-        assert len(assignee_users) == 1, (
-            f"Expected exactly one user for '{args.assignee}', but found {len(assignee_users)}. "
-            f"Please use a more specific name, email, or accountId. "
-            f"Found: {[u.displayName + ' (' + getattr(u, 'accountId', 'no-id') + ')' for u in assignee_users]}"
-        )
-        resolved_assignee = assignee_users[0]
+        resolved_assignee = resolve_assignee(ctx, args.assignee)
         ctx.logger.debug(f"Pre-validated assignee: {resolved_assignee}")
 
     # 9. Sprint validation
@@ -393,18 +369,8 @@ def run(ctx, args):
         issue = ctx.jira.create_issue(fields=issue)
         print(f"Created issue {issue.permalink()}")
 
-    # Load assignee details and set it to issue
     if resolved_assignee is not None:
-        if args.dry_run:
-            _pretty("Would assign the issue to:", resolved_assignee)
-        else:
-            assignee_id = getattr(
-                resolved_assignee,
-                "accountId",
-                getattr(resolved_assignee, "name", None),
-            )
-            ctx.jira.assign_issue(issue, assignee_id)
-            print(f"Assigned to {resolved_assignee.displayName} ({assignee_id})")
+        assign_issue(ctx, args, issue, resolved_assignee)
 
     # Transition issue to status
     update_status(ctx, args, issue)

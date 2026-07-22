@@ -168,6 +168,51 @@ def resolve_parent_field(config, issue_type_name, parent_key):
     return "parent", {"key": parent_key}
 
 
+def resolve_assignee(ctx, assignee_query):
+    """Resolve an assignee string to a single Jira user object."""
+    try:
+        assignee_users = ctx.jira.search_users(
+            query=assignee_query,
+            includeActive=True,
+            includeInactive=False,
+        )
+    except Exception as e:
+        raise AssertionError(f"Failed to search for user '{assignee_query}': {e}")
+
+    if len(assignee_users) > 1:
+        exact_matches = [
+            u
+            for u in assignee_users
+            if u.displayName == assignee_query
+            or getattr(u, "emailAddress", None) == assignee_query
+            or getattr(u, "accountId", None) == assignee_query
+            or getattr(u, "name", None) == assignee_query
+        ]
+        if len(exact_matches) == 1:
+            assignee_users = exact_matches
+
+    assert len(assignee_users) == 1, (
+        f"Expected exactly one user for '{assignee_query}', but found {len(assignee_users)}. "
+        f"Please use a more specific name, email, or accountId. "
+        f"Found: {[u.displayName + ' (' + getattr(u, 'accountId', 'no-id') + ')' for u in assignee_users]}"
+    )
+    return assignee_users[0]
+
+
+def assign_issue(ctx, args, issue, resolved_assignee):
+    """Assign an issue to a resolved user, respecting --dry-run."""
+    if args.dry_run:
+        _pretty("Would assign the issue to:", resolved_assignee)
+    else:
+        assignee_id = getattr(
+            resolved_assignee,
+            "accountId",
+            getattr(resolved_assignee, "name", None),
+        )
+        ctx.jira.assign_issue(issue, assignee_id)
+        print(f"Assigned to {resolved_assignee.displayName} ({assignee_id})")
+
+
 def update_status(ctx, args, issue):
     if args.status is None:
         return
