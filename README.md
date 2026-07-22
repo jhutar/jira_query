@@ -32,9 +32,21 @@ Or if you have cloned the repository locally:
 Configuration
 -------------
 
-To get the Jira token, go to Jira -> your profile -> Personal Access Tokens
-and put it into `~/.jira_query.yaml` in `server -> auth -> auth_token`.
-Template for the config is in `config.yaml`.
+The application stores its configuration file at `~/.config/jira-cli/config.yaml` (supporting the `$XDG_CONFIG_HOME` standard).
+
+To configure the application, run the interactive setup wizard:
+
+    jira-cli setup
+
+This wizard will ask for:
+* Your Jira instance URL (defaults to `https://redhat.atlassian.net/`)
+* Your Username / Email
+* Your Jira Personal Access Token (To get your token, go to Jira -> your profile -> Personal Access Tokens)
+
+Alternatively, you can manually copy and customize the configuration template from [config.yaml](config.yaml):
+
+    mkdir -p ~/.config/jira-cli
+    cp config.yaml ~/.config/jira-cli/config.yaml
 
 
 Generate report

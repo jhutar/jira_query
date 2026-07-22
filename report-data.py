@@ -12,6 +12,8 @@ from jira_cli.cli import TemplateRenderer
 from jira_cli.context import (
     _create_jira_client as JiraClient,
     load_server_config,
+    get_default_config_path,
+    JiraQueryError,
 )
 from jira_cli.report.project_configs import ALL_CATEGORIES, PROJECT_CONFIGS
 from jira_cli.report.runner import ReportRunner
@@ -103,7 +105,12 @@ def main():
         stream=sys.stderr,
     )
 
-    server_conf = load_server_config("~/.jira_query.yaml")
+    try:
+        server_conf = load_server_config(get_default_config_path())
+    except JiraQueryError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
     jira = JiraClient(
         server_conf["url"],
         server_conf["auth"]["basic_auth"]["username"],

@@ -13,10 +13,10 @@ from typing import Any, Dict
 
 import jinja2
 
-from jira_cli.context import JiraQueryError, create_context
+from jira_cli.context import JiraQueryError, create_context, get_default_config_path
 
 # Configuration
-DEFAULT_CONFIG_PATH = "~/.jira_query.yaml"
+DEFAULT_CONFIG_PATH = get_default_config_path()
 DEFAULT_TEMPLATE_PATH = "templates/default.md.j2"
 
 
@@ -289,7 +289,7 @@ def update_fields(ctx, args, issue, resolved_sprint_id=None):
 
 
 def main():
-    from jira_cli.commands import create, list, sprints, template, update, view
+    from jira_cli.commands import create, list, sprints, setup, template, update, view
 
     commands = {
         "create": create,
@@ -298,6 +298,7 @@ def main():
         "template": template,
         "sprints": sprints,
         "view": view,
+        "setup": setup,
     }
 
     parser = argparse.ArgumentParser(
@@ -363,7 +364,15 @@ def main():
         parser.print_help()
         return
 
-    ctx = create_context(args)
+    if args.subparser_name == "setup":
+        setup.run(None, args)
+        return
+
+    try:
+        ctx = create_context(args)
+    except JiraQueryError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
 
     cmd = commands.get(args.subparser_name)
     if cmd:

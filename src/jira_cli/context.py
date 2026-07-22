@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import logging
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict
@@ -21,11 +22,30 @@ class Context:
     logger: logging.Logger
 
 
+def get_default_config_path() -> str:
+    xdg_config_home = os.environ.get("XDG_CONFIG_HOME")
+    if xdg_config_home:
+        return os.path.join(xdg_config_home, "jira-cli", "config.yaml")
+    return os.path.expanduser("~/.config/jira-cli/config.yaml")
+
+
 def load_config(config_path) -> Dict[str, Any]:
     config_path = Path(config_path).expanduser()
 
-    with open(config_path, "r", encoding="utf-8") as fd:
-        config_data = yaml.safe_load(fd)
+    if not config_path.is_file():
+        raise JiraQueryError(
+            f"Configuration file not found at '{config_path}'.\n"
+            "Please run 'jira-cli setup' to create a new configuration."
+        )
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as fd:
+            config_data = yaml.safe_load(fd)
+    except Exception as e:
+        raise JiraQueryError(
+            f"Error reading configuration file at '{config_path}': {e}"
+        ) from e
+
     assert isinstance(config_data, dict)
     assert "server" in config_data
     assert "url" in config_data["server"]

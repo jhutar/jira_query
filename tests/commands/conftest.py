@@ -46,7 +46,7 @@ def mock_ctx(mock_config, mock_jira):
 @pytest.fixture
 def mock_args():
     args = MagicMock()
-    args.config = "~/.jira_query.yaml"
+    args.config = "~/.config/jira-cli/config.yaml"
     args.template = None
     args.project = "KONFLUX"
     args.summary = "Test issue"

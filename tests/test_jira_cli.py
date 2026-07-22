@@ -86,3 +86,69 @@ def test_convert_issue_adf_to_md(mock_translate):
     assert mock_issue.fields.description == "Translated markdown text"
     assert mock_comment.body == "Translated markdown text"
     assert mock_translate.call_count == 2
+
+
+def test_get_default_config_path(tmp_path):
+    from jira_cli.context import get_default_config_path
+
+    # With XDG_CONFIG_HOME set
+    with patch.dict("os.environ", {"XDG_CONFIG_HOME": str(tmp_path)}):
+        path = get_default_config_path()
+        assert path == str(tmp_path / "jira-cli" / "config.yaml")
+
+    # Without XDG_CONFIG_HOME set
+    with patch.dict("os.environ", {}, clear=True):
+        path = get_default_config_path()
+        assert "jira-cli/config.yaml" in path
+
+
+def test_load_config_missing_raises_setup_hint(tmp_path):
+    from jira_cli.context import load_config, JiraQueryError
+
+    missing_path = tmp_path / "non_existent.yaml"
+    with pytest.raises(JiraQueryError) as exc_info:
+        load_config(missing_path)
+
+    assert "Configuration file not found" in str(exc_info.value)
+    assert "jira-cli setup" in str(exc_info.value)
+
+
+@patch("builtins.input")
+def test_setup_wizard_writes_config(mock_input, tmp_path):
+    from jira_cli.commands.setup import run as setup_run
+    import yaml
+
+    # Mock inputs: instance URL, username, token
+    mock_input.side_effect = [
+        "https://test.jira.instance/",
+        "test-user",
+        "test-token",
+    ]
+
+    target_config = tmp_path / "jira-cli" / "config.yaml"
+    mock_args = MagicMock()
+    mock_args.config = str(target_config)
+
+    setup_run(None, mock_args)
+
+    # Verify directory was created and file was written
+    assert target_config.is_file()
+
+    # Load and verify content
+    with open(target_config, "r", encoding="utf-8") as fd:
+        data = yaml.safe_load(fd)
+
+    assert data["server"]["url"] == "https://test.jira.instance/"
+    assert data["server"]["auth"]["basic_auth"]["username"] == "test-user"
+    assert data["server"]["auth"]["basic_auth"]["token"] == "test-token"
+    assert data["boards_list"] == [
+        "Konflux/RHTAP Perf&Scale board",
+        "Pipelines Perf&Scale board",
+        "Perf&Scale Infra tasks",
+        "HCE Perf sprint board",
+        "Satellite Perf&Scale scrum board",
+    ]
+    assert data["issue_templates"] == {}
+    assert data["project_defaults"]["KONFLUX"]["type"] == "Task"
+    assert data["custom_fields"]["epic"] == "customfield_10014"
+    assert data["sprint_regexps"]["KONFLUX"] == "Konflux perf&scale sprint [0-9]+"

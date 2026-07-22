@@ -6,13 +6,17 @@ import datetime
 import logging
 import sys
 import csv
+import os
 from pathlib import Path
 from typing import Any, Dict
 import yaml
 import jira
 
+sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname(__file__)), "src"))
+from jira_cli.context import get_default_config_path
+
 # Configuration
-DEFAULT_CONFIG_PATH = "~/.jira_query.yaml"
+DEFAULT_CONFIG_PATH = get_default_config_path()
 
 
 def setup_logging(stderr_level):
@@ -50,8 +54,23 @@ def setup_logging(stderr_level):
 def _load_config(config_path) -> Dict[str, Any]:
     config_path = Path(config_path).expanduser()
 
-    with open(config_path, "r", encoding="utf-8") as fd:
-        config_data = yaml.safe_load(fd)
+    if not config_path.is_file():
+        print(
+            f"Error: Configuration file not found at '{config_path}'.\n"
+            "Please run 'jira-cli setup' to create a new configuration.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as fd:
+            config_data = yaml.safe_load(fd)
+    except Exception as e:
+        print(
+            f"Error reading configuration file at '{config_path}': {e}", file=sys.stderr
+        )
+        sys.exit(1)
+
     assert isinstance(config_data, dict)
     assert "server" in config_data
     assert "url" in config_data["server"]
