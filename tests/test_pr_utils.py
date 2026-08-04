@@ -121,8 +121,15 @@ def test_enrich_with_prs_patterns(mock_get_pr_info):
         ),
         # Trailing > after Slack URL (ADF artifact)
         (
-            "https://redhat.enterprise.slack.com/archives/C0AUHMVNBAS>",
-            ["https://redhat.enterprise.slack.com/archives/C0AUHMVNBAS"],
+            "https://redhat.enterprise.slack.com/archives/C0AUHMVNBAS/p123>",
+            ["https://redhat.enterprise.slack.com/archives/C0AUHMVNBAS/p123"],
+        ),
+        # Channel-only Slack link (no message timestamp) should be skipped:
+        # slack-cli can't fetch these and only errors, so they're not real
+        # enrichment candidates.
+        (
+            "https://redhat.enterprise.slack.com/archives/C04F4NE15U1",
+            [],
         ),
         # Trailing period after GitHub PR
         (

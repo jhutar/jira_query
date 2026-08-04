@@ -196,7 +196,7 @@ def enrich_with_prs(text, with_diff=False):
         r"https://github\.com/[^\s|\]\)]+/commit/[0-9a-f]{7,40}",
         r"https://gitlab[^\s|\]\)]*/-/merge_requests/\d+",
         r"https://gitlab[^\s|\]\)]*/-/commit/[0-9a-f]{7,40}",
-        r"https://[^\s|\]\)]*slack\.com/archives/[^\s|\]\)]+",
+        r"https://[^\s|\]\)]*slack\.com/archives/[^\s|\]\)/]+/p\d+",
     ]
 
     urls = []
