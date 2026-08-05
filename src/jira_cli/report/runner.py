@@ -21,6 +21,7 @@ class ReportRunner:
         projects,
         categories,
         assignee_emails,
+        enrich=True,
     ):
         self._jira = jira
         self._resolver = user_resolver
@@ -29,6 +30,7 @@ class ReportRunner:
         self._end = format_jql_date(end_date)
         self._projects = projects
         self._categories = categories
+        self._enrich = enrich
         self._assignee_ids = None
         if assignee_emails:
             self._assignee_ids = set()
@@ -125,7 +127,8 @@ class ReportRunner:
     def _post_process(self, issues):
         for issue in issues:
             convert_issue_adf_to_md(issue)
-            enrich_issue_with_prs(issue)
+            if self._enrich:
+                enrich_issue_with_prs(issue)
             if hasattr(issue.fields, "comment") and issue.fields.comment:
                 issue.fields.comment.comments = [
                     c

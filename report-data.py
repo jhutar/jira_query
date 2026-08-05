@@ -74,6 +74,11 @@ def main():
         default="templates/detailed-list.md.j2",
         help="Path to Jinja2 template for rendering",
     )
+    parser.add_argument(
+        "--no-enrich",
+        action="store_true",
+        help="Skip PR/commit enrichment of issues (faster, less detail)",
+    )
 
     args = parser.parse_args()
 
@@ -129,6 +134,7 @@ def main():
         projects=projects,
         categories=categories,
         assignee_emails=args.assignees,
+        enrich=not args.no_enrich,
     )
 
     print(runner.run())
