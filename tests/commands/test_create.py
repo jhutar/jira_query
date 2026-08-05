@@ -291,6 +291,21 @@ def test_create_feature_type_accepted(mock_ctx, mock_args):
     assert not mock_ctx.jira.create_issue.called
 
 
+def test_create_spike_type_accepted(mock_ctx, mock_args):
+    """Spike issue type should pass issue type validation when project supports it."""
+    mock_args.type = "Spike"
+
+    mock_itype_spike = MagicMock()
+    mock_itype_spike.name = "Spike"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype_spike]
+    mock_ctx.jira.project.return_value = mock_project
+
+    create.run(mock_ctx, mock_args)
+
+    assert not mock_ctx.jira.create_issue.called
+
+
 @patch("jira_cli.commands.create._translate_content")
 def test_create_converts_description_to_adf(mock_translate, mock_ctx, mock_args):
     mock_itype = MagicMock()

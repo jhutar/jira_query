@@ -62,7 +62,7 @@ def add_arguments(subparsers):
     )
     parser.add_argument(
         "--type",
-        choices=["Task", "Bug", "Epic", "Feature", "Sub-task"],
+        choices=["Task", "Bug", "Epic", "Feature", "Sub-task", "Spike"],
         default="Task",
         help="Issue type",
     )
