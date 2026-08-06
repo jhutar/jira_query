@@ -54,19 +54,21 @@ Based on the selected report `form`, pick one of the templates below. Completion
 
 ### Report formed as "Quarterly Review"
 
+Be VERY short, each bullet 8 words at max.
+
 ```markdown
 # Perf & Scale Quarterly Review for <team>
 ## Top of Mind
-* ... (Provide 0-3 bullet points summarizing biggest activities done or going on. Be VERY short, each bullet 10 words at max.)
+* ... (Provide 0-3 bullet points summarizing biggest activities done or going on.
 * ...
 ## Risks/Concerns
-* ... (Provide 0-3 bullet points summarizing risks and concerns for in progress or planned work. Be VERY short, each bullet 10 words at max.)
+* ... (Provide 0-3 bullet points summarizing risks and concerns for in progress or planned work.)
 * ...
 ## Coming up
-* ... (Provide 0-3 bullet points summarizing planned work. Be VERY short, each bullet 10 words at max.)
+* ... (Provide 0-3 bullet points summarizing planned work.)
 * ...
 ## Collaboration Opportunities
-* ... (Provide 0-3 bullet points summarizing team collaboration with other teams (like engineering or any other group besides <team>). Be VERY short, each bullet 10 words at max.)
+* ... (Provide 0-3 bullet points summarizing team collaboration with other teams (like engineering or any other group besides <team>).)
 * ...
 ```
 
