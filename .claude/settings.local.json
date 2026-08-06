@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make test *)",
+      "Bash(make check-all *)",
+      "Bash(make check *)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git -C /home/jhutar/Checkouts/jira_query status *)",
+      "Bash(git -C /home/jhutar/Checkouts/jira_query diff *)",
+      "Bash(git -C /home/jhutar/Checkouts/jira_query log *)",
+      "Bash(lsp outline *)"
+    ]
+  }
+}
