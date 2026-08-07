@@ -44,6 +44,10 @@ def add_arguments(subparsers):
         help="New comment to add in Markdown format (or set to '' to edit with editor)",
     )
     parser.add_argument(
+        "--description",
+        help="New description text in Markdown format (or set to '' to edit with editor), if it starts with '@' it is considered a file to load it from",
+    )
+    parser.add_argument(
         "--epic",
         help="Parent epic to put this ticket under",
     )
@@ -118,6 +122,16 @@ def run(ctx, args):
         if args.comment.startswith("@"):
             args.comment = open(args.comment[1:], "r").read()
 
+    if args.description is not None:
+        if args.description == "":
+            args.description = _editor()
+        elif args.description.startswith("@"):
+            args.description = open(args.description[1:], "r").read()
+        else:
+            args.description = args.description.replace(r"\n", "\n").replace(
+                r"\t", "\t"
+            )
+
     assert not (args.parent is not None and args.epic is not None), (
         "Cannot specify both --parent and --epic; use --parent for unified hierarchy linking"
     )
@@ -149,6 +163,16 @@ def run(ctx, args):
                 adf_comment = json.loads(_translate_content("to-adf", args.comment))
                 ctx.jira.add_comment(issue, adf_comment)
                 print(f"Commented on the issue {issue.id}")
+
+        if args.description is not None:
+            if args.dry_run:
+                _pretty("Would set this description:", args.description)
+            else:
+                adf_description = json.loads(
+                    _translate_content("to-adf", args.description)
+                )
+                issue.update(fields={"description": adf_description})
+                print(f"Updated description on the issue {issue.id}")
 
         update_fields(ctx, args, issue)
 

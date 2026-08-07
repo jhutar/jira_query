@@ -13,6 +13,7 @@ def test_update_status_with_resolution(mock_ctx, mock_args):
     mock_args.issue = "KONFLUX-42"
     mock_args.query = None
     mock_args.comment = None
+    mock_args.description = None
     mock_args.status = "Closed"
     mock_args.resolution = "Done"
     mock_args.dry_run = False
@@ -41,6 +42,7 @@ def test_update_status_without_resolution(mock_ctx, mock_args):
     mock_args.issue = "KONFLUX-42"
     mock_args.query = None
     mock_args.comment = None
+    mock_args.description = None
     mock_args.status = "In Progress"
     mock_args.resolution = None
     mock_args.dry_run = False
@@ -65,6 +67,7 @@ def test_update_converts_comment_to_adf(mock_translate, mock_ctx, mock_args):
     mock_args.issue = "KONFLUX-42"
     mock_args.query = None
     mock_args.comment = "my comment"
+    mock_args.description = None
     mock_args.status = None
     mock_args.dry_run = False
 
@@ -83,11 +86,38 @@ def test_update_converts_comment_to_adf(mock_translate, mock_ctx, mock_args):
     assert add_comment_call[0][1]["type"] == "doc"
 
 
+@patch("jira_cli.commands.update._translate_content")
+def test_update_converts_description_to_adf(mock_translate, mock_ctx, mock_args):
+    """--description is translated to ADF and pushed via issue.update()."""
+    mock_args.subparser_name = "update"
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = None
+    mock_args.description = "my description"
+    mock_args.status = None
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_ctx.jira.issue.return_value = mock_issue
+
+    mock_translate.return_value = '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"my description"}]}]}'
+
+    update.run(mock_ctx, mock_args)
+
+    mock_translate.assert_called_once_with("to-adf", "my description")
+    update_call = mock_issue.update.call_args[1]["fields"]
+    assert isinstance(update_call["description"], dict)
+    assert update_call["description"]["type"] == "doc"
+
+
 def test_update_with_link(mock_ctx, mock_args):
     """When --link-relationship and --link-target are set, create_issue_link is called."""
     mock_args.issue = "KONFLUX-42"
     mock_args.query = None
     mock_args.comment = None
+    mock_args.description = None
     mock_args.status = None
     mock_args.dry_run = False
     mock_args.link_relationship = "blocks"
@@ -111,6 +141,7 @@ def test_update_link_requires_both_args(mock_ctx, mock_args):
     mock_args.issue = "KONFLUX-42"
     mock_args.query = None
     mock_args.comment = None
+    mock_args.description = None
     mock_args.status = None
     mock_args.link_relationship = None
     mock_args.link_target = "KONFLUX-100"
@@ -124,6 +155,7 @@ def test_update_add_labels(mock_ctx, mock_args):
     mock_args.issue = "KONFLUX-42"
     mock_args.query = None
     mock_args.comment = None
+    mock_args.description = None
     mock_args.status = None
     mock_args.dry_run = False
     mock_args.add_labels = ["new-label", "another"]
@@ -144,6 +176,7 @@ def test_update_assignee_validation_failure(mock_ctx, mock_args):
     mock_args.issue = "KONFLUX-42"
     mock_args.query = None
     mock_args.comment = None
+    mock_args.description = None
     mock_args.status = None
     mock_args.dry_run = False
 
@@ -163,6 +196,7 @@ def test_update_assignee_success(mock_ctx, mock_args):
     mock_args.issue = "KONFLUX-42"
     mock_args.query = None
     mock_args.comment = None
+    mock_args.description = None
     mock_args.status = None
     mock_args.dry_run = False
 
@@ -187,6 +221,7 @@ def test_update_remove_labels(mock_ctx, mock_args):
     mock_args.issue = "KONFLUX-42"
     mock_args.query = None
     mock_args.comment = None
+    mock_args.description = None
     mock_args.status = None
     mock_args.dry_run = False
     mock_args.remove_labels = ["to-remove"]
