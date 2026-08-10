@@ -41,7 +41,7 @@ def add_arguments(subparsers):
     )
     parser.add_argument(
         "--comment",
-        help="New comment to add in Markdown format (or set to '' to edit with editor)",
+        help="New comment to add in Markdown format (or set to '' to edit with editor), if it starts with '@' it is considered a file to load it from",
     )
     parser.add_argument(
         "--description",
@@ -119,8 +119,10 @@ def run(ctx, args):
     if args.comment is not None:
         if args.comment == "":
             args.comment = _editor()
-        if args.comment.startswith("@"):
+        elif args.comment.startswith("@"):
             args.comment = open(args.comment[1:], "r").read()
+        else:
+            args.comment = args.comment.replace(r"\n", "\n").replace(r"\t", "\t")
 
     if args.description is not None:
         if args.description == "":

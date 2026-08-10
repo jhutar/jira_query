@@ -235,3 +235,63 @@ def test_update_remove_labels(mock_ctx, mock_args):
 
     update_call = mock_issue.update.call_args[1]["fields"]
     assert update_call["labels"] == ["keep", "also-keep"]
+
+
+@patch("builtins.open")
+@patch("jira_cli.commands.update._translate_content")
+def test_update_comment_from_file(mock_translate, mock_open, mock_ctx, mock_args):
+    """When --comment starts with '@', it reads the comment from the specified file."""
+    mock_args.subparser_name = "update"
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = "@my_comment_file.txt"
+    mock_args.description = None
+    mock_args.status = None
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_ctx.jira.issue.return_value = mock_issue
+
+    # Mock open and read
+    mock_file = MagicMock()
+    mock_file.read.return_value = "comment content from file"
+    mock_open.return_value = mock_file
+
+    mock_translate.return_value = '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"comment content from file"}]}]}'
+
+    update.run(mock_ctx, mock_args)
+
+    mock_open.assert_called_once_with("my_comment_file.txt", "r")
+    mock_translate.assert_called_once_with("to-adf", "comment content from file")
+
+
+@patch("builtins.open")
+@patch("jira_cli.commands.update._translate_content")
+def test_update_description_from_file(mock_translate, mock_open, mock_ctx, mock_args):
+    """When --description starts with '@', it reads the description from the specified file."""
+    mock_args.subparser_name = "update"
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = None
+    mock_args.description = "@my_description_file.txt"
+    mock_args.status = None
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_ctx.jira.issue.return_value = mock_issue
+
+    # Mock open and read
+    mock_file = MagicMock()
+    mock_file.read.return_value = "description content from file"
+    mock_open.return_value = mock_file
+
+    mock_translate.return_value = '{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"description content from file"}]}]}'
+
+    update.run(mock_ctx, mock_args)
+
+    mock_open.assert_called_once_with("my_description_file.txt", "r")
+    mock_translate.assert_called_once_with("to-adf", "description content from file")
