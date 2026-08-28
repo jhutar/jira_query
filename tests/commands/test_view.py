@@ -410,6 +410,91 @@ def test_view_shows_links(mock_ctx, mock_args, capsys):
     assert "is blocked by KONFLUX-502" in output
 
 
+def test_view_with_family_shows_parent_and_children(mock_ctx, mock_args, capsys):
+    mock_args.subparser_name = "view"
+    mock_args.issue_key = "KONFLUX-700"
+    mock_args.with_comments = False
+    mock_args.with_enrichment = False
+    mock_args.with_family = True
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-700"
+    mock_issue.fields.summary = "Parent task"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "Open"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = "desc"
+    mock_issue.fields.comment.comments = []
+    setattr(mock_issue.fields, "customfield_10001", {"key": "KONFLUX-100"})
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_ctx.jira.issue.return_value = mock_issue
+
+    parent = MagicMock()
+    parent.key = "KONFLUX-100"
+    parent.fields.summary = "Epic summary"
+    parent.fields.status.name = "In Progress"
+
+    child1 = MagicMock()
+    child1.key = "KONFLUX-701"
+    child1.fields.summary = "Child one"
+    child1.fields.status.name = "Done"
+
+    child2 = MagicMock()
+    child2.key = "KONFLUX-702"
+    child2.fields.summary = "Child two"
+    child2.fields.status.name = "Open"
+
+    def fake_search(jql, fields="", maxResults=50):
+        if 'key = "KONFLUX-100"' in jql:
+            return [parent]
+        return [child1, child2]
+
+    mock_ctx.jira.search_issues.side_effect = fake_search
+
+    view.run(mock_ctx, mock_args)
+
+    output = capsys.readouterr().out
+    assert "Family:" in output
+    assert "Parent: KONFLUX-100 (In Progress): Epic summary" in output
+    assert "Child:  KONFLUX-701 (Done): Child one" in output
+    assert "Child:  KONFLUX-702 (Open): Child two" in output
+
+
+def test_view_with_family_none_found(mock_ctx, mock_args, capsys):
+    mock_args.subparser_name = "view"
+    mock_args.issue_key = "KONFLUX-710"
+    mock_args.with_comments = False
+    mock_args.with_enrichment = False
+    mock_args.with_family = True
+
+    mock_issue = MagicMock()
+    mock_issue.key = "KONFLUX-710"
+    mock_issue.fields.summary = "Standalone task"
+    mock_issue.fields.issuetype.name = "Task"
+    mock_issue.fields.status.name = "Open"
+    mock_issue.fields.assignee = None
+    mock_issue.fields.reporter = None
+    mock_issue.fields.priority = None
+    mock_issue.fields.description = "desc"
+    mock_issue.fields.comment.comments = []
+    setattr(mock_issue.fields, "customfield_10001", None)
+    setattr(mock_issue.fields, "customfield_10002", None)
+    setattr(mock_issue.fields, "customfield_10005", None)
+    mock_issue.fields.parent = None
+    mock_ctx.jira.issue.return_value = mock_issue
+    mock_ctx.jira.search_issues.return_value = []
+
+    view.run(mock_ctx, mock_args)
+
+    output = capsys.readouterr().out
+    assert "Family:" in output
+    assert "No parent or child issues found." in output
+
+
 def test_view_no_links(mock_ctx, mock_args, capsys):
     mock_args.issue_key = "KONFLUX-600"
     mock_args.with_comments = False

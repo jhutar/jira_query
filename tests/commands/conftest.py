@@ -73,4 +73,5 @@ def mock_args():
     args.link_relationship = None
     args.link_target = None
     args.with_diff = False
+    args.with_family = False
     return args

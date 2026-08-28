@@ -8,6 +8,63 @@ from jira_cli.cli import _translate_content
 from jira_cli.pr_utils import enrich_with_prs
 
 
+def _extract_issue_key(value):
+    """Return an issue key from a Jira field value (dict, object, or string)."""
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        return value.get("key")
+    key = getattr(value, "key", None)
+    if key:
+        return key
+    return value if isinstance(value, str) else None
+
+
+def _fetch_family(ctx, issue_key, issue):
+    """Fetch the parent and child issues of the given issue.
+
+    Parents come from issue.fields.parent plus the configured epic link field;
+    children are found via JQL (parent or epic link pointing at the issue).
+
+    Returns:
+        tuple of (list, list): parent issues and child issues.
+    """
+    config = ctx.config
+    custom_fields = config.get("custom_fields", {})
+
+    parent_keys = []
+    if hasattr(issue.fields, "parent") and issue.fields.parent:
+        parent_key = getattr(issue.fields.parent, "key", None)
+        if parent_key:
+            parent_keys.append(parent_key)
+    if "epic" in custom_fields:
+        epic_key = _extract_issue_key(
+            getattr(issue.fields, custom_fields["epic"], None)
+        )
+        if epic_key:
+            parent_keys.append(epic_key)
+
+    parents = []
+    if parent_keys:
+        jql = " OR ".join(f'key = "{k}"' for k in dict.fromkeys(parent_keys))
+        parents = list(
+            ctx.jira.search_issues(jql, fields="summary,status", maxResults=10)
+        )
+
+    child_parts = [f'parent = "{issue_key}"']
+    if "epic" in custom_fields:
+        child_parts.append(f'"{custom_fields["epic"]}" = "{issue_key}"')
+    children = list(
+        ctx.jira.search_issues(
+            " OR ".join(child_parts),
+            fields="summary,status",
+            maxResults=100,
+        )
+    )
+
+    return parents, children
+
+
 def add_arguments(subparsers):
     parser = subparsers.add_parser(
         "view",
@@ -32,6 +89,11 @@ def add_arguments(subparsers):
         "--with-diff",
         action="store_true",
         help="Include diffs from PRs/commits in enrichment output (implies --with-enrichment, truncated to 200 lines)",
+    )
+    parser.add_argument(
+        "--with-family",
+        action="store_true",
+        help="Show the issue's parent and all child issues, together with their summaries",
     )
 
 
@@ -154,6 +216,19 @@ def run(ctx, args):
         print(f"Parent:    {parent_key}")
     if links:
         print(f"Links:     {', '.join(links)}")
+
+    if args.with_family:
+        parents, children = _fetch_family(ctx, key, issue)
+        print(thin_sep)
+        print("Family:")
+        if not parents and not children:
+            print("  No parent or child issues found.")
+        for p in parents:
+            p_status = getattr(getattr(p.fields, "status", None), "name", "N/A")
+            print(f"  Parent: {p.key} ({p_status}): {p.fields.summary}")
+        for c in children:
+            c_status = getattr(getattr(c.fields, "status", None), "name", "N/A")
+            print(f"  Child:  {c.key} ({c_status}): {c.fields.summary}")
 
     print(thin_sep)
     print("Description:")
