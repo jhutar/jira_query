@@ -2,10 +2,20 @@
 # -*- coding: UTF-8 -*-
 
 import json
+from pathlib import Path
 
 from unittest.mock import MagicMock, patch
 
+from jira_cli.cli import default_template_path
 from jira_cli.commands import list as list_cmd
+
+
+def test_default_template_path_resolves_to_existing_file():
+    """Default template must resolve to a file present at runtime."""
+    tmpl = Path(default_template_path())
+    if not tmpl.is_absolute():
+        tmpl = Path.cwd() / tmpl
+    assert tmpl.is_file()
 
 
 @patch("jira_cli.commands.list._translate_content")

@@ -17,7 +17,23 @@ from jira_cli.context import JiraQueryError, create_context, get_default_config_
 
 # Configuration
 DEFAULT_CONFIG_PATH = get_default_config_path()
-DEFAULT_TEMPLATE_PATH = "templates/default.md.j2"
+
+
+def default_template_path() -> str:
+    """
+    Resolve the default Jinja2 template path.
+
+    Prefers the template shipped inside the installed package so the tool
+    works when installed via uv/pip from any working directory. Falls back
+    to a repository-relative path for in-tree development runs.
+    """
+    bundled = Path(__file__).resolve().parent / "templates" / "default.md.j2"
+    if bundled.is_file():
+        return str(bundled)
+    return "templates/default.md.j2"
+
+
+DEFAULT_TEMPLATE_PATH = default_template_path()
 
 
 def setup_logging(stderr_level):
