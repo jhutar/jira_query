@@ -27,4 +27,4 @@ check-all:
 	pre-commit run --all-files
 
 test:
-	PYTHONPATH=src pytest -v
+	uv run --with pytest pytest -v
