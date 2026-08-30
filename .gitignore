@@ -5,4 +5,3 @@ __pycache__/
 
 # Cache dir
 jira_issue_details/
-uv.lock
