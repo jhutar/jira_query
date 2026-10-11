@@ -32,7 +32,7 @@ def default_template_path() -> str:
     here = Path(__file__).resolve()
     candidates = (
         here.parent / "templates" / "default.md.j2",
-        here.parents[1] / "templates" / "default.md.j2",
+        here.parents[2] / "templates" / "default.md.j2",  # repo root
     )
     for candidate in candidates:
         if candidate.is_file():
