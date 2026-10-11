@@ -23,6 +23,7 @@ def mock_config():
             "target_end": "customfield_10004",
             "sprint": "customfield_10005",
             "epic_name": "customfield_10006",
+            "team": "customfield_10007",
         },
         "sprint_regexps": {"KONFLUX": r"Konflux Sprint \d+"},
         "issue_templates": {},
@@ -62,6 +63,7 @@ def mock_args():
     args.epic = None
     args.parent = None
     args.story_points = None
+    args.team = None
     args.sprint = None
     args.sprint_regexp = None
     args.sprint_current = False

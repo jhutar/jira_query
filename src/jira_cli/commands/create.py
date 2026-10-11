@@ -80,6 +80,10 @@ def add_arguments(subparsers):
         help="How many story points to set",
     )
     parser.add_argument(
+        "--team",
+        help="Assigned team (e.g. 'lightwell-performance')",
+    )
+    parser.add_argument(
         "--sprint",
         help="Add to this sprint",
     )

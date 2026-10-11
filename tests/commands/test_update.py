@@ -295,3 +295,26 @@ def test_update_description_from_file(mock_translate, mock_open, mock_ctx, mock_
 
     mock_open.assert_called_once_with("my_description_file.txt", "r")
     mock_translate.assert_called_once_with("to-adf", "description content from file")
+
+
+def test_update_sets_team_custom_field(mock_ctx, mock_args):
+    """When --team is passed, the issue is updated with the team custom field."""
+    mock_args.subparser_name = "update"
+    mock_args.issue = "KONFLUX-42"
+    mock_args.query = None
+    mock_args.comment = None
+    mock_args.description = None
+    mock_args.status = None
+    mock_args.resolution = None
+    mock_args.team = "lightwell-performance"
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_ctx.jira.issue.return_value = mock_issue
+
+    update.run(mock_ctx, mock_args)
+
+    update_fields = mock_issue.update.call_args[1]["fields"]
+    assert update_fields["customfield_10007"] == {"value": "lightwell-performance"}

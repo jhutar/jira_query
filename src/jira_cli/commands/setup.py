@@ -86,6 +86,7 @@ def run(ctx, args):
             "sprint": "customfield_10020",
             "target_start": "customfield_10015",
             "target_end": "customfield_10701",
+            "team": "customfield_10606",
         },
         "sprint_regexps": {
             "KONFLUX": "Konflux perf&scale sprint [0-9]+",

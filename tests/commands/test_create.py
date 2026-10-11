@@ -133,6 +133,29 @@ def test_create_uses_parent_field_for_epic(mock_ctx, mock_args):
     assert create_call_fields["parent"] == {"key": "KONFLUX-100"}
 
 
+def test_create_sets_team_custom_field(mock_ctx, mock_args):
+    """When --team is passed, the issue is updated with the team custom field."""
+    mock_itype = MagicMock()
+    mock_itype.name = "Task"
+    mock_project = MagicMock()
+    mock_project.issueTypes = [mock_itype]
+    mock_ctx.jira.project.return_value = mock_project
+
+    mock_args.team = "lightwell-performance"
+    mock_args.dry_run = False
+
+    mock_issue = MagicMock()
+    mock_issue.permalink.return_value = "https://jira.example.com/browse/KONFLUX-101"
+    mock_issue.fields = MagicMock()
+    mock_issue.fields.labels = []
+    mock_ctx.jira.create_issue.return_value = mock_issue
+
+    create.run(mock_ctx, mock_args)
+
+    update_fields = mock_issue.update.call_args[1]["fields"]
+    assert update_fields["customfield_10007"] == {"value": "lightwell-performance"}
+
+
 def test_create_parent_validation_failure(mock_ctx, mock_args):
     mock_itype = MagicMock()
     mock_itype.name = "Task"
