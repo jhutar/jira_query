@@ -23,13 +23,20 @@ def default_template_path() -> str:
     """
     Resolve the default Jinja2 template path.
 
-    Prefers the template shipped inside the installed package so the tool
-    works when installed via uv/pip from any working directory. Falls back
-    to a repository-relative path for in-tree development runs.
+    Checks, in order:
+    1. Templates force-included inside the package wheel (non-editable install).
+    2. The repo-root ``templates/`` directory (editable install, where
+       hatchling force-include is not applied).
+    3. A cwd-relative path as last resort.
     """
-    bundled = Path(__file__).resolve().parent / "templates" / "default.md.j2"
-    if bundled.is_file():
-        return str(bundled)
+    here = Path(__file__).resolve()
+    candidates = (
+        here.parent / "templates" / "default.md.j2",
+        here.parents[1] / "templates" / "default.md.j2",
+    )
+    for candidate in candidates:
+        if candidate.is_file():
+            return str(candidate)
     return "templates/default.md.j2"
 
 
@@ -293,6 +300,10 @@ def update_fields(ctx, args, issue, resolved_sprint_id=None):
         custom[ctx.config["custom_fields"]["target_end"]] = args.target_end.strftime(
             "%Y-%m-%d"
         )
+
+    if getattr(args, "team", None) is not None:
+        # Select-type field: Jira requires the option as an object with 'value' or 'id'
+        custom[ctx.config["custom_fields"]["team"]] = {"value": args.team}
 
     if resolved_sprint_id is not None:
         custom[ctx.config["custom_fields"]["sprint"]] = resolved_sprint_id
