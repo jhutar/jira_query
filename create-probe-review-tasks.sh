@@ -1,3 +1,11 @@
+#!/bin/sh
+#
+# Create three "Probe results investigation" tasks (Mon/Wed/Fri) for the
+# current week, one per assignee.
+
+set -eu
+
+DESCRIPTION=$(cat <<'EOF'
 Goal of this task is to regularly ensure our Konflux Probe runs are running
 fine, errors are recognized and reported if it makes sense.
 
@@ -18,3 +26,9 @@ h2. Acceptance criteria
 * Let the team know how it went
   * If there is something consistently wrong with Konflux or the cluster itself, consider reporting it to Jira as a bug (see <https://github.com/konflux-ci/error-pattern-tests/blob/main/docs/procedures/report-konflux-bug-by-probe.md> or <https://github.com/konflux-ci/error-pattern-tests/blob/main/docs/howtos/report-issue-to-jira.md>, these procedures were not tested too much yet with AI agents, so be cautious)
   * Share the summary of what you did with the team on the Slack
+EOF
+)
+
+jira-cli create --project KONFLUX --summary "Probe results investigation, Mon, week of $(date -I)" --assignee "jhutar@redhat.com" --components Performance --status "In Progress" --type Task --story-points 1 --sprint-current --description "$DESCRIPTION" --epic KONFLUX-14182
+jira-cli create --project KONFLUX --summary "Probe results investigation, Wed, week of $(date -I)" --assignee "cmusali@redhat.com" --components Performance --status "New" --type Task --story-points 1 --sprint-current --description "$DESCRIPTION" --epic KONFLUX-14182
+jira-cli create --project KONFLUX --summary "Probe results investigation, Fri, week of $(date -I)" --assignee "smodak@redhat.com" --components Performance --status "New" --type Task --story-points 1 --sprint-current --description "$DESCRIPTION" --epic KONFLUX-14182
