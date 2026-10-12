@@ -52,16 +52,16 @@ Alternatively, you can manually copy and customize the configuration template fr
 Generate report
 ---------------
 
-Generate to stdout:
-
-    jira-cli
-
-If template generates MarkDown, convert to HTML like this:
+Templates usually generates MarkDown, so convert to HTML like this:
 
     sudo dnf -y install multimarkdown
-    jira-cli | multimarkdown
+    jira-cli ... | multimarkdown
 
-And also put it into clipboard so you can paste to any office suite editor:
+And also put it into clipboard so you can paste to any office suite as rich formatted text:
 
     sudo dnf -y install xclip
-    jira-cli | multimarkdown | xclip -sel clip -t "text/html"
+    jira-cli ... | multimarkdown | xclip -sel clip -t "text/html"
+
+Or:
+
+    jira-cli ... | multimarkdown | ./xclip_html.py
