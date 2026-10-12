@@ -1,5 +1,79 @@
 ---
 server:
-  url: https://jira.example.com
+  url: https://redhat.atlassian.net/
   auth:
-    token_auth: <JIRA_TOKEN>
+    basic_auth:
+      token: ...
+      username: jhutar@redhat.com
+
+# List Jira boards you work with.
+#
+# This is important when it comes to finding sprints as going through all
+# the sprints in all the beards you have access to is very expensive process.
+boards_list:
+  - "jhutar's issues"
+  - "Konflux/RHTAP Perf&Scale board"
+  - "Red Hat Developer Hub (RHDH) Perf&Scale board"
+  - "Pipelines Perf&Scale board"
+  - "Perf&Scale Infra tasks"
+  - "HCE Perf sprint board"
+  - "Satellite Perf&Scale scrum board"
+  - "GitOps Perf&Scale board"
+  - "Lightwell Performance and Scale"
+
+# Sets of defaults when creating issues
+issue_templates:
+  KONFLUX_adhoc:
+    project: KONFLUX
+    type: Task
+    assignee: jhutar@redhat.com
+    status: In Progress
+    story_points: 1
+    sprint_regexp: Konflux perf&scale sprint .*
+    components:
+      - Performance
+  HCEPERF_KeepLightsOn_work:
+    project: HCEPERF
+    type: Task
+    epic: HCEPERF-687
+    components:
+      - Other - Infrastructure
+
+# Top-level defaults for projects
+project_defaults:
+  KONFLUX:
+    type: Task
+    security: "Red Hat Employee"
+    components: ["Performance"]
+  SAT:
+    type: Task
+    security: "Red Hat Employee"
+    components: ["Performance"]
+  SRVKP:
+    type: Task
+    security: "Red Hat Employee"
+    components: ["Performance"]
+  HCEPERF:
+    type: Task
+    security: "Red Hat Employee"
+  LWLP:
+    type: Task
+    team: "lightwell-performance"
+
+# Custom fields
+custom_fields:
+  epic: customfield_10014
+  epic_name: customfield_10011
+  story_points: customfield_10028
+  sprint: customfield_10020
+  target_start: customfield_10015
+  target_end: customfield_10701
+  team: customfield_10606
+
+# Sprint regexps for given projects
+sprint_regexps:
+  KONFLUX: Konflux perf&scale sprint [0-9]+
+  HCEPERF: HCE Sprint [0-9]+
+  RHIDP: RHDH perf&scale sprint [0-9]+
+  SRVKP: Pipelines perf&scale sprint [0-9]+
+  SAT: Satellite Perf&Scale Sprint [0-9]+
