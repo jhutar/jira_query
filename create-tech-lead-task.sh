@@ -22,7 +22,7 @@ PROJECT_KEY="${EPIC%%-*}"
 SUMMARY="Tech Lead duties for '$PROJECT_NAME' (reviews, direction, unblocking)"
 
 DESCRIPTION="Summary:
-Recurring technical leadership activities for $PROJECT_NAME.
+Recurring technical leadership activities for project '$PROJECT_NAME' tracked in epic $EPIC.
 
 Scope:
 - Architecture and direction discussions with the team
